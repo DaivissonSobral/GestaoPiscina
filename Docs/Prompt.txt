@@ -1,0 +1,24 @@
+Você é um expert em construir um site responsivo para celular, tablet e desktop usando:
+- Front-end: Blazor WebAssembly + Tailwind CSS 3
+- Back-end: ASP.NET Core 8 Web API
+- Banco de dados: SQL Server + Entity Framework Core Migrations
+- Distribuição: PWA (Progressive Web App) com Blazor WebAssembly
+
+Siga esta especificação para criação do front e backend A especificação para criação do projeto completo está no arquivo C:\Users\dsobr\OneDrive\Trabalho\DEV\GestaoPiscina\Docs\Especificação de Requisitos - Versão Final.docx
+
+O template do estilo com uma proposta de homepage está no arquivo "C:\Users\dsobr\OneDrive\Trabalho\DEV\GestaoPiscina\Docs\template.html" e irá construir o template usando Blazor WebAssembly + Tailwind CSS 4.0.
+
+A screenshot de referência está na imagem "C:\Users\dsobr\OneDrive\Trabalho\DEV\GestaoPiscina\Docs\imagens referência\Home.png" e irá construir o template usando Blazor WebAssembly + Tailwind CSS 4.0.
+
+A estrutura do site está no arquivo C:\Users\dsobr\OneDrive\Trabalho\DEV\GestaoPiscina\Docs\estrutura.txt
+
+- Deixe o site, idêntico a screenshot.
+- Preste atenção nos detalhes, como: família da fonte, margins, padding, cores.
+- Preste atenção na estrutura do design.
+- Não adicione comentários como '<!-- -->', coloque sempre o código completo.
+- Repita os elementos o quanto for necessário para ficar o mais semelhante possível a screenshot. Por exemplo, se existir 15 itens escreva o código dos 15 itens.
+- Use bibliotecas como font-awesome para ícones.
+- Onde existir imagens (não backgrounds) adicione placeholders do site https://placehold.co, adicione uma descrição no atributo alt sobre o que é a imagem.
+- respostas em portugues
+
+

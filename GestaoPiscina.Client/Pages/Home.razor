@@ -1,0 +1,93 @@
+﻿@page "/"
+
+<section class="p-4 space-y-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-slate-800 rounded-xl p-4">
+            <h3 class="text-slate-400 text-sm">OS do Dia</h3>
+            <p class="text-2xl font-bold mt-2">18</p>
+            <span class="text-green-500 text-sm">+3 novas</span>
+        </div>
+        <div class="bg-slate-800 rounded-xl p-4">
+            <h3 class="text-slate-400 text-sm">Piscinas Atendidas</h3>
+            <p class="text-2xl font-bold mt-2">45</p>
+            <span class="text-green-500 text-sm">Hoje</span>
+        </div>
+        <div class="bg-slate-800 rounded-xl p-4">
+            <h3 class="text-slate-400 text-sm">Produtos em Baixa</h3>
+            <p class="text-2xl font-bold mt-2">12</p>
+            <span class="text-red-500 text-sm">Repor urgente</span>
+        </div>
+        <div class="bg-slate-800 rounded-xl p-4">
+            <h3 class="text-slate-400 text-sm">Alertas Pendentes</h3>
+            <p class="text-2xl font-bold mt-2">5</p>
+            <span class="text-yellow-400 text-sm">Manutenção Preventiva</span>
+        </div>
+    </div>
+
+    <div>
+        <h2 class="text-lg font-semibold mb-3">Atalhos Rápidos</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
+            <button class="bg-cyan-600 hover:bg-cyan-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
+                <i class="fas fa-plus-circle text-2xl mb-2"></i> Nova OS
+            </button>
+            <button class="bg-blue-600 hover:bg-blue-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
+                <i class="fas fa-chart-pie text-2xl mb-2"></i> Relatórios
+            </button>
+            <button class="bg-teal-600 hover:bg-teal-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
+                <i class="fas fa-route text-2xl mb-2"></i> Rotas
+            </button>
+            <button class="bg-green-600 hover:bg-green-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
+                <i class="fas fa-user-plus text-2xl mb-2"></i> Cliente
+            </button>
+            <button class="bg-yellow-600 hover:bg-yellow-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
+                <i class="fas fa-box text-2xl mb-2"></i> Produto
+            </button>
+            <button class="bg-purple-600 hover:bg-purple-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
+                <i class="fas fa-cog text-2xl mb-2"></i> Configuração
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2 bg-slate-800 rounded-xl p-4">
+            <h3 class="font-semibold mb-2">Resumo Diário de OS</h3>
+            <img src="https://placehold.co/800x250?text=Gráfico+OS+do+Dia" alt="Gráfico OS do dia" class="rounded-lg w-full">
+        </div>
+        <div class="bg-slate-800 rounded-xl p-4">
+            <h3 class="font-semibold mb-2">Alertas Recentes</h3>
+            <div class="space-y-3">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-exclamation-triangle text-red-500"></i>
+                    <span>Produto X em nível crítico</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-tools text-yellow-400"></i>
+                    <span>Manutenção Preventiva: Bomba Y</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-calendar-times text-red-400"></i>
+                    <span>OS atrasada: Cliente João</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-slate-800 rounded-xl p-4">
+            <h3 class="text-sm text-slate-400">OS Abertas</h3>
+            <p class="text-lg font-semibold mt-1">8 pendentes</p>
+        </div>
+        <div class="bg-slate-800 rounded-xl p-4">
+            <h3 class="text-sm text-slate-400">Checklists Concluídos</h3>
+            <p class="text-lg font-semibold mt-1">32 hoje</p>
+        </div>
+        <div class="bg-slate-800 rounded-xl p-4">
+            <h3 class="text-sm text-slate-400">Próximas Rotas</h3>
+            <p class="text-lg font-semibold mt-1">5 programadas</p>
+        </div>
+        <div class="bg-slate-800 rounded-xl p-4">
+            <h3 class="text-sm text-slate-400">Equipamentos Automáticos</h3>
+            <p class="text-lg font-semibold mt-1">2 falhas detectadas</p>
+        </div>
+    </div>
+</section>

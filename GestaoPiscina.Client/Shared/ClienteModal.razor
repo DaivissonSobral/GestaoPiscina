@@ -1,0 +1,87 @@
+@using GestaoPiscina.Client.Models
+
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 @(IsVisible ? "" : "hidden")">
+    <div class="bg-slate-800 rounded-xl p-6 w-full max-w-md mx-4">
+        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-slate-100">
+                    @(Cliente.IDCliente > 0 ? "Editar Cliente" : "Novo Cliente")
+                </h3>
+            <button @onclick="Close" class="text-slate-400 hover:text-slate-200">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <EditForm Model="Cliente" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Nome</label>
+                    <InputText @bind-Value="Cliente.Nome" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+                    <ValidationMessage For="@(() => Cliente.Nome)" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Tipo</label>
+                    <InputSelect @bind-Value="Cliente.Tipo" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                        <option value="">Selecione...</option>
+                        <option value="residencial">Residencial</option>
+                        <option value="comercial">Comercial</option>
+                        <option value="condominio">Condomínio</option>
+                    </InputSelect>
+                    <ValidationMessage For="@(() => Cliente.Tipo)" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Telefone</label>
+                    <InputText @bind-Value="Cliente.Telefone" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Email</label>
+                    <InputText @bind-Value="Cliente.Email" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Endereço</label>
+                    <InputText @bind-Value="Cliente.Endereco" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+                    <ValidationMessage For="@(() => Cliente.Endereco)" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Observações</label>
+                    <InputTextArea @bind-Value="Cliente.Observacoes" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" rows="3" />
+                    <ValidationMessage For="@(() => Cliente.Observacoes)" />
+                </div>
+            </div>
+
+            <div class="flex space-x-3 mt-6">
+                <button type="submit" class="flex-1 bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
+                    <i class="fas fa-save mr-2"></i>Salvar
+                </button>
+                <button type="button" @onclick="Close" class="flex-1 bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded-lg text-white transition-colors">
+                    Cancelar
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public Cliente Cliente { get; set; } = new Cliente();
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+    [Parameter] public EventCallback<Cliente> OnSave { get; set; }
+
+    private async Task Close()
+    {
+        IsVisible = false;
+        await IsVisibleChanged.InvokeAsync(false);
+    }
+
+    private async Task HandleSubmit()
+    {
+        await OnSave.InvokeAsync(Cliente);
+        await Close();
+    }
+} 

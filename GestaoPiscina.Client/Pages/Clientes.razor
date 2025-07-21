@@ -1,0 +1,302 @@
+@page "/clientes"
+@using GestaoPiscina.Client.Services
+@using GestaoPiscina.Client.Models
+@using GestaoPiscina.Client.Shared
+@inject ApiService ApiService
+@inject IJSRuntime JSRuntime
+
+<section class="p-4 space-y-6">
+    <h3 class="text-xl font-bold mb-4">Gestão de Clientes</h3>
+
+    @if (currentView == "lista")
+{
+    <!-- Tela: Lista de Clientes -->
+    <div class="space-y-4">
+        <div class="flex justify-between items-center">
+            <button @onclick="ShowCreateView" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
+                <i class="fas fa-plus mr-2"></i>Novo Cliente
+            </button>
+        </div>
+
+        <div class="flex space-x-2 mb-4">
+            <input type="text" @bind="searchTerm" @bind:event="oninput" placeholder="Buscar clientes..." class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+            <select @bind="selectedType" class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                <option value="">Todos os Tipos</option>
+                <option value="residencial">Residencial</option>
+                <option value="comercial">Comercial</option>
+                <option value="condominio">Condomínio</option>
+            </select>
+        </div>
+
+        @if (clientes == null)
+        {
+            <div class="flex justify-center items-center h-32">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
+            </div>
+        }
+        else
+        {
+            <div class="bg-slate-800 rounded-xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-slate-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Nome</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Tipo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Endereço</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Piscinas</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-700">
+                            @foreach (var cliente in filteredClientes)
+                            {
+                                <tr class="hover:bg-slate-700">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-slate-100">@cliente.Nome</div>
+                                        <div class="text-sm text-slate-400">@cliente.Telefone</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full @(cliente.Tipo == "condominio" ? "bg-blue-100 text-blue-800" : cliente.Tipo == "comercial" ? "bg-purple-100 text-purple-800" : "bg-green-100 text-green-800")">
+                                            @cliente.Tipo
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                                        @cliente.Endereco
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                                        @cliente.Piscinas.Count piscina(s)
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button @onclick="() => ShowEditView(cliente)" class="text-cyan-400 hover:text-cyan-300 mr-3">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button @onclick="() => DeleteCliente(cliente)" class="text-red-400 hover:text-red-300">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+}
+else if (currentView == "cadastro")
+{
+    <!-- Tela: Cadastro de Cliente -->
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-slate-800 rounded-xl p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h4 class="text-lg font-semibold text-slate-100 flex items-center">
+                    <i class="fas fa-user-plus text-cyan-400 mr-2"></i>
+                    @(currentCliente.IDCliente > 0 ? "Editar Cliente" : "Cadastrar Novo Cliente")
+                </h4>
+                <button @onclick="ShowListView" class="bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded-lg text-white transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Voltar à Lista
+                </button>
+            </div>
+
+            <EditForm Model="currentCliente" OnValidSubmit="@(async () => await HandleSaveCliente(currentCliente))">
+                <DataAnnotationsValidator />
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-3">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Nome *</label>
+                        <InputText @bind-Value="currentCliente.Nome" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Nome completo" />
+                        <ValidationMessage For="@(() => currentCliente.Nome)" />
+                    </div>
+
+                    <div class="space-y-3">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Tipo *</label>
+                        <InputSelect @bind-Value="currentCliente.Tipo" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                            <option value="">Selecione...</option>
+                            <option value="residencial">Residencial</option>
+                            <option value="comercial">Comercial</option>
+                            <option value="condominio">Condomínio</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => currentCliente.Tipo)" />
+                    </div>
+
+                    <div class="space-y-3">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Telefone</label>
+                        <InputText @bind-Value="currentCliente.Telefone" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="(11) 99999-9999" />
+                    </div>
+
+                    <div class="space-y-3">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Email</label>
+                        <InputText @bind-Value="currentCliente.Email" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="email@exemplo.com" />
+                    </div>
+
+                    <div class="md:col-span-2 space-y-3">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Endereço</label>
+                        <InputText @bind-Value="currentCliente.Endereco" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Endereço completo" />
+                    </div>
+
+                    <div class="md:col-span-2 space-y-3">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Observações</label>
+                        <InputTextArea @bind-Value="currentCliente.Observacoes" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" rows="4" placeholder="Observações adicionais..." />
+                    </div>
+                </div>
+
+                <div class="flex space-x-3 mt-8">
+                    <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 px-8 py-3 rounded-lg text-white transition-colors">
+                        <i class="fas fa-save mr-2"></i>@(currentCliente.IDCliente > 0 ? "Atualizar" : "Salvar") Cliente
+                    </button>
+                    <button type="button" @onclick="ClearForm" class="bg-slate-600 hover:bg-slate-500 px-6 py-3 rounded-lg text-white transition-colors">
+                        <i class="fas fa-eraser mr-2"></i>Limpar
+                    </button>
+                    @if (currentCliente.IDCliente > 0)
+                    {
+                        <button type="button" @onclick="ShowListView" class="bg-gray-600 hover:bg-gray-500 px-6 py-3 rounded-lg text-white transition-colors">
+                            <i class="fas fa-times mr-2"></i>Cancelar
+                        </button>
+                    }
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+    <LoadingSpinner @bind-IsVisible="isLoading" Message="Salvando cliente..." />
+    <ConfirmDialog @bind-IsVisible="showConfirmDialog" 
+                   Title="Confirmar Exclusão" 
+                   Message="Tem certeza que deseja excluir este cliente?"
+                   OnConfirm="@(async () => await ConfirmDeleteAsync())" />
+</section>
+
+@code {
+    private List<Cliente>? clientes;
+    private bool isLoading = false;
+    private bool showConfirmDialog = false;
+    private Cliente currentCliente = new Cliente();
+    private Cliente? clienteToDelete = null;
+    private string searchTerm = "";
+    private string selectedType = "";
+    private string currentView = "lista";
+
+    private IEnumerable<Cliente> filteredClientes => clientes?.Where(c => 
+        (string.IsNullOrEmpty(searchTerm) || c.Nome.ToLower().Contains(searchTerm.ToLower())) &&
+        (string.IsNullOrEmpty(selectedType) || c.Tipo == selectedType)
+    ) ?? new List<Cliente>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadClientes();
+    }
+
+    private async Task LoadClientes()
+    {
+        try
+        {
+            clientes = await ApiService.GetClientesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar clientes: {ex.Message}");
+            clientes = new List<Cliente>();
+        }
+    }
+
+    private void ShowCreateView()
+    {
+        currentCliente = new Cliente();
+        currentView = "cadastro";
+    }
+
+    private void ShowEditView(Cliente cliente)
+    {
+        currentCliente = new Cliente
+        {
+            IDCliente = cliente.IDCliente,
+            Nome = cliente.Nome,
+            Tipo = cliente.Tipo,
+            Telefone = cliente.Telefone,
+            Email = cliente.Email,
+            Endereco = cliente.Endereco,
+            Observacoes = cliente.Observacoes
+        };
+        currentView = "cadastro";
+    }
+
+    private void ShowListView()
+    {
+        currentView = "lista";
+        ClearForm();
+    }
+
+    private void ClearForm()
+    {
+        currentCliente = new Cliente();
+        StateHasChanged();
+    }
+
+    private async Task HandleSaveCliente(Cliente cliente)
+    {
+        isLoading = true;
+        try
+        {
+            if (cliente.IDCliente > 0)
+            {
+                await ApiService.UpdateClienteAsync(cliente);
+                ShowToast("Sucesso", "Cliente atualizado com sucesso!", "success");
+            }
+            else
+            {
+                await ApiService.CreateClienteAsync(cliente);
+                ShowToast("Sucesso", "Cliente criado com sucesso!", "success");
+            }
+            
+            // Voltar para a lista e recarregar dados
+            await LoadClientes();
+            ShowListView();
+        }
+        catch (Exception ex)
+        {
+            ShowToast("Erro", $"Erro ao salvar cliente: {ex.Message}", "error");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void DeleteCliente(Cliente cliente)
+    {
+        clienteToDelete = cliente;
+        showConfirmDialog = true;
+    }
+
+    private async Task ConfirmDeleteAsync()
+    {
+        if (clienteToDelete != null)
+        {
+            isLoading = true;
+            try
+            {
+                await ApiService.DeleteClienteAsync(clienteToDelete.IDCliente);
+                await LoadClientes();
+                ShowToast("Sucesso", "Cliente excluído com sucesso!", "success");
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                ShowToast("Erro", $"Erro ao excluir cliente: {ex.Message}", "error");
+            }
+            finally
+            {
+                isLoading = false;
+                clienteToDelete = null;
+            }
+        }
+    }
+
+    private void ShowToast(string title, string message, string type)
+    {
+        // Toast será implementado posteriormente
+        // Por enquanto, vamos usar alert do JavaScript
+        JSRuntime.InvokeVoidAsync("alert", $"{title}: {message}");
+    }
+} 

@@ -1,0 +1,180 @@
+@page "/configuracoes"
+@using GestaoPiscina.Client.Services
+@using GestaoPiscina.Client.Models
+@inject ApiService ApiService
+
+<section class="p-4 space-y-6">
+    <h3 class="text-xl font-bold mb-4">Configurações</h3>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Configurações Gerais -->
+        <div class="bg-slate-800 rounded-xl p-6">
+            <h4 class="text-lg font-semibold text-slate-100 mb-4 flex items-center">
+                <i class="fas fa-cog text-cyan-400 mr-2"></i>
+                Configurações Gerais
+            </h4>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Nome da Empresa</label>
+                    <input type="text" value="Gestão Piscina Ltda" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">CNPJ</label>
+                    <input type="text" value="12.345.678/0001-90" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Endereço</label>
+                    <input type="text" value="Rua das Piscinas, 123 - Centro" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Telefone</label>
+                    <input type="text" value="(11) 99999-9999" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Email</label>
+                    <input type="email" value="contato@gestaopiscina.com" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                </div>
+            </div>
+            
+            <button class="mt-6 bg-cyan-600 hover:bg-cyan-500 px-6 py-2 rounded-lg text-white transition-colors">
+                <i class="fas fa-save mr-2"></i>Salvar Configurações
+            </button>
+        </div>
+
+        <!-- Configurações de Notificações -->
+        <div class="bg-slate-800 rounded-xl p-6">
+            <h4 class="text-lg font-semibold text-slate-100 mb-4 flex items-center">
+                <i class="fas fa-bell text-blue-400 mr-2"></i>
+                Notificações
+            </h4>
+            
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-sm font-medium text-slate-300">Email de Alertas</span>
+                        <p class="text-xs text-slate-400">Receber alertas por email</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" checked class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                    </label>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-sm font-medium text-slate-300">SMS de Urgência</span>
+                        <p class="text-xs text-slate-400">Receber SMS para emergências</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                    </label>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-sm font-medium text-slate-300">Push Notifications</span>
+                        <p class="text-xs text-slate-400">Notificações no navegador</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" checked class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configurações de Backup -->
+        <div class="bg-slate-800 rounded-xl p-6">
+            <h4 class="text-lg font-semibold text-slate-100 mb-4 flex items-center">
+                <i class="fas fa-database text-green-400 mr-2"></i>
+                Backup e Segurança
+            </h4>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Frequência de Backup</label>
+                    <select class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                        <option value="diario">Diário</option>
+                        <option value="semanal">Semanal</option>
+                        <option value="mensal">Mensal</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Retenção de Dados</label>
+                    <select class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                        <option value="30">30 dias</option>
+                        <option value="90">90 dias</option>
+                        <option value="365">1 ano</option>
+                    </select>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg text-white transition-colors">
+                        <i class="fas fa-download mr-2"></i>Backup Manual
+                    </button>
+                    <button class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-white transition-colors">
+                        <i class="fas fa-upload mr-2"></i>Restaurar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configurações de Integração -->
+        <div class="bg-slate-800 rounded-xl p-6">
+            <h4 class="text-lg font-semibold text-slate-100 mb-4 flex items-center">
+                <i class="fas fa-plug text-purple-400 mr-2"></i>
+                Integrações
+            </h4>
+            
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-sm font-medium text-slate-300">Google Maps</span>
+                        <p class="text-xs text-slate-400">Integração com GPS</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" checked class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                    </label>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-sm font-medium text-slate-300">WhatsApp Business</span>
+                        <p class="text-xs text-slate-400">Envio de mensagens</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                    </label>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-sm font-medium text-slate-300">Sistema de Pagamento</span>
+                        <p class="text-xs text-slate-400">Integração com gateway</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    protected override Task OnInitializedAsync()
+    {
+        // Página de configurações - dados são estáticos para demonstração
+        return Task.CompletedTask;
+    }
+} 

@@ -1,0 +1,93 @@
+==============================
+Sistema de Gestão de Serviços de Manutenção de Piscinas
+==============================
+
+1. LOGIN / AUTENTICAÇÃO
+-----------------------
+- Tela de Login com usuário/senha
+- Recuperação de senha
+- Seleção de perfil (Gestor, Supervisor, Técnico, Cliente)
+
+2. DASHBOARD
+------------
+- Resumo de Ordens de Serviço do dia
+- Notificações e alertas
+- Atalhos rápidos (Nova OS, Relatórios, Rotas)
+- Indicadores de performance (checklists concluídos, rotas, estoque)
+
+3. CADASTRO DE CLIENTES
+-----------------------
+- Lista de Clientes com filtros e busca
+- Formulário de Cadastro com dados básicos
+- Detalhes do Cliente (histórico, piscinas, estoque)
+
+4. CADASTRO DE PISCINAS
+-----------------------
+- Lista de Piscinas (por cliente)
+- Cadastro com tipo, volume e localização
+- Histórico de manutenção
+
+5. CADASTRO DE PRODUTOS
+-----------------------
+- Lista de produtos
+- Cadastro/edição (nome, unidade, concentração)
+
+6. CADASTRO DE EQUIPAMENTOS AUTOMATIZADOS
+-----------------------------------------
+- Lista de equipamentos
+- Cadastro/edição (tipo, número de série, última calibração)
+- Alertas de falha e manutenção preventiva
+
+7. ORDENS DE SERVIÇO (OS)
+-------------------------
+- Lista de OS com status e filtros
+- Formulário/Nova OS
+- Execução de OS com checklist interativo, fotos/vídeos e cálculo automático de produtos
+- Histórico de OS com relatórios e avaliações
+
+8. GESTÃO DE ROTA
+-----------------
+- Visualização de rota otimizada
+- Integração com GPS
+- Cálculo automático de quilometragem e tempo
+
+9. REAGENDAMENTO E OCORRÊNCIAS
+------------------------------
+- Lista de ocorrências
+- Reagendamento automático ou manual
+- Histórico de justificativas
+
+10. RELATÓRIOS
+--------------
+- Relatório diário por cliente
+- Relatório mensal consolidado
+- Download/Envio automático por e-mail
+- Assinatura digital (quando necessário)
+
+11. SUPERVISÃO E AVALIAÇÕES
+---------------------------
+- Lista de OS para avaliação
+- Avaliação de técnicos
+- Histórico de bonificações
+
+12. CONTROLE DE ESTOQUE (CLIENTE)
+---------------------------------
+- Lista de produtos em estoque por cliente
+- Alertas de nível mínimo
+- Lista mensal de compras sugeridas
+
+13. ADMINISTRAÇÃO E CONFIGURAÇÃO
+--------------------------------
+- Perfis de acesso e permissões
+- Configuração de notificações
+- Parâmetros de cálculo químico
+- Integrações externas (GPS, e-mail)
+
+PERFIS DE USUÁRIO
+-----------------
+- Gestor: acesso total
+- Supervisor: supervisão e avaliações
+- Técnico: execução de OS e checklist
+- Cliente: apenas visualização de relatórios
+
+==============================

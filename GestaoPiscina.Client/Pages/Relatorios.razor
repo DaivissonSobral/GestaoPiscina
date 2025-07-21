@@ -1,0 +1,116 @@
+@page "/relatorios"
+@using GestaoPiscina.Client.Services
+@using GestaoPiscina.Client.Models
+@inject ApiService ApiService
+
+<section class="p-4 space-y-6">
+    <h3 class="text-xl font-bold mb-4">Relatórios</h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="bg-slate-800 rounded-xl p-4 hover:bg-slate-700 transition-colors">
+            <div class="flex items-center mb-3">
+                <i class="fas fa-chart-line text-cyan-400 text-2xl mr-3"></i>
+                <h4 class="text-lg font-semibold text-slate-100">Relatório de OS</h4>
+            </div>
+            <p class="text-slate-400 text-sm mb-4">Análise detalhada das ordens de serviço por período</p>
+            <button class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors w-full">
+                <i class="fas fa-download mr-2"></i>Gerar PDF
+            </button>
+        </div>
+
+        <div class="bg-slate-800 rounded-xl p-4 hover:bg-slate-700 transition-colors">
+            <div class="flex items-center mb-3">
+                <i class="fas fa-box text-blue-400 text-2xl mr-3"></i>
+                <h4 class="text-lg font-semibold text-slate-100">Relatório de Estoque</h4>
+            </div>
+            <p class="text-slate-400 text-sm mb-4">Controle de produtos em estoque por cliente</p>
+            <button class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-white transition-colors w-full">
+                <i class="fas fa-download mr-2"></i>Gerar PDF
+            </button>
+        </div>
+
+        <div class="bg-slate-800 rounded-xl p-4 hover:bg-slate-700 transition-colors">
+            <div class="flex items-center mb-3">
+                <i class="fas fa-users text-green-400 text-2xl mr-3"></i>
+                <h4 class="text-lg font-semibold text-slate-100">Relatório de Clientes</h4>
+            </div>
+            <p class="text-slate-400 text-sm mb-4">Análise de clientes e suas piscinas</p>
+            <button class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg text-white transition-colors w-full">
+                <i class="fas fa-download mr-2"></i>Gerar PDF
+            </button>
+        </div>
+
+        <div class="bg-slate-800 rounded-xl p-4 hover:bg-slate-700 transition-colors">
+            <div class="flex items-center mb-3">
+                <i class="fas fa-route text-purple-400 text-2xl mr-3"></i>
+                <h4 class="text-lg font-semibold text-slate-100">Relatório de Rotas</h4>
+            </div>
+            <p class="text-slate-400 text-sm mb-4">Otimização de rotas e visitas técnicas</p>
+            <button class="bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded-lg text-white transition-colors w-full">
+                <i class="fas fa-download mr-2"></i>Gerar PDF
+            </button>
+        </div>
+
+        <div class="bg-slate-800 rounded-xl p-4 hover:bg-slate-700 transition-colors">
+            <div class="flex items-center mb-3">
+                <i class="fas fa-dollar-sign text-yellow-400 text-2xl mr-3"></i>
+                <h4 class="text-lg font-semibold text-slate-100">Relatório Financeiro</h4>
+            </div>
+            <p class="text-slate-400 text-sm mb-4">Análise de receitas e custos operacionais</p>
+            <button class="bg-yellow-600 hover:bg-yellow-500 px-4 py-2 rounded-lg text-white transition-colors w-full">
+                <i class="fas fa-download mr-2"></i>Gerar PDF
+            </button>
+        </div>
+
+        <div class="bg-slate-800 rounded-xl p-4 hover:bg-slate-700 transition-colors">
+            <div class="flex items-center mb-3">
+                <i class="fas fa-tools text-red-400 text-2xl mr-3"></i>
+                <h4 class="text-lg font-semibold text-slate-100">Relatório de Equipamentos</h4>
+            </div>
+            <p class="text-slate-400 text-sm mb-4">Status e manutenção de equipamentos</p>
+            <button class="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg text-white transition-colors w-full">
+                <i class="fas fa-download mr-2"></i>Gerar PDF
+            </button>
+        </div>
+    </div>
+
+    <div class="bg-slate-800 rounded-xl p-6">
+        <h4 class="text-lg font-semibold text-slate-100 mb-4">Relatórios Personalizados</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Tipo de Relatório</label>
+                <select class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                    <option value="">Selecione...</option>
+                    <option value="os_periodo">OS por Período</option>
+                    <option value="estoque_cliente">Estoque por Cliente</option>
+                    <option value="produtos_baixa">Produtos em Baixa</option>
+                    <option value="manutencao_preventiva">Manutenção Preventiva</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Período</label>
+                <select class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                    <option value="">Selecione...</option>
+                    <option value="hoje">Hoje</option>
+                    <option value="semana">Esta Semana</option>
+                    <option value="mes">Este Mês</option>
+                    <option value="trimestre">Este Trimestre</option>
+                    <option value="ano">Este Ano</option>
+                </select>
+            </div>
+        </div>
+        <div class="mt-4">
+            <button class="bg-cyan-600 hover:bg-cyan-500 px-6 py-2 rounded-lg text-white transition-colors">
+                <i class="fas fa-cog mr-2"></i>Configurar Relatório
+            </button>
+        </div>
+    </div>
+</section>
+
+@code {
+    protected override Task OnInitializedAsync()
+    {
+        // Página de relatórios - dados são simulados para demonstração
+        return Task.CompletedTask;
+    }
+} 

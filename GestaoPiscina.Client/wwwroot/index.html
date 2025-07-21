@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema de Gestão de Piscinas</title>
+    <base href="/" />
+    <link rel="stylesheet" href="css/app.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="favicon.png"/>
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Sistema de Gestão de Serviços de Manutenção de Piscinas">
+</head>
+
+<body>
+    <div id="app">
+        <div class="loading">
+            <div class="loading-progress">
+                <svg class="loading-progress-circle" viewBox="0 0 80 80">
+                    <circle class="loading-progress-circle-track" cx="40" cy="40" r="36"></circle>
+                    <circle class="loading-progress-circle-fill" cx="40" cy="40" r="36"></circle>
+                </svg>
+                <div class="loading-progress-text" role="status" aria-live="polite"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+    <script src="_framework/blazor.webassembly.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(function (registration) {
+                    console.log('SW registered: ', registration);
+                })
+                .catch(function (registrationError) {
+                    console.log('SW registration failed: ', registrationError);
+                });
+        }
+    </script>
+</body>
+
+</html>

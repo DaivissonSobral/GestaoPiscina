@@ -1,0 +1,63 @@
+@if (IsVisible)
+{
+    <div class="fixed top-4 right-4 z-50">
+        <div class="@($"bg-{Color}-600") text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 min-w-80">
+            <div class="flex-shrink-0">
+                @if (Type == "success")
+                {
+                    <i class="@($"fas fa-check-circle text-{Color}-200")"></i>
+                }
+                else if (Type == "error")
+                {
+                    <i class="@($"fas fa-exclamation-circle text-{Color}-200")"></i>
+                }
+                else if (Type == "warning")
+                {
+                    <i class="@($"fas fa-exclamation-triangle text-{Color}-200")"></i>
+                }
+                else
+                {
+                    <i class="@($"fas fa-info-circle text-{Color}-200")"></i>
+                }
+            </div>
+            <div class="flex-1">
+                <h4 class="font-semibold">@Title</h4>
+                <p class="text-sm opacity-90">@Message</p>
+            </div>
+            <button @onclick="Close" class="@($"flex-shrink-0 text-{Color}-200 hover:text-white")">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string Message { get; set; } = "";
+    [Parameter] public string Type { get; set; } = "info"; // success, error, warning, info
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+
+    private string Color => Type switch
+    {
+        "success" => "green",
+        "error" => "red",
+        "warning" => "yellow",
+        _ => "blue"
+    };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (IsVisible && firstRender)
+        {
+            await Task.Delay(3000); // Auto-hide after 3 seconds
+            await Close();
+        }
+    }
+
+    private async Task Close()
+    {
+        IsVisible = false;
+        await IsVisibleChanged.InvokeAsync(false);
+    }
+} 

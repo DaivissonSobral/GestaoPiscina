@@ -1,0 +1,30 @@
+﻿@inherits LayoutComponentBase
+@using GestaoPiscina.Client.Shared
+
+<div class="bg-slate-900 text-slate-100 flex min-h-screen">
+    <Sidebar />
+    <main class="flex-1 flex flex-col w-full">
+        <TopBar />
+        <div class="flex-1 overflow-auto">
+            @Body
+        </div>
+    </main>
+    
+    <Toast @bind-IsVisible="showToast" Title="@toastTitle" Message="@toastMessage" Type="@toastType" />
+</div>
+
+@code {
+    private bool showToast = false;
+    private string toastTitle = "";
+    private string toastMessage = "";
+    private string toastType = "info";
+
+    public void ShowToast(string title, string message, string type = "info")
+    {
+        toastTitle = title;
+        toastMessage = message;
+        toastType = type;
+        showToast = true;
+        StateHasChanged();
+    }
+}

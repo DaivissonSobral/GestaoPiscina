@@ -1,0 +1,6 @@
+@GestaoPiscina.Server_HostAddress = http://localhost:5070
+
+GET {{GestaoPiscina.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
