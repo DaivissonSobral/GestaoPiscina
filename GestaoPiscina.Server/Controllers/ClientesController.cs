@@ -46,6 +46,12 @@ namespace GestaoPiscina.Server.Controllers
         [HttpPost]
         public async Task<ActionResult<Cliente>> PostCliente(Cliente cliente)
         {
+            // Verifica se já existe cliente com o mesmo nome (ignorando maiúsculas/minúsculas)
+            if (await _context.Clientes.AnyAsync(c => c.Nome.ToLower() == cliente.Nome.ToLower()))
+            {
+                return Conflict(new { message = "Já existe um cliente com este nome." });
+            }
+
             _context.Clientes.Add(cliente);
             await _context.SaveChangesAsync();
 

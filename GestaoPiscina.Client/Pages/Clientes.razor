@@ -4,6 +4,7 @@
 @using GestaoPiscina.Client.Shared
 @inject ApiService ApiService
 @inject IJSRuntime JSRuntime
+@inherits LayoutComponentBase
 
 <section class="p-4 space-y-6">
     <h3 class="text-xl font-bold mb-4">Gestão de Clientes</h3>
@@ -41,11 +42,11 @@
                     <table class="w-full">
                         <thead class="bg-slate-700">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Nome</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Tipo</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Endereço</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Piscinas</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Ações</th>
+                                <TableHeader>Nome</TableHeader>
+                                <TableHeader>Tipo</TableHeader>
+                                <TableHeader>Endereço</TableHeader>
+                                <TableHeader>Piscinas</TableHeader>
+                                <TableHeader>Ações</TableHeader>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-700">
@@ -102,48 +103,46 @@ else if (currentView == "cadastro")
             <EditForm Model="currentCliente" OnValidSubmit="@(async () => await HandleSaveCliente(currentCliente))">
                 <DataAnnotationsValidator />
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 gap-x-8">
                     <div class="space-y-3">
                         <label class="block text-sm font-medium text-slate-300 mb-2">Nome *</label>
-                        <InputText @bind-Value="currentCliente.Nome" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Nome completo" />
-                        <ValidationMessage For="@(() => currentCliente.Nome)" />
+                        <InputText @bind-Value="currentCliente.Nome" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="Nome completo" />
+                        <ValidationMessage For="@(() => currentCliente.Nome)" class="text-red-500 text-sm" />
                     </div>
-
                     <div class="space-y-3">
                         <label class="block text-sm font-medium text-slate-300 mb-2">Tipo *</label>
-                        <InputSelect @bind-Value="currentCliente.Tipo" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                        <InputSelect @bind-Value="currentCliente.Tipo" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500">
                             <option value="">Selecione...</option>
                             <option value="residencial">Residencial</option>
                             <option value="comercial">Comercial</option>
                             <option value="condominio">Condomínio</option>
                         </InputSelect>
-                        <ValidationMessage For="@(() => currentCliente.Tipo)" />
+                        <ValidationMessage For="@(() => currentCliente.Tipo)" class="text-red-500 text-sm" />
                     </div>
-
                     <div class="space-y-3">
                         <label class="block text-sm font-medium text-slate-300 mb-2">Telefone</label>
-                        <InputText @bind-Value="currentCliente.Telefone" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="(11) 99999-9999" />
+                        <InputText @bind-Value="currentCliente.Telefone" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="(11) 99999-9999" />
                     </div>
-
                     <div class="space-y-3">
                         <label class="block text-sm font-medium text-slate-300 mb-2">Email</label>
-                        <InputText @bind-Value="currentCliente.Email" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="email@exemplo.com" />
+                        <InputText @bind-Value="currentCliente.Email" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="email@exemplo.com" />
+                        <ValidationMessage For="@(() => currentCliente.Email)" class="text-red-500 text-sm" />
                     </div>
-
                     <div class="md:col-span-2 space-y-3">
                         <label class="block text-sm font-medium text-slate-300 mb-2">Endereço</label>
-                        <InputText @bind-Value="currentCliente.Endereco" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Endereço completo" />
+                        <InputText @bind-Value="currentCliente.Endereco" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="Endereço completo" />
+                        <ValidationMessage For="@(() => currentCliente.Endereco)" class="text-red-500 text-sm" />
                     </div>
-
                     <div class="md:col-span-2 space-y-3">
                         <label class="block text-sm font-medium text-slate-300 mb-2">Observações</label>
-                        <InputTextArea @bind-Value="currentCliente.Observacoes" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" rows="4" placeholder="Observações adicionais..." />
+                        <InputTextArea @bind-Value="currentCliente.Observacoes" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" rows="4" placeholder="Observações adicionais..." />
+                        <ValidationMessage For="@(() => currentCliente.Observacoes)" class="text-red-500 text-sm" />
                     </div>
                 </div>
 
                 <div class="flex space-x-3 mt-8">
                     <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 px-8 py-3 rounded-lg text-white transition-colors">
-                        <i class="fas fa-save mr-2"></i>@(currentCliente.IDCliente > 0 ? "Atualizar" : "Salvar") Cliente
+                        <i class="fas fa-save mr-2"></i>@(currentCliente.IDCliente > 0 ? "Atualizar" : "Salvar") 
                     </button>
                     <button type="button" @onclick="ClearForm" class="bg-slate-600 hover:bg-slate-500 px-6 py-3 rounded-lg text-white transition-colors">
                         <i class="fas fa-eraser mr-2"></i>Limpar
@@ -168,6 +167,7 @@ else if (currentView == "cadastro")
 </section>
 
 @code {
+    [CascadingParameter] public MainLayout? MainLayout { get; set; }
     private List<Cliente>? clientes;
     private bool isLoading = false;
     private bool showConfirmDialog = false;
@@ -248,14 +248,20 @@ else if (currentView == "cadastro")
                 await ApiService.CreateClienteAsync(cliente);
                 ShowToast("Sucesso", "Cliente criado com sucesso!", "success");
             }
-            
             // Voltar para a lista e recarregar dados
             await LoadClientes();
             ShowListView();
         }
         catch (Exception ex)
         {
-            ShowToast("Erro", $"Erro ao salvar cliente: {ex.Message}", "error");
+            if (ex.Message.Contains("Já existe um cliente com este nome"))
+            {
+                ShowToast("Atenção", ex.Message, "warning");
+            }
+            else
+            {
+                ShowToast("Erro", $"Ocorreu um erro ao salvar o cliente. Por favor, tente novamente ou contate o suporte. Detalhes: {ex.Message}", "error");
+            }
         }
         finally
         {
@@ -295,8 +301,6 @@ else if (currentView == "cadastro")
 
     private void ShowToast(string title, string message, string type)
     {
-        // Toast será implementado posteriormente
-        // Por enquanto, vamos usar alert do JavaScript
-        JSRuntime.InvokeVoidAsync("alert", $"{title}: {message}");
+        MainLayout?.ShowToast(title, message, type);
     }
 } 

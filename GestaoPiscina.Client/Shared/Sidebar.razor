@@ -1,44 +1,46 @@
-<aside class="w-64 bg-slate-800 p-6 hidden md:flex flex-col">
-    <div class="flex items-center text-xl font-bold mb-10">
-        <span class="w-6 h-6 rounded-md bg-gradient-to-tr from-cyan-500 to-blue-400 mr-3"></span>
+<aside class="w-64 bg-slate-900 p-6 hidden md:flex flex-col min-h-screen border-r border-slate-800">
+    <div class="flex items-center text-2xl font-bold mb-10 text-cyan-400 tracking-wide">
+        <span class="w-7 h-7 rounded-md bg-gradient-to-tr from-cyan-500 to-blue-400 mr-3 shadow-lg"></span>
         PiscinaGestão
     </div>
-    <nav class="space-y-4">
-        <NavLink href="" class="flex items-center space-x-3 hover:text-cyan-400" Match="NavLinkMatch.All">
-            <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
+    <nav class="flex flex-col gap-1">
+        <NavLink href="" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner" Match="NavLinkMatch.All">
+            <i class="fas fa-tachometer-alt text-lg mr-2"></i><span>Dashboard</span>
         </NavLink>
-        <NavLink href="clientes" class="flex items-center space-x-3 hover:text-cyan-400">
-            <i class="fas fa-user-friends"></i><span>Clientes</span>
+        <NavLink href="clientes" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
+            <i class="fas fa-user-friends text-lg mr-2"></i><span>Clientes</span>
         </NavLink>
-        <NavLink href="piscinas" class="flex items-center space-x-3 hover:text-cyan-400">
-            <i class="fas fa-water"></i><span>Piscinas</span>
+        <NavLink href="piscinas" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
+            <i class="fas fa-water text-lg mr-2"></i><span>Piscinas</span>
         </NavLink>
-        <NavLink href="produtos" class="flex items-center space-x-3 hover:text-cyan-400">
-            <i class="fas fa-box"></i><span>Produtos</span>
+        <NavLink href="produtos" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
+            <i class="fas fa-box text-lg mr-2"></i><span>Produtos</span>
         </NavLink>
-        <NavLink href="equipamentos" class="flex items-center space-x-3 hover:text-cyan-400">
-            <i class="fas fa-robot"></i><span>Equipamentos</span>
+        <NavLink href="equipamentos" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
+            <i class="fas fa-robot text-lg mr-2"></i><span>Equipamentos</span>
         </NavLink>
-        <NavLink href="ordens-servico" class="flex items-center space-x-3 hover:text-cyan-400">
-            <i class="fas fa-tasks"></i><span>Ordens de Serviço</span>
+        <NavLink href="ordens-servico" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
+            <i class="fas fa-tasks text-lg mr-2"></i><span>Ordens de Serviço</span>
         </NavLink>
-        <NavLink href="rotas" class="flex items-center space-x-3 hover:text-cyan-400">
-            <i class="fas fa-route"></i><span>Gestão de Rota</span>
+        <div class="my-2 border-t border-slate-700"></div>
+        <NavLink href="rotas" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
+            <i class="fas fa-route text-lg mr-2"></i><span>Gestão de Rota</span>
         </NavLink>
-        <NavLink href="reagendamentos" class="flex items-center space-x-3 hover:text-cyan-400">
-            <i class="fas fa-calendar-alt"></i><span>Reagendamentos</span>
+        <NavLink href="reagendamentos" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
+            <i class="fas fa-calendar-alt text-lg mr-2"></i><span>Reagendamentos</span>
         </NavLink>
-        <NavLink href="relatorios" class="flex items-center space-x-3 hover:text-cyan-400">
-            <i class="fas fa-chart-line"></i><span>Relatórios</span>
+        <NavLink href="relatorios" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
+            <i class="fas fa-chart-line text-lg mr-2"></i><span>Relatórios</span>
         </NavLink>
-        <NavLink href="supervisao" class="flex items-center space-x-3 hover:text-cyan-400">
-            <i class="fas fa-star"></i><span>Supervisão</span>
+        <NavLink href="supervisao" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
+            <i class="fas fa-star text-lg mr-2"></i><span>Supervisão</span>
         </NavLink>
-        <NavLink href="estoque" class="flex items-center space-x-3 hover:text-cyan-400">
-            <i class="fas fa-warehouse"></i><span>Estoque</span>
+        <NavLink href="estoque" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
+            <i class="fas fa-warehouse text-lg mr-2"></i><span>Estoque</span>
         </NavLink>
-        <NavLink href="configuracoes" class="flex items-center space-x-3 hover:text-cyan-400">
-            <i class="fas fa-cogs"></i><span>Configurações</span>
+        <div class="my-2 border-t border-slate-700"></div>
+        <NavLink href="configuracoes" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
+            <i class="fas fa-cogs text-lg mr-2"></i><span>Configurações</span>
         </NavLink>
     </nav>
 </aside> 

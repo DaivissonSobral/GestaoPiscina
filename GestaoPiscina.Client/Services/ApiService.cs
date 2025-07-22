@@ -27,6 +27,11 @@ namespace GestaoPiscina.Client.Services
         public async Task<Cliente> CreateClienteAsync(Cliente cliente)
         {
             var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}clientes", cliente);
+            if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                var error = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                throw new Exception(error != null && error.ContainsKey("message") ? error["message"] : "Já existe um cliente com este nome.");
+            }
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<Cliente>() ?? cliente;
         }
