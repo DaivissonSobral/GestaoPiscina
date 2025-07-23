@@ -20,13 +20,13 @@
                 <nav class="flex flex-wrap gap-2 md:gap-4">
                     @if (activeTab == "dados")
                     {
-                        <button @onclick="SetDadosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600">
+                        <button @onclick="SetDadosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600 rounded-tl-lg">
                             <i class="fas fa-user mr-2"></i>Dados
                         </button>
                     }
                     else
                     {
-                        <button @onclick="SetDadosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent">
+                        <button @onclick="SetDadosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent rounded-tl-lg">
                             <i class="fas fa-user mr-2"></i>Dados
                         </button>
                     }
@@ -46,13 +46,13 @@
                     
                     @if (activeTab == "relatorios")
                     {
-                        <button @onclick="SetRelatoriosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600">
+                        <button @onclick="SetRelatoriosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600 rounded-tr-lg">
                             <i class="fas fa-chart-bar mr-2"></i>Relatórios
                         </button>
                     }
                     else
                     {
-                        <button @onclick="SetRelatoriosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent">
+                        <button @onclick="SetRelatoriosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent rounded-tr-lg">
                             <i class="fas fa-chart-bar mr-2"></i>Relatórios
                         </button>
                     }
@@ -67,7 +67,7 @@
                         <h5 class="text-lg font-semibold text-slate-200 mb-4 flex items-center">
                             <i class="fas fa-user text-cyan-400 mr-2"></i>Dados do Usuário
                         </h5>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="space-y-3">
                                 <label class="block text-sm font-medium text-slate-300 mb-2">Nome</label>
                                 <input type="text" @bind="nome" @bind:event="oninput" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Nome completo" />
@@ -105,7 +105,7 @@
                         <h5 class="text-lg font-semibold text-slate-200 mb-4 flex items-center">
                             <i class="fas fa-cogs text-cyan-400 mr-2"></i>Configurações do Sistema
                         </h5>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="space-y-3">
                                 <label class="block text-sm font-medium text-slate-300 mb-2">Tema</label>
                                 <select @bind="tema" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
