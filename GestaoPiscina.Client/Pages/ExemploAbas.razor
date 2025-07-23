@@ -1,0 +1,274 @@
+@page "/exemplo-abas"
+@using GestaoPiscina.Client.Shared
+@inherits ComponentBase
+
+<section class="p-4 space-y-6">
+    <div class="max-w-6xl mx-auto">
+        <div class="bg-slate-800 rounded-xl p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h4 class="text-lg font-semibold text-slate-100 flex items-center">
+                    <i class="fas fa-layer-group text-cyan-400 mr-2"></i>
+                    Exemplo com Abas
+                </h4>
+                <button @onclick="VoltarParaClientes" class="bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded-lg text-white transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Voltar
+                </button>
+            </div>
+
+            <!-- Abas -->
+            <div class="mb-8">
+                <nav class="flex flex-wrap gap-2 md:gap-4">
+                    @if (activeTab == "dados")
+                    {
+                        <button @onclick="SetDadosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600">
+                            <i class="fas fa-user mr-2"></i>Dados
+                        </button>
+                    }
+                    else
+                    {
+                        <button @onclick="SetDadosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent">
+                            <i class="fas fa-user mr-2"></i>Dados
+                        </button>
+                    }
+                    
+                    @if (activeTab == "configuracoes")
+                    {
+                        <button @onclick="SetConfiguracoesTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600">
+                            <i class="fas fa-cogs mr-2"></i>Configurações
+                        </button>
+                    }
+                    else
+                    {
+                        <button @onclick="SetConfiguracoesTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent">
+                            <i class="fas fa-cogs mr-2"></i>Configurações
+                        </button>
+                    }
+                    
+                    @if (activeTab == "relatorios")
+                    {
+                        <button @onclick="SetRelatoriosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600">
+                            <i class="fas fa-chart-bar mr-2"></i>Relatórios
+                        </button>
+                    }
+                    else
+                    {
+                        <button @onclick="SetRelatoriosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent">
+                            <i class="fas fa-chart-bar mr-2"></i>Relatórios
+                        </button>
+                    }
+                </nav>
+            </div>
+
+            <!-- Conteúdo das Abas -->
+            <div class="mt-8 bg-slate-900 rounded-lg shadow p-6">
+                @if (activeTab == "dados")
+                {
+                    <div @key="activeTab" class="space-y-6">
+                        <h5 class="text-lg font-semibold text-slate-200 mb-4 flex items-center">
+                            <i class="fas fa-user text-cyan-400 mr-2"></i>Dados do Usuário
+                        </h5>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-3">
+                                <label class="block text-sm font-medium text-slate-300 mb-2">Nome</label>
+                                <input type="text" @bind="nome" @bind:event="oninput" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Nome completo" />
+                            </div>
+                            <div class="space-y-3">
+                                <label class="block text-sm font-medium text-slate-300 mb-2">Email</label>
+                                <input type="email" @bind="email" @bind:event="oninput" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="email@exemplo.com" />
+                            </div>
+                            <div class="space-y-3">
+                                <label class="block text-sm font-medium text-slate-300 mb-2">Telefone</label>
+                                <input type="tel" @bind="telefone" @bind:event="oninput" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="(11) 99999-9999" />
+                            </div>
+                            <div class="space-y-3">
+                                <label class="block text-sm font-medium text-slate-300 mb-2">Cidade</label>
+                                <input type="text" @bind="cidade" @bind:event="oninput" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Sua cidade" />
+                            </div>
+                            <div class="md:col-span-2 space-y-3">
+                                <label class="block text-sm font-medium text-slate-300 mb-2">Endereço</label>
+                                <input type="text" @bind="endereco" @bind:event="oninput" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Endereço completo" />
+                            </div>
+                        </div>
+                        <div class="flex space-x-3 mt-6">
+                            <button class="bg-cyan-600 hover:bg-cyan-500 px-6 py-2 rounded-lg text-white transition-colors">
+                                <i class="fas fa-save mr-2"></i>Salvar Dados
+                            </button>
+                            <button class="bg-slate-600 hover:bg-slate-500 px-6 py-2 rounded-lg text-white transition-colors">
+                                <i class="fas fa-eraser mr-2"></i>Limpar
+                            </button>
+                        </div>
+                    </div>
+                }
+                else if (activeTab == "configuracoes")
+                {
+                    <div @key="activeTab" class="space-y-6">
+                        <h5 class="text-lg font-semibold text-slate-200 mb-4 flex items-center">
+                            <i class="fas fa-cogs text-cyan-400 mr-2"></i>Configurações do Sistema
+                        </h5>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-3">
+                                <label class="block text-sm font-medium text-slate-300 mb-2">Tema</label>
+                                <select @bind="tema" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                                    <option value="dark">Escuro</option>
+                                    <option value="light">Claro</option>
+                                    <option value="auto">Automático</option>
+                                </select>
+                            </div>
+                            <div class="space-y-3">
+                                <label class="block text-sm font-medium text-slate-300 mb-2">Idioma</label>
+                                <select @bind="idioma" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                                    <option value="pt-BR">Português (Brasil)</option>
+                                    <option value="en">English</option>
+                                    <option value="es">Español</option>
+                                </select>
+                            </div>
+                            <div class="space-y-3">
+                                <label class="block text-sm font-medium text-slate-300 mb-2">Notificações</label>
+                                <div class="flex items-center space-x-4">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" @bind="notificacaoEmail" class="mr-2 text-cyan-500 bg-slate-700 border-slate-600 rounded" />
+                                        <span class="text-slate-300 text-sm">Email</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" @bind="notificacaoSms" class="mr-2 text-cyan-500 bg-slate-700 border-slate-600 rounded" />
+                                        <span class="text-slate-300 text-sm">SMS</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" @bind="notificacaoPush" class="mr-2 text-cyan-500 bg-slate-700 border-slate-600 rounded" />
+                                        <span class="text-slate-300 text-sm">Push</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <label class="block text-sm font-medium text-slate-300 mb-2">Privacidade</label>
+                                <div class="flex items-center space-x-4">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" @bind="compartilharDados" class="mr-2 text-cyan-500 bg-slate-700 border-slate-600 rounded" />
+                                        <span class="text-slate-300 text-sm">Compartilhar dados</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex space-x-3 mt-6">
+                            <button class="bg-cyan-600 hover:bg-cyan-500 px-6 py-2 rounded-lg text-white transition-colors">
+                                <i class="fas fa-save mr-2"></i>Salvar Configurações
+                            </button>
+                            <button class="bg-slate-600 hover:bg-slate-500 px-6 py-2 rounded-lg text-white transition-colors">
+                                <i class="fas fa-undo mr-2"></i>Restaurar Padrão
+                            </button>
+                        </div>
+                    </div>
+                }
+                else if (activeTab == "relatorios")
+                {
+                    <div @key="activeTab" class="space-y-6">
+                        <h5 class="text-lg font-semibold text-slate-200 mb-4 flex items-center">
+                            <i class="fas fa-chart-bar text-cyan-400 mr-2"></i>Relatórios e Estatísticas
+                        </h5>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-slate-700 rounded-lg p-4 border border-slate-600">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h6 class="text-sm font-medium text-slate-200">Total de Clientes</h6>
+                                        <p class="text-2xl font-bold text-cyan-400">1,234</p>
+                                    </div>
+                                    <i class="fas fa-users text-cyan-400 text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="bg-slate-700 rounded-lg p-4 border border-slate-600">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h6 class="text-sm font-medium text-slate-200">Piscinas Ativas</h6>
+                                        <p class="text-2xl font-bold text-cyan-400">567</p>
+                                    </div>
+                                    <i class="fas fa-swimming-pool text-cyan-400 text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="bg-slate-700 rounded-lg p-4 border border-slate-600">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h6 class="text-sm font-medium text-slate-200">Faturamento Mensal</h6>
+                                        <p class="text-2xl font-bold text-cyan-400">R$ 45.678</p>
+                                    </div>
+                                    <i class="fas fa-dollar-sign text-cyan-400 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-slate-700 rounded-lg p-4 border border-slate-600">
+                                <h6 class="text-sm font-medium text-slate-200 mb-3">Relatórios Disponíveis</h6>
+                                <div class="space-y-2">
+                                    <button class="w-full text-left p-2 hover:bg-slate-600 rounded transition-colors">
+                                        <i class="fas fa-file-pdf text-red-400 mr-2"></i>Relatório de Clientes
+                                    </button>
+                                    <button class="w-full text-left p-2 hover:bg-slate-600 rounded transition-colors">
+                                        <i class="fas fa-file-excel text-green-400 mr-2"></i>Relatório Financeiro
+                                    </button>
+                                    <button class="w-full text-left p-2 hover:bg-slate-600 rounded transition-colors">
+                                        <i class="fas fa-chart-line text-blue-400 mr-2"></i>Relatório de Crescimento
+                                    </button>
+                                    <button class="w-full text-left p-2 hover:bg-slate-600 rounded transition-colors">
+                                        <i class="fas fa-calendar text-purple-400 mr-2"></i>Relatório Mensal
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="bg-slate-700 rounded-lg p-4 border border-slate-600">
+                                <h6 class="text-sm font-medium text-slate-200 mb-3">Exportar Dados</h6>
+                                <div class="space-y-3">
+                                    <button class="w-full bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-white transition-colors">
+                                        <i class="fas fa-file-excel mr-2"></i>Exportar para Excel
+                                    </button>
+                                    <button class="w-full bg-red-600 hover:bg-red-500 px-4 py-2 rounded text-white transition-colors">
+                                        <i class="fas fa-file-pdf mr-2"></i>Exportar para PDF
+                                    </button>
+                                    <button class="w-full bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded text-white transition-colors">
+                                        <i class="fas fa-file-csv mr-2"></i>Exportar para CSV
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    [Inject] public NavigationManager NavigationManager { get; set; } = default!;
+    
+    private string activeTab = "dados";
+
+    // Propriedades para manter os valores dos campos
+    private string nome = "";
+    private string email = "";
+    private string telefone = "";
+    private string cidade = "";
+    private string endereco = "";
+    private string tema = "dark";
+    private string idioma = "pt-BR";
+    private bool notificacaoEmail = true;
+    private bool notificacaoSms = false;
+    private bool notificacaoPush = true;
+    private bool compartilharDados = true;
+
+    private void SetDadosTab()
+    {
+        activeTab = "dados";
+    }
+
+    private void SetConfiguracoesTab()
+    {
+        activeTab = "configuracoes";
+    }
+
+    private void SetRelatoriosTab()
+    {
+        activeTab = "relatorios";
+    }
+
+    private void VoltarParaClientes()
+    {
+        NavigationManager.NavigateTo("/clientes");
+    }
+} 
