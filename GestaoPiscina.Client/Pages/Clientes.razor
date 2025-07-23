@@ -173,69 +173,128 @@
                 <EditForm Model="currentCliente" OnValidSubmit="@(async () => await HandleSaveCliente(currentCliente))">
                     <DataAnnotationsValidator />
 
-                    <!-- Seção: Dados do Cliente -->
+                    <!-- Sistema de Abas -->
                     <div class="mb-8">
-                        <h5 class="text-md font-semibold text-slate-200 mb-4 border-b border-slate-600 pb-2">
-                            <i class="fas fa-user text-cyan-400 mr-2"></i>Dados do Cliente
-                        </h5>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="space-y-3">
-                                <label class="block text-sm font-medium text-slate-300 mb-2">Nome *</label>
-                                <InputText @bind-Value="currentCliente.Nome" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="Nome completo" />
-                                <ValidationMessage For="@(() => currentCliente.Nome)" class="text-red-500 text-sm" />
-                            </div>
-                            <div class="space-y-3">
-                                <label class="block text-sm font-medium text-slate-300 mb-2">Tipo *</label>
-                                <InputSelect @bind-Value="currentCliente.Tipo" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500">
-                                    <option value="">Selecione...</option>
-                                    <option value="residencial">Residencial</option>
-                                    <option value="comercial">Comercial</option>
-                                    <option value="condominio">Condomínio</option>
-                                </InputSelect>
-                                <ValidationMessage For="@(() => currentCliente.Tipo)" class="text-red-500 text-sm" />
-                            </div>
-                            <div class="space-y-3">
-                                <label class="block text-sm font-medium text-slate-300 mb-2">Telefone</label>
-                                <InputText @bind-Value="currentCliente.Telefone" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="(11) 99999-9999" />
-                            </div>
-                            <div class="space-y-3">
-                                <label class="block text-sm font-medium text-slate-300 mb-2">Email</label>
-                                <InputText @bind-Value="currentCliente.Email" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="email@exemplo.com" />
-                                <ValidationMessage For="@(() => currentCliente.Email)" class="text-red-500 text-sm" />
-                            </div>
-                            <div class="md:col-span-2 space-y-3">
-                                <label class="block text-sm font-medium text-slate-300 mb-2">Endereço</label>
-                                <InputText @bind-Value="currentCliente.Endereco" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="Endereço completo" />
-                                <ValidationMessage For="@(() => currentCliente.Endereco)" class="text-red-500 text-sm" />
-                            </div>
-                            <div class="md:col-span-2 space-y-3">
-                                <label class="block text-sm font-medium text-slate-300 mb-2">Observações</label>
-                                <InputTextArea @bind-Value="currentCliente.Observacoes" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" rows="4" placeholder="Observações adicionais..." />
-                                <ValidationMessage For="@(() => currentCliente.Observacoes)" class="text-red-500 text-sm" />
-                            </div>
-                        </div>
+                        <nav class="flex flex-wrap gap-2 md:gap-4">
+                            @if (activeTab == "dados")
+                            {
+                                <button @onclick="SetDadosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600 rounded-tl-lg">
+                                    <i class="fas fa-user mr-2"></i>Dados
+                                </button>
+                            }
+                            else
+                            {
+                                <button @onclick="SetDadosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent rounded-tl-lg">
+                                    <i class="fas fa-user mr-2"></i>Dados
+                                </button>
+                            }
+                            
+                            @if (activeTab == "piscinas")
+                            {
+                                <button @onclick="SetPiscinasTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600">
+                                    <i class="fas fa-swimming-pool mr-2"></i>Piscinas
+                                </button>
+                            }
+                            else
+                            {
+                                <button @onclick="SetPiscinasTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent">
+                                    <i class="fas fa-swimming-pool mr-2"></i>Piscinas
+                                </button>
+                            }
+                            
+                            @if (activeTab == "equipamentos")
+                            {
+                                <button @onclick="SetEquipamentosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600">
+                                    <i class="fas fa-cogs mr-2"></i>Equipamentos
+                                </button>
+                            }
+                            else
+                            {
+                                <button @onclick="SetEquipamentosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent">
+                                    <i class="fas fa-cogs mr-2"></i>Equipamentos
+                                </button>
+                            }
+                            
+                            @if (activeTab == "produtos")
+                            {
+                                <button @onclick="SetProdutosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600 rounded-tr-lg">
+                                    <i class="fas fa-box mr-2"></i>Produtos
+                                </button>
+                            }
+                            else
+                            {
+                                <button @onclick="SetProdutosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent rounded-tr-lg">
+                                    <i class="fas fa-box mr-2"></i>Produtos
+                                </button>
+                            }
+                        </nav>
                     </div>
 
-                    @if (currentCliente.IDCliente > 0)
-                    {
-                        <!-- Seção: Piscinas -->
-                        <div class="mb-8">
-                            <div class="flex items-center justify-between mb-4">
-                                <h5 class="text-md font-semibold text-slate-200 border-b border-slate-600 pb-2">
-                                    <i class="fas fa-swimming-pool text-cyan-400 mr-2"></i>Piscinas
+                    <!-- Conteúdo das Abas -->
+                    <div class="mt-8 bg-slate-900 rounded-lg shadow p-6">
+                        @if (activeTab == "dados")
+                        {
+                            <div @key="activeTab" class="space-y-6">
+                                <h5 class="text-lg font-semibold text-slate-200 mb-4 flex items-center">
+                                    <i class="fas fa-user text-cyan-400 mr-2"></i>Dados do Cliente
                                 </h5>
-                                <button type="button" @onclick="ShowCreatePiscina" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-1 rounded text-white text-sm transition-colors">
-                                    <i class="fas fa-plus mr-1"></i>Nova Piscina
-                                </button>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="space-y-3">
+                                        <label class="block text-sm font-medium text-slate-300 mb-2">Nome *</label>
+                                        <InputText @bind-Value="currentCliente.Nome" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="Nome completo" />
+                                        <ValidationMessage For="@(() => currentCliente.Nome)" class="text-red-500 text-sm" />
+                                    </div>
+                                    <div class="space-y-3">
+                                        <label class="block text-sm font-medium text-slate-300 mb-2">Tipo *</label>
+                                        <InputSelect @bind-Value="currentCliente.Tipo" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500">
+                                            <option value="">Selecione...</option>
+                                            <option value="residencial">Residencial</option>
+                                            <option value="comercial">Comercial</option>
+                                            <option value="condominio">Condomínio</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => currentCliente.Tipo)" class="text-red-500 text-sm" />
+                                    </div>
+                                    <div class="space-y-3">
+                                        <label class="block text-sm font-medium text-slate-300 mb-2">Telefone</label>
+                                        <InputText @bind-Value="currentCliente.Telefone" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="(11) 99999-9999" />
+                                    </div>
+                                    <div class="space-y-3">
+                                        <label class="block text-sm font-medium text-slate-300 mb-2">Email</label>
+                                        <InputText @bind-Value="currentCliente.Email" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="email@exemplo.com" />
+                                        <ValidationMessage For="@(() => currentCliente.Email)" class="text-red-500 text-sm" />
+                                    </div>
+                                    <div class="md:col-span-2 space-y-3">
+                                        <label class="block text-sm font-medium text-slate-300 mb-2">Endereço</label>
+                                        <InputText @bind-Value="currentCliente.Endereco" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="Endereço completo" />
+                                        <ValidationMessage For="@(() => currentCliente.Endereco)" class="text-red-500 text-sm" />
+                                    </div>
+                                    <div class="md:col-span-2 space-y-3">
+                                        <label class="block text-sm font-medium text-slate-300 mb-2">Observações</label>
+                                        <InputTextArea @bind-Value="currentCliente.Observacoes" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" rows="4" placeholder="Observações adicionais..." />
+                                        <ValidationMessage For="@(() => currentCliente.Observacoes)" class="text-red-500 text-sm" />
+                                    </div>
+                                </div>
                             </div>
-                            
-                            @if (piscinas != null && piscinas.Any())
-                            {
-                                <div class="bg-slate-700 rounded-lg p-4">
+                        }
+                        else if (activeTab == "piscinas")
+                        {
+                            <div @key="activeTab" class="space-y-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h5 class="text-lg font-semibold text-slate-200 flex items-center">
+                                        <i class="fas fa-swimming-pool text-cyan-400 mr-2"></i>Piscinas
+                                    </h5>
+                                    <button type="button" @onclick="ShowCreatePiscina" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-1 rounded text-white text-sm transition-colors">
+                                        <i class="fas fa-plus mr-1"></i>Nova Piscina
+                                    </button>
+                                </div>
+                                
+                                @if (piscinas != null && piscinas.Any())
+                                {
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         @foreach (var piscina in piscinas)
                                         {
-                                            <div class="bg-slate-600 rounded-lg p-3">
+                                            <div class="bg-slate-700 rounded-lg p-3 border border-slate-600">
                                                 <div class="flex justify-between items-start mb-2">
                                                     <span class="text-sm font-medium text-slate-200">@piscina.Tipo</span>
                                                     <div class="flex space-x-1">
@@ -257,35 +316,35 @@
                                             </div>
                                         }
                                     </div>
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="text-center py-4 text-slate-400">
-                                    <i class="fas fa-swimming-pool text-2xl mb-2"></i>
-                                    <p>Nenhuma piscina cadastrada</p>
-                                </div>
-                            }
-                        </div>
-
-                        <!-- Seção: Equipamentos -->
-                        <div class="mb-8">
-                            <div class="flex items-center justify-between mb-4">
-                                <h5 class="text-md font-semibold text-slate-200 border-b border-slate-600 pb-2">
-                                    <i class="fas fa-cogs text-cyan-400 mr-2"></i>Equipamentos
-                                </h5>
-                                <button type="button" @onclick="ShowCreateEquipamento" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-1 rounded text-white text-sm transition-colors">
-                                    <i class="fas fa-plus mr-1"></i>Novo Equipamento
-                                </button>
+                                }
+                                else
+                                {
+                                    <div class="text-center py-8 text-slate-400">
+                                        <i class="fas fa-swimming-pool text-4xl mb-4"></i>
+                                        <p class="text-lg">Nenhuma piscina cadastrada</p>
+                                        <p class="text-sm mt-2">Clique em "Nova Piscina" para adicionar</p>
+                                    </div>
+                                }
                             </div>
-                            
-                            @if (equipamentos != null && equipamentos.Any())
-                            {
-                                <div class="bg-slate-700 rounded-lg p-4">
+                        }
+                        else if (activeTab == "equipamentos")
+                        {
+                            <div @key="activeTab" class="space-y-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h5 class="text-lg font-semibold text-slate-200 flex items-center">
+                                        <i class="fas fa-cogs text-cyan-400 mr-2"></i>Equipamentos
+                                    </h5>
+                                    <button type="button" @onclick="ShowCreateEquipamento" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-1 rounded text-white text-sm transition-colors">
+                                        <i class="fas fa-plus mr-1"></i>Novo Equipamento
+                                    </button>
+                                </div>
+                                
+                                @if (equipamentos != null && equipamentos.Any())
+                                {
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         @foreach (var equipamento in equipamentos)
                                         {
-                                            <div class="bg-slate-600 rounded-lg p-3">
+                                            <div class="bg-slate-700 rounded-lg p-3 border border-slate-600">
                                                 <div class="flex justify-between items-start mb-2">
                                                     <span class="text-sm font-medium text-slate-200">@equipamento.Tipo</span>
                                                     <div class="flex space-x-1">
@@ -307,35 +366,35 @@
                                             </div>
                                         }
                                     </div>
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="text-center py-4 text-slate-400">
-                                    <i class="fas fa-cogs text-2xl mb-2"></i>
-                                    <p>Nenhum equipamento cadastrado</p>
-                                </div>
-                            }
-                        </div>
-
-                        <!-- Seção: Produtos -->
-                        <div class="mb-8">
-                            <div class="flex items-center justify-between mb-4">
-                                <h5 class="text-md font-semibold text-slate-200 border-b border-slate-600 pb-2">
-                                    <i class="fas fa-box text-cyan-400 mr-2"></i>Produtos
-                                </h5>
-                                <button type="button" @onclick="ShowCreateProduto" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-1 rounded text-white text-sm transition-colors">
-                                    <i class="fas fa-plus mr-1"></i>Novo Produto
-                                </button>
+                                }
+                                else
+                                {
+                                    <div class="text-center py-8 text-slate-400">
+                                        <i class="fas fa-cogs text-4xl mb-4"></i>
+                                        <p class="text-lg">Nenhum equipamento cadastrado</p>
+                                        <p class="text-sm mt-2">Clique em "Novo Equipamento" para adicionar</p>
+                                    </div>
+                                }
                             </div>
-                            
-                            @if (produtos != null && produtos.Any())
-                            {
-                                <div class="bg-slate-700 rounded-lg p-4">
+                        }
+                        else if (activeTab == "produtos")
+                        {
+                            <div @key="activeTab" class="space-y-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h5 class="text-lg font-semibold text-slate-200 flex items-center">
+                                        <i class="fas fa-box text-cyan-400 mr-2"></i>Produtos
+                                    </h5>
+                                    <button type="button" @onclick="ShowCreateProduto" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-1 rounded text-white text-sm transition-colors">
+                                        <i class="fas fa-plus mr-1"></i>Novo Produto
+                                    </button>
+                                </div>
+                                
+                                @if (produtos != null && produtos.Any())
+                                {
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         @foreach (var produto in produtos)
                                         {
-                                            <div class="bg-slate-600 rounded-lg p-3">
+                                            <div class="bg-slate-700 rounded-lg p-3 border border-slate-600">
                                                 <div class="flex justify-between items-start mb-2">
                                                     <span class="text-sm font-medium text-slate-200">@produto.Nome</span>
                                                     <div class="flex space-x-1">
@@ -357,16 +416,18 @@
                                             </div>
                                         }
                                     </div>
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="text-center py-4 text-slate-400">
-                                    <i class="fas fa-box text-2xl mb-2"></i>
-                                    <p>Nenhum produto cadastrado</p>
-                                </div>
-                            }
-                        </div>
+                                }
+                                else
+                                {
+                                    <div class="text-center py-8 text-slate-400">
+                                        <i class="fas fa-box text-4xl mb-4"></i>
+                                        <p class="text-lg">Nenhum produto cadastrado</p>
+                                        <p class="text-sm mt-2">Clique em "Novo Produto" para adicionar</p>
+                                    </div>
+                                }
+                            </div>
+                        }
+                                        </div>
                     }
 
                     <div class="flex space-x-3 mt-8">
@@ -564,6 +625,7 @@
     private string selectedType = "";
     private string currentView = "lista";
     private string viewMode = "lista"; // "lista" ou "cards"
+    private string activeTab = "dados";
 
     private IEnumerable<Cliente> filteredClientes => clientes?.Where(c => 
         (string.IsNullOrEmpty(searchTerm) || c.Nome.ToLower().Contains(searchTerm.ToLower())) &&
@@ -943,5 +1005,26 @@
         return viewMode == "cards" 
             ? "px-3 py-2 rounded-lg transition-colors bg-cyan-600 text-white" 
             : "px-3 py-2 rounded-lg transition-colors bg-slate-700 text-slate-300 hover:bg-slate-600";
+    }
+
+    // Métodos para controle das abas
+    private void SetDadosTab()
+    {
+        activeTab = "dados";
+    }
+
+    private void SetPiscinasTab()
+    {
+        activeTab = "piscinas";
+    }
+
+    private void SetEquipamentosTab()
+    {
+        activeTab = "equipamentos";
+    }
+
+    private void SetProdutosTab()
+    {
+        activeTab = "produtos";
     }
 } 
