@@ -1,46 +1,35 @@
-<aside class="w-64 bg-slate-900 p-6 hidden md:flex flex-col min-h-screen border-r border-slate-800">
+ <aside class="w-64 bg-slate-900 p-6 hidden md:flex flex-col min-h-screen border-r border-slate-800">
     <div class="flex items-center text-2xl font-bold mb-10 text-cyan-400 tracking-wide">
         <span class="w-7 h-7 rounded-md bg-gradient-to-tr from-cyan-500 to-blue-400 mr-3 shadow-lg"></span>
-        PiscinaGestão
+        Gestão de Piscinas
     </div>
     <nav class="flex flex-col gap-1">
-        <NavLink href="" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner" Match="NavLinkMatch.All">
-            <i class="fas fa-tachometer-alt text-lg mr-2"></i><span>Dashboard</span>
-        </NavLink>
-        <NavLink href="clientes" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
-            <i class="fas fa-user-friends text-lg mr-2"></i><span>Clientes</span>
-        </NavLink>
-        <NavLink href="piscinas" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
-            <i class="fas fa-water text-lg mr-2"></i><span>Piscinas</span>
-        </NavLink>
-        <NavLink href="produtos" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
-            <i class="fas fa-box text-lg mr-2"></i><span>Produtos</span>
-        </NavLink>
-        <NavLink href="equipamentos" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
-            <i class="fas fa-robot text-lg mr-2"></i><span>Equipamentos</span>
-        </NavLink>
-        <NavLink href="ordens-servico" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
-            <i class="fas fa-tasks text-lg mr-2"></i><span>Ordens de Serviço</span>
-        </NavLink>
-        <div class="my-2 border-t border-slate-700"></div>
-        <NavLink href="rotas" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
-            <i class="fas fa-route text-lg mr-2"></i><span>Gestão de Rota</span>
-        </NavLink>
-        <NavLink href="reagendamentos" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
-            <i class="fas fa-calendar-alt text-lg mr-2"></i><span>Reagendamentos</span>
-        </NavLink>
-        <NavLink href="relatorios" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
-            <i class="fas fa-chart-line text-lg mr-2"></i><span>Relatórios</span>
-        </NavLink>
-        <NavLink href="supervisao" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
-            <i class="fas fa-star text-lg mr-2"></i><span>Supervisão</span>
-        </NavLink>
-        <NavLink href="estoque" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
-            <i class="fas fa-warehouse text-lg mr-2"></i><span>Estoque</span>
-        </NavLink>
-        <div class="my-2 border-t border-slate-700"></div>
-        <NavLink href="configuracoes" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base" ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
-            <i class="fas fa-cogs text-lg mr-2"></i><span>Configurações</span>
-        </NavLink>
+        @foreach (var item in menuItems)
+        {
+            <NavLink href="@item.Href" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base"
+                    ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
+                <i class="fas @item.Icon text-lg mr-2"></i><span>@item.Label</span>
+            </NavLink>
+        }
     </nav>
-</aside> 
+</aside>
+
+@code {
+    private record MenuItem(string Href, string Icon, string Label);
+
+    private List<MenuItem> menuItems = new()
+    {
+        new("","fa-tachometer-alt","Dashboard"),
+        new("clientes","fa-user-friends","Clientes"),
+        new("piscinas","fa-water","Piscinas"),
+        new("produtos","fa-box","Produtos"),
+        new("equipamentos","fa-robot","Equipamentos"),
+        new("ordens-servico","fa-tasks","Ordens de Serviço"),
+        new("rotas","fa-route","Gestão de Rota"),
+        new("reagendamentos","fa-calendar-alt","Reagendamentos"),
+        new("relatorios","fa-chart-line","Relatórios"),
+        new("supervisao","fa-star","Supervisão"),
+        new("estoque","fa-warehouse","Estoque"),
+        new("configuracoes","fa-cogs","Configurações"),
+    };
+}
