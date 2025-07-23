@@ -96,5 +96,61 @@ namespace GestaoPiscina.Client.Services
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<OrdemDeServico>() ?? ordemDeServico;
         }
+
+        // Equipamentos
+        public async Task<List<Equipamento>> GetEquipamentosAsync()
+        {
+            return await _httpClient.GetFromJsonAsync<List<Equipamento>>($"{_baseUrl}equipamentos") ?? new List<Equipamento>();
+        }
+
+        public async Task<List<Equipamento>> GetEquipamentosByClienteAsync(int clienteId)
+        {
+            return await _httpClient.GetFromJsonAsync<List<Equipamento>>($"{_baseUrl}equipamentos/cliente/{clienteId}") ?? new List<Equipamento>();
+        }
+
+        public async Task<Equipamento> CreateEquipamentoAsync(Equipamento equipamento)
+        {
+            var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}equipamentos", equipamento);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<Equipamento>() ?? equipamento;
+        }
+
+        public async Task UpdateEquipamentoAsync(Equipamento equipamento)
+        {
+            var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}equipamentos/{equipamento.IDEquipamento}", equipamento);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task DeleteEquipamentoAsync(int id)
+        {
+            var response = await _httpClient.DeleteAsync($"{_baseUrl}equipamentos/{id}");
+            response.EnsureSuccessStatusCode();
+        }
+
+        // Métodos adicionais para Piscinas
+        public async Task UpdatePiscinaAsync(Piscina piscina)
+        {
+            var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}piscinas/{piscina.IDPiscina}", piscina);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task DeletePiscinaAsync(int id)
+        {
+            var response = await _httpClient.DeleteAsync($"{_baseUrl}piscinas/{id}");
+            response.EnsureSuccessStatusCode();
+        }
+
+        // Métodos adicionais para Produtos
+        public async Task UpdateProdutoAsync(Produto produto)
+        {
+            var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}produtos/{produto.IDProduto}", produto);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task DeleteProdutoAsync(int id)
+        {
+            var response = await _httpClient.DeleteAsync($"{_baseUrl}produtos/{id}");
+            response.EnsureSuccessStatusCode();
+        }
     }
 } 

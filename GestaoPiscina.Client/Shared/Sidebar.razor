@@ -6,8 +6,9 @@
     <nav class="flex flex-col gap-1">
         @foreach (var item in menuItems)
         {
-            <NavLink href="@item.Href" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors duration-150 font-medium text-base"
-                    ActiveClass="bg-cyan-900/40 text-cyan-300 font-bold shadow-inner">
+            <NavLink href="@item.Href" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150 font-medium text-base"
+                    ActiveClass="bg-cyan-600 text-white font-semibold shadow-lg"
+                    Match="@(item.Href == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)">
                 <i class="fas @item.Icon text-lg mr-2"></i><span>@item.Label</span>
             </NavLink>
         }
@@ -19,7 +20,7 @@
 
     private List<MenuItem> menuItems = new()
     {
-        new("","fa-tachometer-alt","Dashboard"),
+        new("/","fa-tachometer-alt","Dashboard"),
         new("clientes","fa-user-friends","Clientes"),
         new("piscinas","fa-water","Piscinas"),
         new("produtos","fa-box","Produtos"),

@@ -1,33 +1,50 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿<div class="top-row ps-3 navbar navbar-dark bg-slate-800">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">GestaoPiscina.Client</a>
+        <a class="navbar-brand text-cyan-400 font-bold" href="">Gestão Piscina</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
     </div>
 </div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+<div class="@NavMenuCssClass nav-scrollable bg-slate-900" @onclick="ToggleNavMenu">
     <nav class="flex-column">
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            <NavLink class="@GetNavLinkClass("")" href="" Match="NavLinkMatch.All">
+                <i class="fas fa-home mr-2"></i> Dashboard
             </NavLink>
         </div>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+            <NavLink class="@GetNavLinkClass("clientes")" href="clientes">
+                <i class="fas fa-users mr-2"></i> Clientes
             </NavLink>
         </div>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+            <NavLink class="@GetNavLinkClass("piscinas")" href="piscinas">
+                <i class="fas fa-swimming-pool mr-2"></i> Piscinas
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="@GetNavLinkClass("equipamentos")" href="equipamentos">
+                <i class="fas fa-tools mr-2"></i> Equipamentos
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="@GetNavLinkClass("produtos")" href="produtos">
+                <i class="fas fa-flask mr-2"></i> Produtos
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="@GetNavLinkClass("configuracoes")" href="configuracoes">
+                <i class="fas fa-cog mr-2"></i> Configurações
             </NavLink>
         </div>
     </nav>
 </div>
 
 @code {
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+    
     private bool collapseNavMenu = true;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
@@ -35,5 +52,15 @@
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    private string GetNavLinkClass(string href)
+    {
+        var currentUri = NavigationManager.Uri;
+        var isActive = href == "" ? currentUri.EndsWith("/") : currentUri.Contains(href);
+        
+        return isActive 
+            ? "nav-link bg-cyan-600 text-white font-medium transition-colors rounded-lg mx-2 px-3 py-2" 
+            : "nav-link text-slate-300 hover:bg-slate-700 hover:text-white transition-colors rounded-lg mx-2 px-3 py-2";
     }
 }

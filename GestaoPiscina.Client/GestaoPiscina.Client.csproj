@@ -4,6 +4,9 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <RunAOTCompilation>false</RunAOTCompilation>
+    <BlazorWebAssemblyEnableLinking>false</BlazorWebAssemblyEnableLinking>
+    <BlazorWebAssemblyEnableCompression>false</BlazorWebAssemblyEnableCompression>
   </PropertyGroup>
 
   <ItemGroup>

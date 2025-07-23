@@ -7,7 +7,9 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:7001/") });
+// Configurar HttpClient com a URL da API
+var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:7001/";
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
 builder.Services.AddScoped<ApiService>();
 
 await builder.Build().RunAsync();
