@@ -103,7 +103,7 @@ else if (currentView == "cadastro")
             <EditForm Model="currentCliente" OnValidSubmit="@(async () => await HandleSaveCliente(currentCliente))">
                 <DataAnnotationsValidator />
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 gap-x-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-3">
                         <label class="block text-sm font-medium text-slate-300 mb-2">Nome *</label>
                         <InputText @bind-Value="currentCliente.Nome" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="Nome completo" />
