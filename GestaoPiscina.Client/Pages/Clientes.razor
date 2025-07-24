@@ -170,7 +170,7 @@
                     </button>
                 </div>
 
-                <EditForm Model="currentCliente" OnValidSubmit="@(async () => await HandleSaveCliente(currentCliente))">
+                <EditForm Model="currentCliente" OnValidSubmit="@(async () => await HandleSaveCliente(currentCliente))" Context="clienteContext">
                     <DataAnnotationsValidator />
 
                     <!-- Sistema de Abas -->
@@ -205,13 +205,13 @@
                             @if (activeTab == "equipamentos")
                             {
                                 <button @onclick="SetEquipamentosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600">
-                                    <i class="fas fa-cogs mr-2"></i>Equipamentos
+                                    <i class="fas fa-robot mr-2"></i>Equipamentos
                                 </button>
                             }
                             else
                             {
                                 <button @onclick="SetEquipamentosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent">
-                                    <i class="fas fa-cogs mr-2"></i>Equipamentos
+                                    <i class="fas fa-robot mr-2"></i>Equipamentos
                                 </button>
                             }
                             
@@ -384,10 +384,66 @@
                                     <h5 class="text-lg font-semibold text-slate-200 flex items-center">
                                         <i class="fas fa-box text-cyan-400 mr-2"></i>Produtos
                                     </h5>
-                                    <button type="button" @onclick="ShowCreateProduto" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-1 rounded text-white text-sm transition-colors">
-                                        <i class="fas fa-plus mr-1"></i>Novo Produto
-                                    </button>
+                                    @if (!showProdutoForm)
+                                    {
+                                        <button type="button" @onclick="ShowCreateProduto" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-2 rounded-lg text-white text-sm transition-colors">
+                                            <i class="fas fa-plus mr-1"></i>Novo Produto
+                                        </button>
+                                    }
                                 </div>
+
+                                @if (showProdutoForm)
+                                {
+                                    <div class="bg-slate-700 rounded-lg p-6 border border-slate-600">
+                                        <div class="flex items-center justify-between mb-4">
+                                            <h6 class="text-md font-semibold text-slate-200">
+                                                @(currentProduto.IDProduto > 0 ? "Editar Produto" : "Novo Produto")
+                                            </h6>
+                                            <button @onclick="CloseProdutoForm" class="text-slate-400 hover:text-slate-300">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <EditForm Model="currentProduto" OnValidSubmit="@(async () => await HandleSaveProduto())" Context="produtoContext">
+                                            <DataAnnotationsValidator />
+                                            
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div class="space-y-3">
+                                                    <label class="block text-sm font-medium text-slate-300 mb-2">Nome *</label>
+                                                    <InputText @bind-Value="currentProduto.Nome" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" placeholder="Nome do produto" />
+                                                    <ValidationMessage For="@(() => currentProduto.Nome)" class="text-red-500 text-sm" />
+                                                </div>
+                                                
+                                                <div class="space-y-3">
+                                                    <label class="block text-sm font-medium text-slate-300 mb-2">Unidade *</label>
+                                                    <InputSelect @bind-Value="currentProduto.Unidade" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100">
+                                                        <option value="">Selecione...</option>
+                                                        <option value="L">Litros (L)</option>
+                                                        <option value="kg">Quilogramas (kg)</option>
+                                                        <option value="g">Gramas (g)</option>
+                                                        <option value="ml">Mililitros (ml)</option>
+                                                        <option value="un">Unidade (un)</option>
+                                                    </InputSelect>
+                                                    <ValidationMessage For="@(() => currentProduto.Unidade)" class="text-red-500 text-sm" />
+                                                </div>
+                                                
+                                                <div class="md:col-span-2 space-y-3">
+                                                    <label class="block text-sm font-medium text-slate-300 mb-2">Concentração</label>
+                                                    <InputText @bind-Value="currentProduto.Concentracao" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" placeholder="Ex: 10%, 5ppm..." />
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="flex space-x-3 mt-8">
+                                                <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-2 rounded-lg text-white transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-slate-800">
+                                                    <i class="fas fa-save mr-2"></i>Salvar
+                                                </button>
+                                                <button type="button" @onclick="CloseProdutoForm" class="bg-slate-600 hover:bg-slate-500 px-3 py-2 rounded-lg text-white transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-800">
+                                                    <i class="fas fa-times mr-2"></i>Cancelar
+                                                </button>
+                                            </div>
+                                        </EditForm>
+                                    </div>
+                                }
                                 
                                 @if (produtos != null && produtos.Any())
                                 {
@@ -417,7 +473,7 @@
                                         }
                                     </div>
                                 }
-                                else
+                                else if (!showProdutoForm)
                                 {
                                     <div class="text-center py-8 text-slate-400">
                                         <i class="fas fa-box text-4xl mb-4"></i>
@@ -427,7 +483,7 @@
                                 }
                             </div>
                         }
-                                        </div>
+                    </div>
                     }
 
                     <div class="flex space-x-3 mt-8">
@@ -546,59 +602,8 @@
             </div>
         </div>
     }
-
-    <!-- Modais para Produtos -->
-    @if (showProdutoModal)
-    {
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-slate-800 rounded-xl p-6 w-full max-w-md">
-                <h5 class="text-lg font-semibold text-slate-100 mb-4">
-                    @(currentProduto.IDProduto > 0 ? "Editar Produto" : "Novo Produto")
-                </h5>
-                
-                <EditForm Model="currentProduto" OnValidSubmit="@(async () => await HandleSaveProduto())">
-                    <DataAnnotationsValidator />
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Nome *</label>
-                            <InputText @bind-Value="currentProduto.Nome" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Nome do produto" />
-                            <ValidationMessage For="@(() => currentProduto.Nome)" class="text-red-500 text-sm" />
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Concentração</label>
-                            <InputText @bind-Value="currentProduto.Concentracao" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Ex: 10%, 5ppm..." />
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Unidade *</label>
-                            <InputSelect @bind-Value="currentProduto.Unidade" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-                                <option value="">Selecione...</option>
-                                <option value="L">Litros (L)</option>
-                                <option value="kg">Quilogramas (kg)</option>
-                                <option value="g">Gramas (g)</option>
-                                <option value="ml">Mililitros (ml)</option>
-                                <option value="un">Unidade (un)</option>
-                            </InputSelect>
-                            <ValidationMessage For="@(() => currentProduto.Unidade)" class="text-red-500 text-sm" />
-                        </div>
-                    </div>
-                    
-                    <div class="flex space-x-3 mt-6">
-                        <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded text-white">
-                            Salvar
-                        </button>
-                        <button type="button" @onclick="CloseProdutoModal" class="bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded text-white">
-                            Cancelar
-                        </button>
-                    </div>
-                </EditForm>
-            </div>
-        </div>
-    }
-
-    <LoadingSpinner @bind-IsVisible="isLoading" Message="Salvando..." />
+    
+    <LoadingSpinner IsVisible="isLoading" Message="Salvando..." />
     <ConfirmDialog @bind-IsVisible="showConfirmDialog" 
                    Title="Confirmar Exclusão" 
                    Message="Tem certeza que deseja excluir este item?"
@@ -615,7 +620,7 @@
     private bool showConfirmDialog = false;
     private bool showPiscinaModal = false;
     private bool showEquipamentoModal = false;
-    private bool showProdutoModal = false;
+    private bool showProdutoForm = false;
     private Cliente currentCliente = new Cliente();
     private Piscina currentPiscina = new Piscina();
     private Equipamento currentEquipamento = new Equipamento();
@@ -832,7 +837,7 @@
     private void ShowCreateProduto()
     {
         currentProduto = new Produto();
-        showProdutoModal = true;
+        showProdutoForm = true;
     }
 
     private void ShowEditProduto(Produto produto)
@@ -844,12 +849,12 @@
             Concentracao = produto.Concentracao,
             Unidade = produto.Unidade
         };
-        showProdutoModal = true;
+        showProdutoForm = true;
     }
 
-    private void CloseProdutoModal()
+    private void CloseProdutoForm()
     {
-        showProdutoModal = false;
+        showProdutoForm = false;
         currentProduto = new Produto();
     }
 
@@ -869,7 +874,7 @@
                 ShowToast("Sucesso", "Produto criado com sucesso!", "success");
             }
             await LoadRelatedData();
-            CloseProdutoModal();
+            CloseProdutoForm();
         }
         catch (Exception ex)
         {

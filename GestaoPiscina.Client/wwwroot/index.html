@@ -28,23 +28,19 @@
         </div>
     </div>
 
-    <div id="blazor-error-ui">
-        An unhandled error has occurred.
-        <a href="" class="reload">Reload</a>
-        <a class="dismiss">🗙</a>
+    <div id="blazor-error-ui" class="fixed bottom-0 left-0 w-full bg-red-600 text-white p-4 shadow-lg z-50 hidden">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle mr-3"></i>
+                <span>Ocorreu um erro inesperado.</span>
+            </div>
+            <div class="flex items-center space-x-3">
+                <a href="" class="reload bg-red-700 hover:bg-red-800 px-3 py-1 rounded text-sm transition-colors">Recarregar</a>
+                <a class="dismiss bg-red-800 hover:bg-red-900 px-3 py-1 rounded text-sm transition-colors cursor-pointer">Fechar</a>
+            </div>
+        </div>
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-                .then(function (registration) {
-                    console.log('SW registered: ', registration);
-                })
-                .catch(function (registrationError) {
-                    console.log('SW registration failed: ', registrationError);
-                });
-        }
-    </script>
 </body>
 
 </html>

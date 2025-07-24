@@ -27,3 +27,4 @@ wwwroot/dist/
 # Outros arquivos temporários
 *.log
 *.tmp 
+GestaoPiscina.Server/GestaoPiscina.db-wal

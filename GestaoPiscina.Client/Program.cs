@@ -12,4 +12,7 @@ var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:7001/"
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
 builder.Services.AddScoped<ApiService>();
 
+// Configurar logging para debug
+builder.Logging.SetMinimumLevel(LogLevel.Information);
+
 await builder.Build().RunAsync();
