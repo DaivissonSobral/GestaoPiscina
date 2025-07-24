@@ -81,7 +81,7 @@
                                         <td class="px-3 md:px-4 py-3 md:py-4">
                                             <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
                                                 @(cliente.Tipo == "condominio" ? "bg-blue-100 text-blue-800" : 
-                                                cliente.Tipo == "comercial" ? "bg-purple-100 text-purple-800" : "bg-green-100 text-green-800")">
+                                                cliente.Tipo == "comercial" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800")">
                                                 @cliente.Tipo
                                             </span>
                                         </td>
@@ -119,7 +119,6 @@
                                     <div class="flex-1">
                                         <h4 class="text-sm font-medium text-slate-100">@cliente.Nome</h4>
                                         <span class="text-sm text-slate-400">@cliente.Telefone</span>
-                                        <span class="text-sm text-slate-300">•</span>
                                         <span class="text-sm text-slate-400">@cliente.Email</span>
                                     </div>
                                     <div class="flex space-x-3 ml-4">
@@ -134,10 +133,10 @@
                                 
                                 <div class="space-y-2">
                                     <div class="flex items-center space-x-2">
-                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full @(cliente.Tipo == "condominio" ? "bg-blue-100 text-blue-800" : cliente.Tipo == "comercial" ? "bg-purple-100 text-purple-800" : "bg-green-100 text-green-800")">
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full @(cliente.Tipo == "condominio" ? "bg-blue-100 text-blue-800" : 
+                                        cliente.Tipo == "comercial" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800")">
                                             @cliente.Tipo
                                         </span>
-                                        <span class="text-sm text-slate-300">•</span>
                                         <span class="text-sm text-slate-300">@cliente.Piscinas.Count piscina(s)</span>
                                     </div>
                                     @if (!string.IsNullOrEmpty(cliente.Endereco))
