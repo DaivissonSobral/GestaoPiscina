@@ -17,6 +17,7 @@ namespace GestaoPiscina.Server.Data
         public DbSet<EstoqueCliente> EstoquesCliente { get; set; }
         public DbSet<Equipamento> Equipamentos { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
+        public DbSet<Perfil> Perfis { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -91,14 +92,30 @@ namespace GestaoPiscina.Server.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
+            modelBuilder.Entity<Perfil>(entity =>
+            {
+                entity.HasKey(e => e.IDPerfil);
+                entity.Property(e => e.Nome).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Descricao).HasMaxLength(255);
+            });
+
             modelBuilder.Entity<Usuario>(entity =>
             {
                 entity.HasKey(e => e.IDUsuario);
                 entity.Property(e => e.Nome).IsRequired().HasMaxLength(150);
-                entity.Property(e => e.Perfil).IsRequired().HasMaxLength(20);
-                entity.Property(e => e.Login).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Login).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.SenhaHash).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.Ativo).IsRequired();
+                entity.Property(e => e.DataCriacao).IsRequired();
                 entity.HasIndex(e => e.Login).IsUnique();
+                entity.HasIndex(e => e.Email).IsUnique();
+                
+                // Relacionamento com Perfil
+                entity.HasOne(e => e.Perfil)
+                    .WithMany()
+                    .HasForeignKey(e => e.IDPerfil)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }

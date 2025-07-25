@@ -1,17 +1,20 @@
 using System.Net.Http.Json;
 using GestaoPiscina.Client.Models;
 using System.Text.Json;
+using Microsoft.JSInterop;
 
 namespace GestaoPiscina.Client.Services
 {
     public class ApiService
     {
         private readonly HttpClient _httpClient;
+        private readonly IJSRuntime _jsRuntime;
         private readonly string _baseUrl = "api/";
 
-        public ApiService(HttpClient httpClient)
+        public ApiService(HttpClient httpClient, IJSRuntime jsRuntime)
         {
             _httpClient = httpClient;
+            _jsRuntime = jsRuntime;
         }
 
         // Métodos auxiliares para tratamento de erros
@@ -45,11 +48,29 @@ namespace GestaoPiscina.Client.Services
             return response.ReasonPhrase ?? "Erro desconhecido";
         }
 
+        // Método para adicionar token de autenticação
+        private async Task AddAuthHeaderAsync()
+        {
+            try
+            {
+                var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "token");
+                if (!string.IsNullOrEmpty(token))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                }
+            }
+            catch
+            {
+                // Ignorar erros de autenticação
+            }
+        }
+
         // Clientes
         public async Task<List<Cliente>> GetClientesAsync()
         {
             try
             {
+                await AddAuthHeaderAsync();
                 return await _httpClient.GetFromJsonAsync<List<Cliente>>($"{_baseUrl}clientes") ?? new List<Cliente>();
             }
             catch (Exception ex)

@@ -1,15 +1,81 @@
+@using GestaoPiscina.Client.Services
+@using GestaoPiscina.Client.Models
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
 <div class="flex justify-between items-center p-4 border-b border-slate-700">
     <div class="text-xl font-bold">@PageTitle</div>
     <div class="flex items-center space-x-4 text-xl">
+        <!-- Botão de Notificação -->
         <button class="hover:text-cyan-400 transition-colors">
             <i class="fas fa-bell"></i>
         </button>
-        <button class="hover:text-cyan-400 transition-colors">
-            <i class="fas fa-user-circle"></i>
-        </button>
+        
+        <!-- Informações do Usuário e Menu -->
+        @if (currentUser != null)
+        {
+            <div class="flex items-center space-x-3 text-sm">
+                <div class="text-right">
+                    <div class="font-medium text-slate-200">@currentUser.Nome</div>
+                    <div class="text-slate-400 text-xs">@currentUser.NomePerfil</div>
+                </div>
+                <div class="relative">
+                    <button @onclick="ToggleUserMenu" class="flex items-center space-x-2 text-slate-300 hover:text-slate-100 transition-colors">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                        </svg>
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                    
+                    @if (showUserMenu)
+                    {
+                        <div class="absolute right-0 mt-2 w-48 bg-slate-800 rounded-lg shadow-lg border border-slate-700 z-50">
+                            <div class="py-1">
+                                <button @onclick="HandleLogout" class="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition-colors">
+                                    <div class="flex items-center space-x-2">
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span>Sair</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- Fallback para quando não há usuário logado -->
+            <button class="hover:text-cyan-400 transition-colors">
+                <i class="fas fa-user-circle"></i>
+            </button>
+        }
     </div>
 </div>
 
 @code {
     [Parameter] public string PageTitle { get; set; } = "Painel de Manutenção";
+    
+    private UsuarioInfo? currentUser;
+    private bool showUserMenu = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUser = await AuthService.GetCurrentUserAsync();
+    }
+
+    private void ToggleUserMenu()
+    {
+        showUserMenu = !showUserMenu;
+    }
+
+    private async Task HandleLogout()
+    {
+        await AuthService.LogoutAsync();
+        showUserMenu = false;
+    }
 } 

@@ -1,5 +1,7 @@
 ﻿@inherits LayoutComponentBase
 @using GestaoPiscina.Client.Shared
+@using GestaoPiscina.Client.Services
+@inject AuthService AuthService
 
 <CascadingValue Value="this">
     <div class="bg-slate-900 text-slate-100 flex min-h-screen">
@@ -24,6 +26,16 @@
     private string toastTitle = "";
     private string toastMessage = "";
     private string toastType = "info";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Verificar autenticação
+        var isAuthenticated = await AuthService.IsAuthenticatedAsync();
+        if (!isAuthenticated)
+        {
+            NavigationManager.NavigateTo("/login");
+        }
+    }
 
     private string CurrentPageTitle
     {

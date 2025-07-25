@@ -1,6 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using GestaoPiscina.Server.Data;
 using Microsoft.EntityFrameworkCore.Sqlite;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using GestaoPiscina.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +28,27 @@ builder.Services.AddCors(options =>
         });
 });
 
+// Configuração do JWT
+var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] ?? "SuaChaveSecretaMuitoLongaParaJWT2024";
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSecretKey)),
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "GestaoPiscina",
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "GestaoPiscinaUsers",
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+// Registrar serviços
+builder.Services.AddScoped<JwtService>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -34,7 +59,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowBlazorApp");
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Seed data
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<GestaoPiscinaContext>();
+    await SeedData.SeedAsync(context);
+}
 
 app.Run();
