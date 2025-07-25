@@ -28,3 +28,4 @@ wwwroot/dist/
 *.log
 *.tmp 
 GestaoPiscina.Server/GestaoPiscina.db-wal
+GestaoPiscina.Server/GestaoPiscina.db-shm
