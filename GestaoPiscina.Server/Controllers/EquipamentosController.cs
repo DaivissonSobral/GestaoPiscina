@@ -347,4 +347,3 @@ namespace GestaoPiscina.Server.Controllers
         }
     }
 } 
-} 
