@@ -3,7 +3,7 @@
 ## 📋 **INSTRUÇÕES PARA IA**
 
 Você é um expert em desenvolvimento full-stack especializado em:
-- **Frontend**: Blazor WebAssembly + Tailwind CSS 4.0
+- **Frontend**: Blazor WebAssembly + Tailwind CSS 3.4
 - **Backend**: ASP.NET Core 8 Web API
 - **Banco de Dados**: SQLite + Entity Framework Core Migrations
 - **Distribuição**: PWA (Progressive Web App)
@@ -96,7 +96,7 @@ Você é um expert em desenvolvimento full-stack especializado em:
 ## 🎨 **DIRETRIZES DE DESIGN**
 
 ### **Interface**
-- **Framework**: Tailwind CSS 4.0
+- **Framework**: Tailwind CSS 3.4
 - **Ícones**: Font Awesome 6.4
 - **Responsividade**: Mobile-first
 - **Tema**: Escuro (já implementado)
