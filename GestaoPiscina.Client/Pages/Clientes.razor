@@ -1,6 +1,7 @@
 @page "/clientes"
 @using GestaoPiscina.Client.Services
 @using GestaoPiscina.Client.Models
+@using GestaoPiscina.Client.Models.DTOs
 @using GestaoPiscina.Client.Shared
 @inject ApiService ApiService
 @inject IJSRuntime JSRuntime
@@ -216,14 +217,27 @@
                             
                             @if (activeTab == "produtos")
                             {
-                                <button @onclick="SetProdutosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600 rounded-tr-lg">
+                                <button @onclick="SetProdutosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600">
                                     <i class="fas fa-box mr-2"></i>Produtos
                                 </button>
                             }
                             else
                             {
-                                <button @onclick="SetProdutosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent rounded-tr-lg">
+                                <button @onclick="SetProdutosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent">
                                     <i class="fas fa-box mr-2"></i>Produtos
+                                </button>
+                            }
+                            
+                            @if (activeTab == "salvar")
+                            {
+                                <button @onclick="SetSalvarTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600 rounded-tr-lg">
+                                    <i class="fas fa-save mr-2"></i>Salvar Tudo
+                                </button>
+                            }
+                            else
+                            {
+                                <button @onclick="SetSalvarTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent rounded-tr-lg">
+                                    <i class="fas fa-save mr-2"></i>Salvar Tudo
                                 </button>
                             }
                         </nav>
@@ -283,15 +297,11 @@
                                     <h5 class="text-lg font-semibold text-slate-200 flex items-center">
                                         <i class="fas fa-swimming-pool text-cyan-400 mr-2"></i>Piscinas
                                     </h5>
-                                    @if (!showPiscinaForm && currentCliente.IDCliente > 0)
+                                    @if (!showPiscinaForm)
                                     {
                                         <button type="button" @onclick="ShowCreatePiscina" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-2 rounded-lg text-white text-sm transition-colors">
                                             <i class="fas fa-plus mr-1"></i>Nova Piscina
                                         </button>
-                                    }
-                                    @if (currentCliente.IDCliente <= 0)
-                                    {
-                                        <span class="text-sm text-slate-400">Salve o cliente primeiro para adicionar piscinas</span>
                                     }
                                 </div>
 
@@ -313,7 +323,7 @@
                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div class="space-y-3">
                                                     <label class="block text-sm font-medium text-slate-300 mb-2">Tipo *</label>
-                                                    <InputSelect @bind-Value="currentPiscina.Tipo" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100">
+                                                    <InputSelect @bind-Value="currentPiscina.Tipo" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" style="background-color: white !important; color: #111827 !important;">
                                                         <option value="">Selecione...</option>
                                                         <option value="adulto">Adulto</option>
                                                         <option value="infantil">Infantil</option>
@@ -324,13 +334,18 @@
                                                 
                                                 <div class="space-y-3">
                                                     <label class="block text-sm font-medium text-slate-300 mb-2">Volume (Litros) *</label>
-                                                    <InputNumber @bind-Value="currentPiscina.VolumeLitros" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" placeholder="Ex: 50000" />
+                                                    <InputNumber @bind-Value="currentPiscina.VolumeLitros" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="Ex: 50000" style="background-color: white !important; color: #111827 !important;" />
                                                     <ValidationMessage For="@(() => currentPiscina.VolumeLitros)" class="text-red-500 text-sm" />
                                                 </div>
                                                 
                                                 <div class="md:col-span-2 space-y-3">
                                                     <label class="block text-sm font-medium text-slate-300 mb-2">Localização</label>
-                                                    <InputText @bind-Value="currentPiscina.Localizacao" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" placeholder="Ex: Fundos, Lateral..." />
+                                                    <InputText @bind-Value="currentPiscina.Localizacao" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="Ex: Fundos, Lateral..." style="background-color: white !important; color: #111827 !important;" />
+                                                </div>
+                                                
+                                                <div class="md:col-span-2 space-y-3">
+                                                    <label class="block text-sm font-medium text-slate-300 mb-2">Teste</label>
+                                                    <InputText @bind-Value="currentPiscina.Localizacao" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="Ex: Fundos, Lateral..." style="background-color: white !important; color: #111827 !important;" />
                                                 </div>
                                             </div>
                                             
@@ -346,22 +361,53 @@
                                     </div>
                                 }
                                 
-                                @if (currentCliente.IDCliente > 0 && piscinas != null && piscinas.Any())
+                                @if ((currentCliente.IDCliente > 0 && piscinas != null && piscinas.Any()) || piscinasTemporarias.Any())
                                 {
                                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                        @foreach (var piscina in piscinas)
+                                        @if (piscinas != null)
                                         {
-                                            <div class="bg-slate-800 rounded-xl p-4 space-y-3">
+                                            @foreach (var piscina in piscinas)
+                                            {
+                                                <div class="bg-slate-800 rounded-xl p-4 space-y-3">
+                                                    <div class="flex justify-between items-start">
+                                                        <div class="flex-1">
+                                                            <h4 class="text-sm font-medium text-slate-100">@piscina.Tipo</h4>
+                                                            <span class="text-sm text-slate-400">Volume: @piscina.VolumeLitros L</span>
+                                                        </div>
+                                                        <div class="flex space-x-3 ml-4">
+                                                            <button @onclick="() => ShowEditPiscina(piscina)" class="text-cyan-400 hover:text-cyan-300 p-2 rounded transition-colors" title="Editar">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                            <button @onclick="() => DeletePiscina(piscina)" class="text-red-400 hover:text-red-300 p-2 rounded transition-colors" title="Excluir">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="space-y-2">
+                                                        @if (!string.IsNullOrEmpty(piscina.Localizacao))
+                                                        {
+                                                            <div class="text-sm text-slate-400">
+                                                                <i class="fas fa-map-marker-alt text-slate-500 mr-2"></i>
+                                                                @piscina.Localizacao
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                        
+                                        @foreach (var piscina in piscinasTemporarias)
+                                        {
+                                            <div class="bg-slate-700 rounded-xl p-4 space-y-3 border-2 border-dashed border-cyan-400">
                                                 <div class="flex justify-between items-start">
                                                     <div class="flex-1">
                                                         <h4 class="text-sm font-medium text-slate-100">@piscina.Tipo</h4>
                                                         <span class="text-sm text-slate-400">Volume: @piscina.VolumeLitros L</span>
+                                                        <span class="text-xs text-cyan-400 bg-cyan-900 px-2 py-1 rounded">Temporário</span>
                                                     </div>
                                                     <div class="flex space-x-3 ml-4">
-                                                        <button @onclick="() => ShowEditPiscina(piscina)" class="text-cyan-400 hover:text-cyan-300 p-2 rounded transition-colors" title="Editar">
-                                                            <i class="fas fa-edit"></i>
-                                                        </button>
-                                                        <button @onclick="() => DeletePiscina(piscina)" class="text-red-400 hover:text-red-300 p-2 rounded transition-colors" title="Excluir">
+                                                        <button @onclick="() => RemovePiscinaTemporaria(piscina)" class="text-red-400 hover:text-red-300 p-2 rounded transition-colors" title="Remover">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
                                                     </div>
@@ -380,7 +426,7 @@
                                         }
                                     </div>
                                 }
-                                else if (!showPiscinaForm && currentCliente.IDCliente > 0)
+                                else if (!showPiscinaForm && (currentCliente.IDCliente > 0 || piscinasTemporarias.Any()))
                                 {
                                     <div class="text-center py-8 text-slate-400">
                                         <i class="fas fa-swimming-pool text-4xl mb-4"></i>
@@ -388,7 +434,7 @@
                                         <p class="text-sm mt-2">Clique em "Nova Piscina" para adicionar</p>
                                     </div>
                                 }
-                                else if (currentCliente.IDCliente <= 0)
+                                else if (currentCliente.IDCliente <= 0 && !piscinasTemporarias.Any())
                                 {
                                     <div class="text-center py-8 text-slate-400">
                                         <i class="fas fa-user-plus text-4xl mb-4"></i>
@@ -405,15 +451,11 @@
                                     <h5 class="text-lg font-semibold text-slate-200 flex items-center">
                                         <i class="fas fa-robot text-cyan-400 mr-2"></i>Equipamentos
                                     </h5>
-                                    @if (!showEquipamentoForm && currentCliente.IDCliente > 0)
+                                    @if (!showEquipamentoForm)
                                     {
                                         <button type="button" @onclick="ShowCreateEquipamento" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-2 rounded-lg text-white text-sm transition-colors">
                                             <i class="fas fa-plus mr-1"></i>Novo Equipamento
                                         </button>
-                                    }
-                                    @if (currentCliente.IDCliente <= 0)
-                                    {
-                                        <span class="text-sm text-slate-400">Salve o cliente primeiro para adicionar equipamentos</span>
                                     }
                                 </div>
 
@@ -435,24 +477,24 @@
                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div class="space-y-3">
                                                     <label class="block text-sm font-medium text-slate-300 mb-2">Tipo *</label>
-                                                    <InputText @bind-Value="currentEquipamento.Tipo" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" placeholder="Ex: Bomba, Filtro..." />
+                                                    <InputText @bind-Value="currentEquipamento.Tipo" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-800 !text-slate-800" placeholder="Ex: Bomba, Filtro..." style="color: #1e293b !important;" />
                                                     <ValidationMessage For="@(() => currentEquipamento.Tipo)" class="text-red-500 text-sm" />
                                                 </div>
                                                 
                                                 <div class="space-y-3">
                                                     <label class="block text-sm font-medium text-slate-300 mb-2">Número de Série *</label>
-                                                    <InputText @bind-Value="currentEquipamento.NumeroSerie" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" placeholder="Número de série" />
+                                                    <InputText @bind-Value="currentEquipamento.NumeroSerie" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-800 !text-slate-800" placeholder="Número de série" style="color: #1e293b !important;" />
                                                     <ValidationMessage For="@(() => currentEquipamento.NumeroSerie)" class="text-red-500 text-sm" />
                                                 </div>
                                                 
                                                 <div class="space-y-3">
                                                     <label class="block text-sm font-medium text-slate-300 mb-2">Última Calibragem</label>
-                                                    <InputDate @bind-Value="currentEquipamento.UltimaCalibragem" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" />
+                                                    <InputDate @bind-Value="currentEquipamento.UltimaCalibragem" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-800 !text-slate-800" style="color: #1e293b !important;" />
                                                 </div>
                                                 
                                                 <div class="space-y-3">
                                                     <label class="block text-sm font-medium text-slate-300 mb-2">Observações</label>
-                                                    <InputTextArea @bind-Value="currentEquipamento.Observacao" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" rows="3" placeholder="Observações adicionais..." />
+                                                    <InputTextArea @bind-Value="currentEquipamento.Observacao" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-800 !text-slate-800" rows="3" placeholder="Observações adicionais..." style="color: #1e293b !important;" />
                                                 </div>
                                             </div>
                                             
@@ -468,22 +510,53 @@
                                     </div>
                                 }
                                 
-                                @if (currentCliente.IDCliente > 0 && equipamentos != null && equipamentos.Any())
+                                @if ((currentCliente.IDCliente > 0 && equipamentos != null && equipamentos.Any()) || equipamentosTemporarios.Any())
                                 {
                                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                        @foreach (var equipamento in equipamentos)
+                                        @if (equipamentos != null)
                                         {
-                                            <div class="bg-slate-800 rounded-xl p-4 space-y-3">
+                                            @foreach (var equipamento in equipamentos)
+                                            {
+                                                <div class="bg-slate-800 rounded-xl p-4 space-y-3">
+                                                    <div class="flex justify-between items-start">
+                                                        <div class="flex-1">
+                                                            <h4 class="text-sm font-medium text-slate-100">@equipamento.Tipo</h4>
+                                                            <span class="text-sm text-slate-400">Série: @equipamento.NumeroSerie</span>
+                                                        </div>
+                                                        <div class="flex space-x-3 ml-4">
+                                                            <button @onclick="() => ShowEditEquipamento(equipamento)" class="text-cyan-400 hover:text-cyan-300 p-2 rounded transition-colors" title="Editar">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                            <button @onclick="() => DeleteEquipamento(equipamento)" class="text-red-400 hover:text-red-300 p-2 rounded transition-colors" title="Excluir">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="space-y-2">
+                                                        @if (equipamento.UltimaCalibragem.HasValue)
+                                                        {
+                                                            <div class="text-sm text-slate-400">
+                                                                <i class="fas fa-calendar-alt text-slate-500 mr-2"></i>
+                                                                Última Calibragem: @equipamento.UltimaCalibragem.Value.ToShortDateString()
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                        
+                                        @foreach (var equipamento in equipamentosTemporarios)
+                                        {
+                                            <div class="bg-slate-700 rounded-xl p-4 space-y-3 border-2 border-dashed border-cyan-400">
                                                 <div class="flex justify-between items-start">
                                                     <div class="flex-1">
                                                         <h4 class="text-sm font-medium text-slate-100">@equipamento.Tipo</h4>
                                                         <span class="text-sm text-slate-400">Série: @equipamento.NumeroSerie</span>
+                                                        <span class="text-xs text-cyan-400 bg-cyan-900 px-2 py-1 rounded">Temporário</span>
                                                     </div>
                                                     <div class="flex space-x-3 ml-4">
-                                                        <button @onclick="() => ShowEditEquipamento(equipamento)" class="text-cyan-400 hover:text-cyan-300 p-2 rounded transition-colors" title="Editar">
-                                                            <i class="fas fa-edit"></i>
-                                                        </button>
-                                                        <button @onclick="() => DeleteEquipamento(equipamento)" class="text-red-400 hover:text-red-300 p-2 rounded transition-colors" title="Excluir">
+                                                        <button @onclick="() => RemoveEquipamentoTemporario(equipamento)" class="text-red-400 hover:text-red-300 p-2 rounded transition-colors" title="Remover">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
                                                     </div>
@@ -502,7 +575,7 @@
                                         }
                                     </div>
                                 }
-                                else if (!showEquipamentoForm && currentCliente.IDCliente > 0)
+                                else if (!showEquipamentoForm && (currentCliente.IDCliente > 0 || equipamentosTemporarios.Any()))
                                 {
                                     <div class="text-center py-8 text-slate-400">
                                         <i class="fas fa-robot text-4xl mb-4"></i>
@@ -510,7 +583,7 @@
                                         <p class="text-sm mt-2">Clique em "Novo Equipamento" para adicionar</p>
                                     </div>
                                 }
-                                else if (currentCliente.IDCliente <= 0)
+                                else if (currentCliente.IDCliente <= 0 && !equipamentosTemporarios.Any())
                                 {
                                     <div class="text-center py-8 text-slate-400">
                                         <i class="fas fa-user-plus text-4xl mb-4"></i>
@@ -553,13 +626,13 @@
                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div class="space-y-3">
                                                     <label class="block text-sm font-medium text-slate-300 mb-2">Nome *</label>
-                                                    <InputText @bind-Value="currentProduto.Nome" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" placeholder="Nome do produto" />
+                                                    <InputText @bind-Value="currentProduto.Nome" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-800 !text-slate-800" placeholder="Nome do produto" style="color: #1e293b !important;" />
                                                     <ValidationMessage For="@(() => currentProduto.Nome)" class="text-red-500 text-sm" />
                                                 </div>
                                                 
                                                 <div class="space-y-3">
                                                     <label class="block text-sm font-medium text-slate-300 mb-2">Unidade *</label>
-                                                    <InputSelect @bind-Value="currentProduto.Unidade" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100">
+                                                    <InputSelect @bind-Value="currentProduto.Unidade" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-800 !text-slate-800" style="color: #1e293b !important;">
                                                         <option value="">Selecione...</option>
                                                         <option value="L">Litros (L)</option>
                                                         <option value="kg">Quilogramas (kg)</option>
@@ -572,7 +645,7 @@
                                                 
                                                 <div class="md:col-span-2 space-y-3">
                                                     <label class="block text-sm font-medium text-slate-300 mb-2">Concentração</label>
-                                                    <InputText @bind-Value="currentProduto.Concentracao" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" placeholder="Ex: 10%, 5ppm..." />
+                                                    <InputText @bind-Value="currentProduto.Concentracao" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-800 !text-slate-800" placeholder="Ex: 10%, 5ppm..." style="color: #1e293b !important;" />
                                                 </div>
                                             </div>
                                             
@@ -632,8 +705,73 @@
                                 }
                             </div>
                         }
+                        else if (activeTab == "salvar")
+                        {
+                            <div @key="activeTab" class="space-y-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h5 class="text-lg font-semibold text-slate-200 flex items-center">
+                                        <i class="fas fa-save text-cyan-400 mr-2"></i>Salvar Tudo em Uma Transação
+                                    </h5>
+                                </div>
+
+                                <div class="bg-slate-700 rounded-lg p-6 border border-slate-600">
+                                    <div class="space-y-4">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-user text-cyan-400"></i>
+                                            <div>
+                                                <h6 class="text-sm font-medium text-slate-200">Dados do Cliente</h6>
+                                                <p class="text-sm text-slate-400">@currentCliente.Nome - @currentCliente.Tipo</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-swimming-pool text-cyan-400"></i>
+                                            <div>
+                                                <h6 class="text-sm font-medium text-slate-200">Piscinas</h6>
+                                                <p class="text-sm text-slate-400">@(piscinas?.Count ?? 0) piscina(s) cadastrada(s) + @piscinasTemporarias.Count temporária(s)</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-robot text-cyan-400"></i>
+                                            <div>
+                                                <h6 class="text-sm font-medium text-slate-200">Equipamentos</h6>
+                                                <p class="text-sm text-slate-400">@(equipamentos?.Count ?? 0) equipamento(s) cadastrado(s) + @equipamentosTemporarios.Count temporário(s)</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-box text-cyan-400"></i>
+                                            <div>
+                                                <h6 class="text-sm font-medium text-slate-200">Produtos</h6>
+                                                <p class="text-sm text-slate-400">@(produtos?.Count ?? 0) produto(s) cadastrado(s)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-6 p-4 bg-slate-600 rounded-lg">
+                                        <h6 class="text-sm font-medium text-slate-200 mb-2">Informações Importantes:</h6>
+                                        <ul class="text-sm text-slate-300 space-y-1">
+                                            <li>• Todos os dados serão salvos em uma única transação</li>
+                                            <li>• Se houver erro em qualquer item, nada será salvo</li>
+                                            <li>• Produtos são globais e ficam disponíveis para todos os clientes</li>
+                                            <li>• Piscinas e equipamentos são específicos do cliente</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="flex space-x-3 mt-6">
+                                        <button @onclick="HandleSaveCompleto" class="bg-green-600 hover:bg-green-500 px-6 py-3 rounded-lg text-white transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-slate-800">
+                                            <i class="fas fa-save mr-2"></i>Salvar Tudo
+                                        </button>
+                                        <button @onclick="ShowListView" class="bg-slate-600 hover:bg-slate-500 px-6 py-3 rounded-lg text-white transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-800">
+                                            <i class="fas fa-times mr-2"></i>Cancelar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
                     </div>
-                    }
+                    
 
                     <div class="flex space-x-3 mt-8">
                         <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 px-6 py-3 rounded-lg text-white transition-colors">
@@ -669,6 +807,8 @@
     private List<Piscina>? piscinas;
     private List<Equipamento>? equipamentos;
     private List<Produto>? produtos;
+    private List<Piscina> piscinasTemporarias = new List<Piscina>();
+    private List<Equipamento> equipamentosTemporarios = new List<Equipamento>();
     private bool isLoading = false;
     private bool showConfirmDialog = false;
     private bool showProdutoForm = false;
@@ -700,6 +840,15 @@
         try
         {
             clientes = await ApiService.GetClientesAsync();
+            
+            // Debug: verificar se as piscinas estão sendo carregadas
+            if (clientes != null)
+            {
+                foreach (var cliente in clientes)
+                {
+                    Console.WriteLine($"Cliente: {cliente.Nome}, Piscinas: {cliente.Piscinas?.Count ?? 0}");
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -724,6 +873,9 @@
                 piscinas = await piscinasTask;
                 equipamentos = await equipamentosTask;
                 produtos = await produtosTask;
+                
+                // Forçar atualização da UI
+                StateHasChanged();
             }
             catch (Exception ex)
             {
@@ -762,7 +914,10 @@
         };
         currentView = "cadastro";
         activeTab = "dados"; // Reset para a primeira aba
+        
+        // Carregar dados relacionados de forma assíncrona
         await LoadRelatedData();
+        StateHasChanged();
     }
 
     private void ShowListView()
@@ -777,22 +932,36 @@
         piscinas = null;
         equipamentos = null;
         produtos = null;
+        piscinasTemporarias.Clear();
+        equipamentosTemporarios.Clear();
         showPiscinaForm = false;
         showEquipamentoForm = false;
         showProdutoForm = false;
         StateHasChanged();
     }
 
+    private void RemovePiscinaTemporaria(Piscina piscina)
+    {
+        piscinasTemporarias.Remove(piscina);
+        StateHasChanged();
+    }
+
+    private void RemoveEquipamentoTemporario(Equipamento equipamento)
+    {
+        equipamentosTemporarios.Remove(equipamento);
+        StateHasChanged();
+    }
+
     // Métodos para Piscinas
     private void ShowCreatePiscina()
     {
-        if (currentCliente.IDCliente <= 0)
-        {
-            ShowToast("Atenção", "Salve o cliente primeiro antes de adicionar piscinas.", "warning");
-            return;
-        }
-        currentPiscina = new Piscina { IDCliente = currentCliente.IDCliente };
+        currentPiscina = new Piscina 
+        { 
+            IDCliente = currentCliente.IDCliente,
+            IDPiscina = 0 // Garantir que é uma nova piscina
+        };
         showPiscinaForm = true;
+        StateHasChanged();
     }
 
     private void ShowEditPiscina(Piscina piscina)
@@ -806,12 +975,14 @@
             Localizacao = piscina.Localizacao
         };
         showPiscinaForm = true;
+        StateHasChanged();
     }
 
     private void ClosePiscinaForm()
     {
         showPiscinaForm = false;
         currentPiscina = new Piscina();
+        StateHasChanged();
     }
 
 
@@ -827,6 +998,39 @@
                 currentPiscina.IDCliente = currentCliente.IDCliente;
             }
 
+            // Validações adicionais
+            if (string.IsNullOrWhiteSpace(currentPiscina.Tipo))
+            {
+                ShowToast("Erro", "Tipo de piscina é obrigatório", "error");
+                return;
+            }
+
+            if (currentPiscina.VolumeLitros <= 0)
+            {
+                ShowToast("Erro", "Volume deve ser maior que zero", "error");
+                return;
+            }
+
+            // SEMPRE adicionar à lista temporária se o cliente não foi salvo via "Salvar Tudo"
+            // ou se há piscinas temporárias (indicando que estamos no modo transação única)
+            if (currentCliente.IDCliente <= 0 || piscinasTemporarias.Any())
+            {
+                piscinasTemporarias.Add(new Piscina
+                {
+                    IDPiscina = -(piscinasTemporarias.Count + 1), // ID negativo para identificar como temporário
+                    IDCliente = 0,
+                    Tipo = currentPiscina.Tipo,
+                    VolumeLitros = currentPiscina.VolumeLitros,
+                    Localizacao = currentPiscina.Localizacao
+                });
+                
+                ShowToast("Sucesso", "Piscina adicionada temporariamente. Use 'Salvar Tudo' para confirmar.", "success");
+                ClosePiscinaForm();
+                StateHasChanged();
+                return;
+            }
+
+            // Se o cliente já foi salvo E não há piscinas temporárias, salvar normalmente
             if (currentPiscina.IDPiscina > 0)
             {
                 await ApiService.UpdatePiscinaAsync(currentPiscina);
@@ -837,8 +1041,11 @@
                 await ApiService.CreatePiscinaAsync(currentPiscina);
                 ShowToast("Sucesso", "Piscina criada com sucesso!", "success");
             }
+            
+            // Recarregar dados relacionados
             await LoadRelatedData();
             ClosePiscinaForm();
+            StateHasChanged();
         }
         catch (Exception ex)
         {
@@ -859,11 +1066,6 @@
     // Métodos para Equipamentos
     private void ShowCreateEquipamento()
     {
-        if (currentCliente.IDCliente <= 0)
-        {
-            ShowToast("Atenção", "Salve o cliente primeiro antes de adicionar equipamentos.", "warning");
-            return;
-        }
         currentEquipamento = new Equipamento { IDCliente = currentCliente.IDCliente };
         showEquipamentoForm = true;
     }
@@ -901,6 +1103,27 @@
                 currentEquipamento.IDCliente = currentCliente.IDCliente;
             }
 
+            // SEMPRE adicionar à lista temporária se o cliente não foi salvo via "Salvar Tudo"
+            // ou se há equipamentos temporários (indicando que estamos no modo transação única)
+            if (currentCliente.IDCliente <= 0 || equipamentosTemporarios.Any())
+            {
+                equipamentosTemporarios.Add(new Equipamento
+                {
+                    IDEquipamento = -(equipamentosTemporarios.Count + 1), // ID negativo para identificar como temporário
+                    IDCliente = 0,
+                    Tipo = currentEquipamento.Tipo,
+                    NumeroSerie = currentEquipamento.NumeroSerie,
+                    UltimaCalibragem = currentEquipamento.UltimaCalibragem,
+                    Observacao = currentEquipamento.Observacao
+                });
+                
+                ShowToast("Sucesso", "Equipamento adicionado temporariamente. Use 'Salvar Tudo' para confirmar.", "success");
+                CloseEquipamentoForm();
+                StateHasChanged();
+                return;
+            }
+
+            // Se o cliente já foi salvo E não há equipamentos temporários, salvar normalmente
             if (currentEquipamento.IDEquipamento > 0)
             {
                 await ApiService.UpdateEquipamentoAsync(currentEquipamento);
@@ -1002,8 +1225,14 @@
             }
             else
             {
-                await ApiService.CreateClienteAsync(cliente);
+                var novoCliente = await ApiService.CreateClienteAsync(cliente);
+                // Atualizar o ID do cliente atual com o ID retornado do servidor
+                currentCliente.IDCliente = novoCliente.IDCliente;
                 ShowToast("Sucesso", "Cliente criado com sucesso!", "success");
+                
+                // Carregar dados relacionados após criar o cliente
+                await LoadRelatedData();
+                return; // Não voltar para a lista, manter na tela de edição
             }
             await LoadClientes();
             ShowListView();
@@ -1049,6 +1278,7 @@
                         await ApiService.DeletePiscinaAsync(piscina.IDPiscina);
                         await LoadRelatedData();
                         ShowToast("Sucesso", "Piscina excluída com sucesso!", "success");
+                        StateHasChanged();
                         break;
                     case Equipamento equipamento:
                         await ApiService.DeleteEquipamentoAsync(equipamento.IDEquipamento);
@@ -1118,7 +1348,7 @@
     private async void SetPiscinasTab()
     {
         activeTab = "piscinas";
-        if (currentCliente.IDCliente > 0 && (piscinas == null || !piscinas.Any()))
+        if (currentCliente.IDCliente > 0)
         {
             await LoadRelatedData();
         }
@@ -1139,6 +1369,155 @@
         if (produtos == null || !produtos.Any())
         {
             await LoadRelatedData();
+        }
+    }
+
+    private void SetSalvarTab()
+    {
+        activeTab = "salvar";
+    }
+
+    private async Task HandleSaveCompleto()
+    {
+        isLoading = true;
+        try
+        {
+            // Validar dados do cliente
+            if (string.IsNullOrWhiteSpace(currentCliente.Nome))
+            {
+                ShowToast("Erro", "Nome do cliente é obrigatório", "error");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(currentCliente.Tipo))
+            {
+                ShowToast("Erro", "Tipo do cliente é obrigatório", "error");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(currentCliente.Endereco))
+            {
+                ShowToast("Erro", "Endereço do cliente é obrigatório", "error");
+                return;
+            }
+
+            // Criar DTO com todos os dados
+            var clienteCompleto = new ClienteCompletoDTO
+            {
+                IDCliente = currentCliente.IDCliente,
+                Nome = currentCliente.Nome,
+                Tipo = currentCliente.Tipo,
+                Telefone = currentCliente.Telefone,
+                Email = currentCliente.Email,
+                Endereco = currentCliente.Endereco,
+                DiasDeVisita = currentCliente.DiasDeVisita,
+                Observacoes = currentCliente.Observacoes,
+                Piscinas = new List<PiscinaDTO>(),
+                Equipamentos = new List<EquipamentoDTO>(),
+                Produtos = new List<ProdutoDTO>()
+            };
+
+            // Adicionar piscinas (incluindo temporárias)
+            if (piscinas != null)
+            {
+                foreach (var piscina in piscinas)
+                {
+                    clienteCompleto.Piscinas.Add(new PiscinaDTO
+                    {
+                        IDPiscina = piscina.IDPiscina,
+                        IDCliente = piscina.IDCliente,
+                        Tipo = piscina.Tipo,
+                        VolumeLitros = piscina.VolumeLitros,
+                        Localizacao = piscina.Localizacao
+                    });
+                }
+            }
+            
+            // Adicionar piscinas temporárias
+            foreach (var piscina in piscinasTemporarias)
+            {
+                clienteCompleto.Piscinas.Add(new PiscinaDTO
+                {
+                    IDPiscina = 0, // Nova piscina
+                    IDCliente = 0, // Será definido pelo servidor
+                    Tipo = piscina.Tipo,
+                    VolumeLitros = piscina.VolumeLitros,
+                    Localizacao = piscina.Localizacao
+                });
+            }
+
+            // Adicionar equipamentos (incluindo temporários)
+            if (equipamentos != null)
+            {
+                foreach (var equipamento in equipamentos)
+                {
+                    clienteCompleto.Equipamentos.Add(new EquipamentoDTO
+                    {
+                        IDEquipamento = equipamento.IDEquipamento,
+                        IDCliente = equipamento.IDCliente,
+                        Tipo = equipamento.Tipo,
+                        NumeroSerie = equipamento.NumeroSerie,
+                        UltimaCalibragem = equipamento.UltimaCalibragem,
+                        Observacao = equipamento.Observacao
+                    });
+                }
+            }
+            
+            // Adicionar equipamentos temporários
+            foreach (var equipamento in equipamentosTemporarios)
+            {
+                clienteCompleto.Equipamentos.Add(new EquipamentoDTO
+                {
+                    IDEquipamento = 0, // Novo equipamento
+                    IDCliente = 0, // Será definido pelo servidor
+                    Tipo = equipamento.Tipo,
+                    NumeroSerie = equipamento.NumeroSerie,
+                    UltimaCalibragem = equipamento.UltimaCalibragem,
+                    Observacao = equipamento.Observacao
+                });
+            }
+
+            // Adicionar produtos
+            if (produtos != null)
+            {
+                foreach (var produto in produtos)
+                {
+                    clienteCompleto.Produtos.Add(new ProdutoDTO
+                    {
+                        IDProduto = produto.IDProduto,
+                        Nome = produto.Nome,
+                        Concentracao = produto.Concentracao,
+                        Unidade = produto.Unidade
+                    });
+                }
+            }
+
+            // Salvar tudo em uma transação
+            var clienteSalvo = await ApiService.CreateClienteCompletoAsync(clienteCompleto);
+            
+            ShowToast("Sucesso", "Cliente e todos os dados relacionados foram salvos com sucesso em uma única transação!", "success");
+            
+            // Atualizar o cliente atual com os dados retornados
+            currentCliente = clienteSalvo;
+            
+            // Recarregar dados
+            await LoadClientes();
+            await LoadRelatedData();
+            
+            // Limpar listas temporárias
+            piscinasTemporarias.Clear();
+            equipamentosTemporarios.Clear();
+            
+            // Voltar para a lista
+            ShowListView();
+        }
+        catch (Exception ex)
+        {
+            ShowToast("Erro", $"Erro ao salvar dados completos: {ex.Message}", "error");
+        }
+        finally
+        {
+            isLoading = false;
         }
     }
 } 

@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using GestaoPiscina.Client.Models;
+using GestaoPiscina.Client.Models.DTOs;
 using System.Text.Json;
 using Microsoft.JSInterop;
 
@@ -71,7 +72,25 @@ namespace GestaoPiscina.Client.Services
             try
             {
                 await AddAuthHeaderAsync();
-                return await _httpClient.GetFromJsonAsync<List<Cliente>>($"{_baseUrl}clientes") ?? new List<Cliente>();
+                var response = await _httpClient.GetAsync($"{_baseUrl}clientes");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Resposta da API: {content}");
+                    
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
+                    };
+                    
+                    return JsonSerializer.Deserialize<List<Cliente>>(content, options) ?? new List<Cliente>();
+                }
+                else
+                {
+                    throw new Exception($"Erro HTTP: {response.StatusCode}");
+                }
             }
             catch (Exception ex)
             {
@@ -115,6 +134,33 @@ namespace GestaoPiscina.Client.Services
             catch (Exception ex)
             {
                 throw new Exception($"Erro ao criar cliente: {ex.Message}");
+            }
+        }
+
+        public async Task<Cliente> CreateClienteCompletoAsync(ClienteCompletoDTO clienteCompleto)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}clientes/completo", clienteCompleto);
+                
+                if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+                
+                var createdCliente = await response.Content.ReadFromJsonAsync<Cliente>();
+                return createdCliente ?? new Cliente();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao criar cliente completo: {ex.Message}");
             }
         }
 
@@ -431,6 +477,87 @@ namespace GestaoPiscina.Client.Services
             catch (Exception ex)
             {
                 throw new Exception($"Erro ao criar ordem de serviço: {ex.Message}");
+            }
+        }
+
+        public async Task UpdateOrdemDeServicoAsync(OrdemDeServico ordemDeServico)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}ordensdeservico/{ordemDeServico.IDOS}", ordemDeServico);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao atualizar ordem de serviço: {ex.Message}");
+            }
+        }
+
+        public async Task DeleteOrdemDeServicoAsync(int id)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{_baseUrl}ordensdeservico/{id}");
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao excluir ordem de serviço: {ex.Message}");
+            }
+        }
+
+        public async Task<OrdemDeServico?> GetOrdemDeServicoAsync(int id)
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<OrdemDeServico>($"{_baseUrl}ordensdeservico/{id}");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao buscar ordem de serviço: {ex.Message}");
+            }
+        }
+
+        public async Task<List<OrdemDeServico>> GetOrdensByPiscinaAsync(int piscinaId)
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<List<OrdemDeServico>>($"{_baseUrl}ordensdeservico/piscina/{piscinaId}") ?? new List<OrdemDeServico>();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao buscar ordens por piscina: {ex.Message}");
+            }
+        }
+
+        public async Task<List<OrdemDeServico>> GerarOSAutomaticasAsync()
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync($"{_baseUrl}ordensdeservico/gerar-automaticas", null);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+                
+                var osCriadas = await response.Content.ReadFromJsonAsync<List<OrdemDeServico>>();
+                return osCriadas ?? new List<OrdemDeServico>();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao gerar OS automáticas: {ex.Message}");
             }
         }
     }
