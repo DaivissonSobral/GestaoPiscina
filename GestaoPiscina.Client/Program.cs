@@ -9,7 +9,12 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 // Configurar HttpClient com a URL da API
 var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:7001/";
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
+builder.Services.AddScoped(sp => 
+{
+    var httpClient = new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
+    httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+    return httpClient;
+});
 
 // Registrar serviços
 builder.Services.AddScoped<ApiService>();

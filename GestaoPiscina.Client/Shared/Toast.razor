@@ -1,13 +1,13 @@
 @if (IsVisible)
 {
-    <div class="fixed top-4 right-4 z-[9999] bg-green-600 text-white px-6 py-4 rounded-lg shadow-lg max-w-sm" style="position: fixed; top: 1rem; right: 1rem; z-index: 9999;">
+    <div class="fixed top-4 right-4 z-[9999] @GetToastClasses() px-6 py-4 rounded-lg shadow-lg max-w-sm">
         <div class="flex items-center space-x-3">
-            <i class="fas fa-check-circle text-green-200"></i>
+            <i class="@GetIconClass()"></i>
             <div class="flex-1">
                 <h4 class="font-semibold">@Title</h4>
                 <p class="text-sm opacity-90">@Message</p>
             </div>
-            <button @onclick="Close" class="text-green-200 hover:text-white">
+            <button @onclick="Close" class="@GetCloseButtonClass()">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -56,5 +56,41 @@
     public void Dispose()
     {
         _autoHideTimer?.Dispose();
+    }
+
+    private string GetToastClasses()
+    {
+        return Type switch
+        {
+            "success" => "bg-green-600 text-white",
+            "error" => "bg-red-600 text-white",
+            "warning" => "bg-yellow-600 text-white",
+            "info" => "bg-blue-600 text-white",
+            _ => "bg-slate-600 text-white"
+        };
+    }
+
+    private string GetIconClass()
+    {
+        return Type switch
+        {
+            "success" => "fas fa-check-circle text-green-200",
+            "error" => "fas fa-exclamation-circle text-red-200",
+            "warning" => "fas fa-exclamation-triangle text-yellow-200",
+            "info" => "fas fa-info-circle text-blue-200",
+            _ => "fas fa-info-circle text-slate-200"
+        };
+    }
+
+    private string GetCloseButtonClass()
+    {
+        return Type switch
+        {
+            "success" => "text-green-200 hover:text-white",
+            "error" => "text-red-200 hover:text-white",
+            "warning" => "text-yellow-200 hover:text-white",
+            "info" => "text-blue-200 hover:text-white",
+            _ => "text-slate-200 hover:text-white"
+        };
     }
 } 

@@ -1,123 +1,369 @@
 @page "/ordens-servico"
 @using GestaoPiscina.Client.Services
 @using GestaoPiscina.Client.Models
+@using GestaoPiscina.Client.Shared
 @inject ApiService ApiService
+@inject IJSRuntime JSRuntime
 
 <section class="p-4 space-y-6">
-    <h3 class="text-xl font-bold mb-4">Gestão de Ordens de Serviço</h3>
-
-    <div class="mb-4 flex justify-between items-center">
-        <button class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
-            <i class="fas fa-plus mr-2"></i>Nova OS
-        </button>
+    <div class="flex justify-between items-center">
+        <h3 class="text-xl font-bold text-slate-100">Gestão de Ordens de Serviço</h3>
+        <div class="flex space-x-2">
+            <button @onclick="GerarOSAutomaticas" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg text-white transition-colors">
+                <i class="fas fa-magic mr-2"></i>Gerar OS Automáticas
+            </button>
+            <button @onclick="AbrirModalNovaOS" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
+                <i class="fas fa-plus mr-2"></i>Nova OS
+            </button>
+        </div>
     </div>
 
-    <div class="flex space-x-2 mb-4">
-        <input type="text" placeholder="Buscar OS..." class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-        <select class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+    <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 mb-4">
+        <input @bind="termoBusca" @bind:event="oninput" @onkeyup="FiltrarOS" type="text" placeholder="Buscar OS..." 
+               class="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+        <select @bind="FiltroStatus" @bind:event="onchange" class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
             <option value="">Todos os Status</option>
-            <option value="aberta">Aberta</option>
-            <option value="em_andamento">Em Andamento</option>
-            <option value="concluida">Concluída</option>
-            <option value="cancelada">Cancelada</option>
+            <option value="Em Aberto">Em Aberto</option>
+            <option value="Em Andamento">Em Andamento</option>
+            <option value="Finalizada">Finalizada</option>
+            <option value="Reagendada">Reagendada</option>
+            <option value="Cancelada">Cancelada</option>
+        </select>
+        <select @bind="FiltroData" @bind:event="onchange" class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+            <option value="">Todas as Datas</option>
+            <option value="hoje">Hoje</option>
+            <option value="semana">Esta Semana</option>
+            <option value="mes">Este Mês</option>
         </select>
     </div>
 
-    <div class="bg-slate-800 rounded-xl overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-slate-700">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">OS</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Cliente</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Tipo</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Data</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Ações</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-700">
-                    <tr class="hover:bg-slate-700">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-slate-100">OS-2024-001</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-slate-100">João Silva</div>
-                            <div class="text-sm text-slate-400">Residencial</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                Limpeza
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">15/01/2024</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                Concluída
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button class="text-cyan-400 hover:text-cyan-300 mr-3">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="text-blue-400 hover:text-blue-300 mr-3">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="text-red-400 hover:text-red-300">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    <tr class="hover:bg-slate-700">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-slate-100">OS-2024-002</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-slate-100">Maria Santos</div>
-                            <div class="text-sm text-slate-400">Comercial</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                Manutenção
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">16/01/2024</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                Em Andamento
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button class="text-cyan-400 hover:text-cyan-300 mr-3">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="text-blue-400 hover:text-blue-300 mr-3">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="text-red-400 hover:text-red-300">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+    @if (carregando)
+    {
+        <LoadingSpinner IsVisible="true" Message="Carregando ordens de serviço..." />
+    }
+    else if (ordensFiltradas?.Any() == true)
+    {
+        <div class="bg-slate-800 rounded-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-slate-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">OS</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Cliente</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Piscina</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Data</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Checklist</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700">
+                        @foreach (var os in ordensFiltradas)
+                        {
+                            <tr class="hover:bg-slate-700">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-slate-100">#@os.IDOS</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-slate-100">@os.Piscina?.Cliente?.Nome</div>
+                                    <div class="text-sm text-slate-400">@os.Piscina?.Cliente?.Tipo</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-slate-300">@os.Piscina?.Tipo</div>
+                                    <div class="text-sm text-slate-400">@os.Piscina?.VolumeLitros L</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                                    @os.DataExecucao.ToString("dd/MM/yyyy")
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="@GetStatusClass(os.Status) px-2 py-1 text-xs font-semibold rounded-full">
+                                        @os.Status
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="@(os.ChecklistConcluido ? "text-green-400" : "text-red-400") text-sm">
+                                        @(os.ChecklistConcluido ? "✓" : "✗")
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button @onclick="() => VerDetalhes(os)" class="text-blue-400 hover:text-blue-300 mr-3" title="Ver Detalhes">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button @onclick="() => EditarOS(os)" class="text-cyan-400 hover:text-cyan-300 mr-3" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button @onclick="() => ExcluirOS(os)" class="text-red-400 hover:text-red-300" title="Excluir">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
+    }
+    else
+    {
+        <div class="bg-slate-800 rounded-xl p-8 text-center">
+            <i class="fas fa-clipboard-list text-4xl text-slate-600 mb-4"></i>
+            <h4 class="text-lg font-medium text-slate-300 mb-2">Nenhuma Ordem de Serviço encontrada</h4>
+            <p class="text-slate-400">Crie uma nova OS ou gere automaticamente baseado nos agendamentos.</p>
+        </div>
+    }
 </section>
+
+<OrdemServicoModal @bind-IsVisible="modalOSVisible" 
+                   OrdemDeServico="osSelecionada" 
+                   Piscinas="piscinas"
+                   OnSave="SalvarOS" />
+
+<OrdemServicoDetalhes @bind-IsVisible="modalDetalhesVisible" 
+                      OrdemDeServico="osSelecionada"
+                      OnEdit="EditarOS" />
+
+<ConfirmDialog @bind-IsVisible="confirmacaoExclusaoVisible"
+               Title="Confirmar Exclusão"
+               Message="Tem certeza que deseja excluir esta ordem de serviço?"
+               ConfirmText="Excluir"
+               OnConfirm="ConfirmarExclusao" />
+
+<Toast @bind-IsVisible="toastVisible"
+       Title="Notificação"
+       Message="mensagemToast"
+       Type="tipoToast" />
 
 @code {
     private List<OrdemDeServico>? ordensDeServico;
+    private List<OrdemDeServico>? ordensFiltradas;
+    private List<Piscina>? piscinas;
+    private OrdemDeServico osSelecionada = new OrdemDeServico();
+    private bool modalOSVisible = false;
+    private bool modalDetalhesVisible = false;
+    private bool confirmacaoExclusaoVisible = false;
+    private bool carregando = true;
+    private string termoBusca = "";
+    private string filtroStatus = "";
+    private string filtroData = "";
+
+    private string FiltroStatus
+    {
+        get => filtroStatus;
+        set
+        {
+            filtroStatus = value;
+            FiltrarOS();
+        }
+    }
+
+    private string FiltroData
+    {
+        get => filtroData;
+        set
+        {
+            filtroData = value;
+            FiltrarOS();
+        }
+    }
+    private OrdemDeServico? osParaExcluir;
+    private bool toastVisible = false;
+    private string mensagemToast = "";
+    private string tipoToast = "success";
 
     protected override async Task OnInitializedAsync()
     {
+        await CarregarDados();
+    }
+
+    private async Task CarregarDados()
+    {
         try
         {
-            ordensDeServico = await ApiService.GetOrdensDeServicoAsync();
+            carregando = true;
+            StateHasChanged();
+
+            var tasks = new Task[]
+            {
+                ApiService.GetOrdensDeServicoAsync(),
+                ApiService.GetPiscinasAsync()
+            };
+
+            await Task.WhenAll(tasks);
+
+            ordensDeServico = ((Task<List<OrdemDeServico>>)tasks[0]).Result;
+            piscinas = ((Task<List<Piscina>>)tasks[1]).Result;
+            ordensFiltradas = ordensDeServico;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erro ao carregar ordens de serviço: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("console.error", $"Erro ao carregar dados: {ex.Message}");
             ordensDeServico = new List<OrdemDeServico>();
+            piscinas = new List<Piscina>();
+            ordensFiltradas = new List<OrdemDeServico>();
         }
+        finally
+        {
+            carregando = false;
+            StateHasChanged();
+        }
+    }
+
+    private void FiltrarOS()
+    {
+        if (ordensDeServico == null) return;
+
+        ordensFiltradas = ordensDeServico.ToList();
+
+        if (!string.IsNullOrEmpty(termoBusca))
+        {
+            ordensFiltradas = ordensFiltradas.Where(os => 
+                os.IDOS.ToString().Contains(termoBusca, StringComparison.OrdinalIgnoreCase) ||
+                os.Piscina?.Cliente?.Nome?.Contains(termoBusca, StringComparison.OrdinalIgnoreCase) == true ||
+                os.Piscina?.Tipo?.Contains(termoBusca, StringComparison.OrdinalIgnoreCase) == true ||
+                os.Observacoes?.Contains(termoBusca, StringComparison.OrdinalIgnoreCase) == true
+            ).ToList();
+        }
+
+        if (!string.IsNullOrEmpty(filtroStatus))
+        {
+            ordensFiltradas = ordensFiltradas.Where(os => os.Status == filtroStatus).ToList();
+        }
+
+        if (!string.IsNullOrEmpty(filtroData))
+        {
+            var hoje = DateTime.Today;
+            ordensFiltradas = filtroData switch
+            {
+                "hoje" => ordensFiltradas.Where(os => os.DataExecucao.Date == hoje).ToList(),
+                "semana" => ordensFiltradas.Where(os => os.DataExecucao.Date >= hoje && os.DataExecucao.Date <= hoje.AddDays(7)).ToList(),
+                "mes" => ordensFiltradas.Where(os => os.DataExecucao.Month == hoje.Month && os.DataExecucao.Year == hoje.Year).ToList(),
+                _ => ordensFiltradas
+            };
+        }
+
+        StateHasChanged();
+    }
+
+    private void AbrirModalNovaOS()
+    {
+        osSelecionada = new OrdemDeServico
+        {
+            DataExecucao = DateTime.Today,
+            Status = "Em Aberto"
+        };
+        modalOSVisible = true;
+    }
+
+    private void EditarOS(OrdemDeServico os)
+    {
+        osSelecionada = new OrdemDeServico
+        {
+            IDOS = os.IDOS,
+            IDPiscina = os.IDPiscina,
+            DataExecucao = os.DataExecucao,
+            Status = os.Status,
+            ChecklistConcluido = os.ChecklistConcluido,
+            Observacoes = os.Observacoes,
+            FotosAntesDepois = os.FotosAntesDepois,
+            RelatorioGerado = os.RelatorioGerado,
+            Piscina = os.Piscina
+        };
+        modalOSVisible = true;
+    }
+
+    private void VerDetalhes(OrdemDeServico os)
+    {
+        osSelecionada = os;
+        modalDetalhesVisible = true;
+    }
+
+    private async Task SalvarOS(OrdemDeServico os)
+    {
+        try
+        {
+            if (os.IDOS == 0)
+            {
+                await ApiService.CreateOrdemDeServicoAsync(os);
+                MostrarNotificacao("Sucesso", "Ordem de Serviço criada com sucesso!", "success");
+            }
+            else
+            {
+                await ApiService.UpdateOrdemDeServicoAsync(os);
+                MostrarNotificacao("Sucesso", "Ordem de Serviço atualizada com sucesso!", "success");
+            }
+
+            await CarregarDados();
+        }
+        catch (Exception ex)
+        {
+            MostrarNotificacao("Erro", $"Erro ao salvar OS: {ex.Message}", "error");
+        }
+    }
+
+    private void MostrarNotificacao(string titulo, string mensagem, string tipo)
+    {
+        mensagemToast = mensagem;
+        tipoToast = tipo;
+        toastVisible = true;
+    }
+
+    private void ExcluirOS(OrdemDeServico os)
+    {
+        osParaExcluir = os;
+        confirmacaoExclusaoVisible = true;
+    }
+
+    private async Task ConfirmarExclusao()
+    {
+        if (osParaExcluir != null)
+        {
+            try
+            {
+                await ApiService.DeleteOrdemDeServicoAsync(osParaExcluir.IDOS);
+                MostrarNotificacao("Sucesso", "Ordem de Serviço excluída com sucesso!", "success");
+                await CarregarDados();
+            }
+            catch (Exception ex)
+            {
+                MostrarNotificacao("Erro", $"Erro ao excluir OS: {ex.Message}", "error");
+            }
+            finally
+            {
+                osParaExcluir = null;
+            }
+        }
+    }
+
+    private async Task GerarOSAutomaticas()
+    {
+        try
+        {
+            var confirmacao = await JSRuntime.InvokeAsync<bool>("confirm", 
+                "Deseja gerar ordens de serviço automáticas para todas as piscinas cadastradas?");
+            
+            if (confirmacao)
+            {
+                var osCriadas = await ApiService.GerarOSAutomaticasAsync();
+                MostrarNotificacao("Sucesso", $"Foram criadas {osCriadas.Count} ordens de serviço automáticas!", "success");
+                await CarregarDados();
+            }
+        }
+        catch (Exception ex)
+        {
+            MostrarNotificacao("Erro", $"Erro ao gerar OS automáticas: {ex.Message}", "error");
+        }
+    }
+
+    private string GetStatusClass(string status)
+    {
+        return status switch
+        {
+            "Em Aberto" => "bg-yellow-100 text-yellow-800",
+            "Em Andamento" => "bg-blue-100 text-blue-800",
+            "Finalizada" => "bg-green-100 text-green-800",
+            "Reagendada" => "bg-orange-100 text-orange-800",
+            "Cancelada" => "bg-red-100 text-red-800",
+            _ => "bg-slate-100 text-slate-800"
+        };
     }
 } 
