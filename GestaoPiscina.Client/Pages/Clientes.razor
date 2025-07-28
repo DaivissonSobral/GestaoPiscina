@@ -627,7 +627,7 @@
                                                         {
                                                             @foreach (var produto in produtos)
                                                             {
-                                                                <option value="@produto.IDProduto">@produto.Nome @(string.IsNullOrEmpty(produto.Concentracao) ? "" : $"({produto.Concentracao})")</option>
+                                                                <option value="@produto.IDProduto">@produto.Nome @(string.IsNullOrEmpty(produto.Concentracao) ? "" : $"({produto.Concentracao})") @(string.IsNullOrEmpty(produto.Unidade) ? "" : $"({produto.Unidade})")</option>
                                                             }
                                                         }
                                                     </InputSelect>
