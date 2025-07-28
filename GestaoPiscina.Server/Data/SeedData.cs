@@ -198,7 +198,7 @@ namespace GestaoPiscina.Server.Data
             }
 
             // Adicionar estoque de teste
-            if (!context.EstoquesCliente.Any())
+            if (!context.EstoqueClientes.Any())
             {
                 var clientes = context.Clientes.ToList();
                 var produtos = context.Produtos.ToList();
@@ -248,7 +248,7 @@ namespace GestaoPiscina.Server.Data
 
                     if (estoques.Any())
                     {
-                        context.EstoquesCliente.AddRange(estoques);
+                        context.EstoqueClientes.AddRange(estoques);
                         await context.SaveChangesAsync();
                     }
                 }

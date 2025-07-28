@@ -115,6 +115,12 @@ namespace GestaoPiscina.Server.Controllers
             
             try
             {
+                // Validações iniciais
+                if (clienteDTO == null)
+                {
+                    return BadRequest(new { message = "Dados do cliente não fornecidos." });
+                }
+
                 // Verifica se já existe cliente com o mesmo nome (ignorando maiúsculas/minúsculas)
                 if (await _context.Clientes.AnyAsync(c => c.Nome.ToLower() == clienteDTO.Nome.ToLower()))
                 {
@@ -125,13 +131,13 @@ namespace GestaoPiscina.Server.Controllers
                 Cliente cliente;
                 if (clienteDTO.IDCliente > 0)
                 {
-                                    // Atualizar cliente existente
-                var clienteExistente = await _context.Clientes.FindAsync(clienteDTO.IDCliente);
-                if (clienteExistente == null)
-                {
-                    return NotFound(new { message = "Cliente não encontrado." });
-                }
-                cliente = clienteExistente;
+                    // Atualizar cliente existente
+                    var clienteExistente = await _context.Clientes.FindAsync(clienteDTO.IDCliente);
+                    if (clienteExistente == null)
+                    {
+                        return NotFound(new { message = "Cliente não encontrado." });
+                    }
+                    cliente = clienteExistente;
                     
                     cliente.Nome = clienteDTO.Nome;
                     cliente.Tipo = clienteDTO.Tipo;
@@ -161,6 +167,12 @@ namespace GestaoPiscina.Server.Controllers
                 }
 
                 await _context.SaveChangesAsync();
+
+                // Verificar se o cliente foi salvo corretamente
+                if (cliente.IDCliente <= 0)
+                {
+                    return BadRequest(new { message = "Erro ao salvar cliente após commit." });
+                }
 
                 // 2. Processar Piscinas
                 foreach (var piscinaDTO in clienteDTO.Piscinas)
@@ -222,49 +234,163 @@ namespace GestaoPiscina.Server.Controllers
                     }
                 }
 
-                // 4. Processar Produtos (globais)
-                foreach (var produtoDTO in clienteDTO.Produtos)
+                // 4. Processar Estoque do Cliente (produtos específicos do cliente)
+                foreach (var estoqueDTO in clienteDTO.Estoques)
                 {
-                    if (produtoDTO.IDProduto > 0)
+                    // Validações para o estoque
+                    if (string.IsNullOrWhiteSpace(estoqueDTO.NomeProduto))
                     {
-                        // Atualizar produto existente
-                        var produto = await _context.Produtos.FindAsync(produtoDTO.IDProduto);
-                        if (produto != null)
+                        return BadRequest(new { message = "Nome do produto é obrigatório." });
+                    }
+
+                    if (string.IsNullOrWhiteSpace(estoqueDTO.UnidadeProduto))
+                    {
+                        return BadRequest(new { message = "Unidade do produto é obrigatória." });
+                    }
+
+                    if (estoqueDTO.QuantidadeAtual < 0)
+                    {
+                        return BadRequest(new { message = "Quantidade atual deve ser maior ou igual a zero." });
+                    }
+
+                    if (estoqueDTO.QuantidadeMinima.HasValue && estoqueDTO.QuantidadeMinima.Value < 0)
+                    {
+                        return BadRequest(new { message = "Quantidade mínima deve ser maior ou igual a zero." });
+                    }
+
+                    // Primeiro, verificar se o produto já existe ou criar um novo
+                    Produto produto;
+                    if (estoqueDTO.IDProduto > 0)
+                    {
+                        // Produto existente
+                        produto = await _context.Produtos.FindAsync(estoqueDTO.IDProduto);
+                        if (produto == null)
                         {
-                            produto.Nome = produtoDTO.Nome;
-                            produto.Concentracao = produtoDTO.Concentracao;
-                            produto.Unidade = produtoDTO.Unidade;
-                            _context.Entry(produto).State = EntityState.Modified;
+                            return BadRequest(new { message = $"Produto com ID {estoqueDTO.IDProduto} não encontrado." });
                         }
                     }
                     else
                     {
-                        // Criar novo produto
-                        var produto = new Produto
+                        // Verificar se já existe um produto com o mesmo nome
+                        produto = await _context.Produtos
+                            .FirstOrDefaultAsync(p => p.Nome.ToLower() == estoqueDTO.NomeProduto.ToLower());
+                        
+                        if (produto == null)
                         {
-                            Nome = produtoDTO.Nome,
-                            Concentracao = produtoDTO.Concentracao,
-                            Unidade = produtoDTO.Unidade
-                        };
-                        _context.Produtos.Add(produto);
+                            // Criar novo produto
+                            produto = new Produto
+                            {
+                                Nome = estoqueDTO.NomeProduto.Trim(),
+                                Concentracao = !string.IsNullOrWhiteSpace(estoqueDTO.ConcentracaoProduto) 
+                                    ? estoqueDTO.ConcentracaoProduto.Trim() 
+                                    : null,
+                                Unidade = estoqueDTO.UnidadeProduto.Trim()
+                            };
+                            _context.Produtos.Add(produto);
+                            await _context.SaveChangesAsync(); // Salvar para obter o ID
+                        }
+                        else
+                        {
+                            // Produto já existe, usar o existente
+                            // Atualizar dados se necessário
+                            if (!string.IsNullOrWhiteSpace(estoqueDTO.ConcentracaoProduto) && 
+                                string.IsNullOrWhiteSpace(produto.Concentracao))
+                            {
+                                produto.Concentracao = estoqueDTO.ConcentracaoProduto.Trim();
+                                _context.Entry(produto).State = EntityState.Modified;
+                            }
+                        }
+                    }
+
+                    // Verificar se o produto foi processado corretamente
+                    if (produto.IDProduto <= 0)
+                    {
+                        return BadRequest(new { message = "Erro ao processar produto." });
+                    }
+
+                    // Agora processar o estoque
+                    if (estoqueDTO.IDEstoque > 0)
+                    {
+                        // Atualizar estoque existente
+                        var estoque = await _context.EstoqueClientes.FindAsync(estoqueDTO.IDEstoque);
+                        if (estoque != null)
+                        {
+                            estoque.IDProduto = produto.IDProduto;
+                            estoque.QuantidadeAtual = estoqueDTO.QuantidadeAtual;
+                            estoque.QuantidadeMinima = estoqueDTO.QuantidadeMinima;
+                            _context.Entry(estoque).State = EntityState.Modified;
+                        }
+                    }
+                    else
+                    {
+                        // Verificar se já existe estoque para este produto e cliente
+                        var estoqueExistente = await _context.EstoqueClientes
+                            .FirstOrDefaultAsync(e => e.IDCliente == cliente.IDCliente && e.IDProduto == produto.IDProduto);
+                        
+                        if (estoqueExistente != null)
+                        {
+                            // Atualizar estoque existente
+                            estoqueExistente.QuantidadeAtual = estoqueDTO.QuantidadeAtual;
+                            estoqueExistente.QuantidadeMinima = estoqueDTO.QuantidadeMinima;
+                            _context.Entry(estoqueExistente).State = EntityState.Modified;
+                        }
+                        else
+                        {
+                            // Criar novo estoque
+                            var estoque = new EstoqueCliente
+                            {
+                                IDCliente = cliente.IDCliente,
+                                IDProduto = produto.IDProduto,
+                                QuantidadeAtual = estoqueDTO.QuantidadeAtual,
+                                QuantidadeMinima = estoqueDTO.QuantidadeMinima
+                            };
+                            _context.EstoqueClientes.Add(estoque);
+                        }
+                    }
+
+                    // Verificar se o estoque foi processado corretamente
+                    if (estoqueDTO.QuantidadeAtual < 0)
+                    {
+                        return BadRequest(new { message = "Quantidade atual deve ser maior ou igual a zero." });
                     }
                 }
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
+                // Verificar se o cliente foi salvo corretamente
+                if (cliente.IDCliente <= 0)
+                {
+                    return BadRequest(new { message = "Erro ao salvar cliente após commit." });
+                }
+
                 // Retornar o cliente com todos os dados relacionados
                 var clienteCompleto = await _context.Clientes
                     .Include(c => c.Piscinas)
                     .Include(c => c.Equipamentos)
+                    .Include(c => c.Estoques)
+                        .ThenInclude(e => e.Produto)
                     .FirstOrDefaultAsync(c => c.IDCliente == cliente.IDCliente);
+
+                if (clienteCompleto == null)
+                {
+                    return BadRequest(new { message = "Erro ao carregar cliente após salvamento." });
+                }
 
                 return CreatedAtAction(nameof(GetCliente), new { id = cliente.IDCliente }, clienteCompleto);
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return BadRequest(new { message = $"Erro ao processar transação: {ex.Message}" });
+                
+                // Log detalhado do erro para debug
+                var errorMessage = $"Erro ao processar transação: {ex.Message}";
+                if (ex.InnerException != null)
+                {
+                    errorMessage += $" Inner Exception: {ex.InnerException.Message}";
+                }
+                
+                return BadRequest(new { message = errorMessage });
             }
         }
     }

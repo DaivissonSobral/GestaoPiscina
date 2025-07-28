@@ -35,7 +35,7 @@ namespace GestaoPiscina.Server.Controllers
             }
             
             // Buscar produtos que estão em estoque do cliente específico
-            var produtos = await _context.EstoquesCliente
+            var produtos = await _context.EstoqueClientes
                 .Where(ec => ec.IDCliente == clienteId && ec.QuantidadeAtual > 0)
                 .Include(ec => ec.Produto)
                 .Select(ec => ec.Produto)
@@ -56,13 +56,13 @@ namespace GestaoPiscina.Server.Controllers
             }
 
             // Verificar estoques do cliente
-            var estoques = await _context.EstoquesCliente
+            var estoques = await _context.EstoqueClientes
                 .Where(ec => ec.IDCliente == clienteId)
                 .Include(ec => ec.Produto)
                 .ToListAsync();
 
             // Verificar produtos com estoque > 0
-            var produtosComEstoque = await _context.EstoquesCliente
+            var produtosComEstoque = await _context.EstoqueClientes
                 .Where(ec => ec.IDCliente == clienteId && ec.QuantidadeAtual > 0)
                 .Include(ec => ec.Produto)
                 .Select(ec => ec.Produto)
@@ -101,7 +101,7 @@ namespace GestaoPiscina.Server.Controllers
             }
 
             // Verificar se já existe estoque para este cliente/produto
-            var estoqueExistente = await _context.EstoquesCliente
+            var estoqueExistente = await _context.EstoqueClientes
                 .FirstOrDefaultAsync(ec => ec.IDCliente == estoque.IDCliente && ec.IDProduto == estoque.IDProduto);
 
             if (estoqueExistente != null)
@@ -113,7 +113,7 @@ namespace GestaoPiscina.Server.Controllers
             else
             {
                 // Adicionar novo estoque
-                _context.EstoquesCliente.Add(estoque);
+                _context.EstoqueClientes.Add(estoque);
             }
 
             await _context.SaveChangesAsync();

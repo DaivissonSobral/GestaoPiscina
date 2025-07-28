@@ -446,6 +446,76 @@ namespace GestaoPiscina.Client.Services
             }
         }
 
+        // Estoque
+        public async Task<List<EstoqueCliente>> GetEstoqueByClienteAsync(int clienteId)
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<List<EstoqueCliente>>($"{_baseUrl}estoque/cliente/{clienteId}") ?? new List<EstoqueCliente>();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao buscar estoque do cliente: {ex.Message}");
+            }
+        }
+
+        public async Task<EstoqueCliente> CreateEstoqueAsync(EstoqueCliente estoque)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}estoque", estoque);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+                
+                var createdEstoque = await response.Content.ReadFromJsonAsync<EstoqueCliente>();
+                return createdEstoque ?? estoque;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao criar item do estoque: {ex.Message}");
+            }
+        }
+
+        public async Task UpdateEstoqueAsync(EstoqueCliente estoque)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}estoque/{estoque.IDEstoque}", estoque);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao atualizar item do estoque: {ex.Message}");
+            }
+        }
+
+        public async Task DeleteEstoqueAsync(int id)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{_baseUrl}estoque/{id}");
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao excluir item do estoque: {ex.Message}");
+            }
+        }
+
         // Ordens de Serviço
         public async Task<List<OrdemDeServico>> GetOrdensDeServicoAsync()
         {

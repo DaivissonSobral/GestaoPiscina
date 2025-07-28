@@ -217,13 +217,13 @@
                             
                             @if (activeTab == "produtos")
                             {
-                                <button @onclick="SetProdutosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600">
+                                <button @onclick="SetEstoqueTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600">
                                     <i class="fas fa-box mr-2"></i>Produtos
                                 </button>
                             }
                             else
                             {
-                                <button @onclick="SetProdutosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent">
+                                <button @onclick="SetEstoqueTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent">
                                     <i class="fas fa-box mr-2"></i>Produtos
                                 </button>
                             }
@@ -598,54 +598,66 @@
                             <div @key="activeTab" class="space-y-6">
                                 <div class="flex items-center justify-between mb-4">
                                     <h5 class="text-lg font-semibold text-slate-200 flex items-center">
-                                        <i class="fas fa-box text-cyan-400 mr-2"></i>Produtos
+                                        <i class="fas fa-box text-cyan-400 mr-2"></i>Estoque do Cliente
                                     </h5>
-                                    @if (!showProdutoForm)
+                                    @if (!showEstoqueForm)
                                     {
-                                        <button type="button" @onclick="ShowCreateProduto" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-2 rounded-lg text-white text-sm transition-colors">
-                                            <i class="fas fa-plus mr-1"></i>Novo Produto
+                                        <button type="button" @onclick="ShowCreateEstoque" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-2 rounded-lg text-white text-sm transition-colors">
+                                            <i class="fas fa-plus mr-1"></i>Novo Item no Estoque
                                         </button>
                                     }
                                 </div>
 
-                                @if (showProdutoForm)
+                                @if (showEstoqueForm)
                                 {
                                     <div class="bg-slate-700 rounded-lg p-6 border border-slate-600">
                                         <div class="flex items-center justify-between mb-4">
                                             <h6 class="text-md font-semibold text-slate-200">
-                                                @(currentProduto.IDProduto > 0 ? "Editar Produto" : "Novo Produto")
+                                                @(currentEstoque.IDEstoque > 0 ? "Editar Item do Estoque" : "Novo Item no Estoque")
                                             </h6>
-                                            <button @onclick="CloseProdutoForm" class="text-slate-400 hover:text-slate-300">
+                                            <button @onclick="CloseEstoqueForm" class="text-slate-400 hover:text-slate-300">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </div>
                                         
-                                        <EditForm Model="currentProduto" OnValidSubmit="@(async () => await HandleSaveProduto())" Context="produtoContext">
+                                        <EditForm Model="currentEstoque" OnValidSubmit="@(async () => await HandleSaveEstoque())" Context="estoqueContext">
                                             <DataAnnotationsValidator />
                                             
                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div class="space-y-3">
-                                                    <label class="block text-sm font-medium text-slate-300 mb-2">Nome *</label>
-                                                    <InputText @bind-Value="currentProduto.Nome" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-800 !text-slate-800" placeholder="Nome do produto" style="color: #1e293b !important;" />
-                                                    <ValidationMessage For="@(() => currentProduto.Nome)" class="text-red-500 text-sm" />
+                                                    <label class="block text-sm font-medium text-slate-300 mb-2">Produto *</label>
+                                                    <InputSelect @bind-Value="selectedProdutoId" @onchange="OnProdutoSelected" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" style="color: #f1f5f9 !important;">
+                                                        <option value="0">Selecione um produto...</option>
+                                                        @if (produtos != null)
+                                                        {
+                                                            @foreach (var produto in produtos)
+                                                            {
+                                                                <option value="@produto.IDProduto">@produto.Nome @(string.IsNullOrEmpty(produto.Concentracao) ? "" : $"({produto.Concentracao})")</option>
+                                                            }
+                                                        }
+                                                    </InputSelect>
+                                                    <ValidationMessage For="@(() => currentEstoque.Produto.Nome)" class="text-red-500 text-sm" />
                                                 </div>
                                                 
                                                 <div class="space-y-3">
-                                                    <label class="block text-sm font-medium text-slate-300 mb-2">Unidade *</label>
-                                                    <InputSelect @bind-Value="currentProduto.Unidade" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-800 !text-slate-800" style="color: #1e293b !important;">
-                                                        <option value="">Selecione...</option>
-                                                        <option value="L">Litros (L)</option>
-                                                        <option value="kg">Quilogramas (kg)</option>
-                                                        <option value="g">Gramas (g)</option>
-                                                        <option value="ml">Mililitros (ml)</option>
-                                                        <option value="un">Unidade (un)</option>
-                                                    </InputSelect>
-                                                    <ValidationMessage For="@(() => currentProduto.Unidade)" class="text-red-500 text-sm" />
+                                                    <label class="block text-sm font-medium text-slate-300 mb-2">Quantidade Atual *</label>
+                                                    <InputNumber @bind-Value="currentEstoque.QuantidadeAtual" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" placeholder="0.00" style="color: #f1f5f9 !important;" />
+                                                    <ValidationMessage For="@(() => currentEstoque.QuantidadeAtual)" class="text-red-500 text-sm" />
+                                                </div>
+                                                
+                                                <div class="space-y-3">
+                                                    <label class="block text-sm font-medium text-slate-300 mb-2">Quantidade Mínima</label>
+                                                    <InputNumber @bind-Value="currentEstoque.QuantidadeMinima" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" placeholder="0.00" style="color: #f1f5f9 !important;" />
+                                                </div>
+                                                
+                                                <div class="space-y-3">
+                                                    <label class="block text-sm font-medium text-slate-300 mb-2">Unidade</label>
+                                                    <InputText @bind-Value="currentEstoque.Produto.Unidade" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" readonly style="color: #f1f5f9 !important;" />
                                                 </div>
                                                 
                                                 <div class="md:col-span-2 space-y-3">
                                                     <label class="block text-sm font-medium text-slate-300 mb-2">Concentração</label>
-                                                    <InputText @bind-Value="currentProduto.Concentracao" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-800 !text-slate-800" placeholder="Ex: 10%, 5ppm..." style="color: #1e293b !important;" />
+                                                    <InputText @bind-Value="currentEstoque.Produto.Concentracao" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" readonly style="color: #f1f5f9 !important;" />
                                                 </div>
                                             </div>
                                             
@@ -653,7 +665,7 @@
                                                 <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-2 rounded-lg text-white transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-slate-800">
                                                     <i class="fas fa-save mr-2"></i>Salvar
                                                 </button>
-                                                <button type="button" @onclick="CloseProdutoForm" class="bg-slate-600 hover:bg-slate-500 px-3 py-2 rounded-lg text-white transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-800">
+                                                <button type="button" @onclick="CloseEstoqueForm" class="bg-slate-600 hover:bg-slate-500 px-3 py-2 rounded-lg text-white transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-800">
                                                     <i class="fas fa-times mr-2"></i>Cancelar
                                                 </button>
                                             </div>
@@ -661,33 +673,78 @@
                                     </div>
                                 }
                                 
-                                @if (produtos != null && produtos.Any())
+                                @if ((currentCliente.IDCliente > 0 && estoques != null && estoques.Any()) || estoquesTemporarios.Any())
                                 {
                                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                        @foreach (var produto in produtos)
+                                        @if (estoques != null)
                                         {
-                                            <div class="bg-slate-800 rounded-xl p-4 space-y-3">
+                                            @foreach (var estoque in estoques)
+                                            {
+                                                <div class="bg-slate-800 rounded-xl p-4 space-y-3">
+                                                    <div class="flex justify-between items-start">
+                                                        <div class="flex-1">
+                                                            <h4 class="text-sm font-medium text-slate-100">@estoque.Produto.Nome</h4>
+                                                            <span class="text-sm text-slate-400">Quantidade: @estoque.QuantidadeAtual @estoque.Produto.Unidade</span>
+                                                        </div>
+                                                        <div class="flex space-x-3 ml-4">
+                                                            <button @onclick="() => ShowEditEstoque(estoque)" class="text-cyan-400 hover:text-cyan-300 p-2 rounded transition-colors" title="Editar">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                            <button @onclick="() => DeleteEstoque(estoque)" class="text-red-400 hover:text-red-300 p-2 rounded transition-colors" title="Excluir">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="space-y-2">
+                                                        @if (!string.IsNullOrEmpty(estoque.Produto.Concentracao))
+                                                        {
+                                                            <div class="text-sm text-slate-400">
+                                                                <i class="fas fa-percentage text-slate-500 mr-2"></i>
+                                                                Concentração: @estoque.Produto.Concentracao
+                                                            </div>
+                                                        }
+                                                        @if (estoque.QuantidadeMinima.HasValue)
+                                                        {
+                                                            <div class="text-sm text-slate-400">
+                                                                <i class="fas fa-exclamation-triangle text-slate-500 mr-2"></i>
+                                                                Mínimo: @estoque.QuantidadeMinima @estoque.Produto.Unidade
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                        
+                                        @foreach (var estoque in estoquesTemporarios)
+                                        {
+                                            <div class="bg-slate-700 rounded-xl p-4 space-y-3 border-2 border-dashed border-cyan-400">
                                                 <div class="flex justify-between items-start">
                                                     <div class="flex-1">
-                                                        <h4 class="text-sm font-medium text-slate-100">@produto.Nome</h4>
-                                                        <span class="text-sm text-slate-400">Unidade: @produto.Unidade</span>
+                                                        <h4 class="text-sm font-medium text-slate-100">@estoque.Produto.Nome</h4>
+                                                        <span class="text-sm text-slate-400">Quantidade: @estoque.QuantidadeAtual @estoque.Produto.Unidade</span>
+                                                        <span class="text-xs text-cyan-400 bg-cyan-900 px-2 py-1 rounded">Temporário</span>
                                                     </div>
                                                     <div class="flex space-x-3 ml-4">
-                                                        <button @onclick="() => ShowEditProduto(produto)" class="text-cyan-400 hover:text-cyan-300 p-2 rounded transition-colors" title="Editar">
-                                                            <i class="fas fa-edit"></i>
-                                                        </button>
-                                                        <button @onclick="() => DeleteProduto(produto)" class="text-red-400 hover:text-red-300 p-2 rounded transition-colors" title="Excluir">
+                                                        <button @onclick="() => RemoveEstoqueTemporario(estoque)" class="text-red-400 hover:text-red-300 p-2 rounded transition-colors" title="Remover">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
                                                     </div>
                                                 </div>
                                                 
                                                 <div class="space-y-2">
-                                                    @if (!string.IsNullOrEmpty(produto.Concentracao))
+                                                    @if (!string.IsNullOrEmpty(estoque.Produto.Concentracao))
                                                     {
                                                         <div class="text-sm text-slate-400">
                                                             <i class="fas fa-percentage text-slate-500 mr-2"></i>
-                                                            Concentração: @produto.Concentracao
+                                                            Concentração: @estoque.Produto.Concentracao
+                                                        </div>
+                                                    }
+                                                    @if (estoque.QuantidadeMinima.HasValue)
+                                                    {
+                                                        <div class="text-sm text-slate-400">
+                                                            <i class="fas fa-exclamation-triangle text-slate-500 mr-2"></i>
+                                                            Mínimo: @estoque.QuantidadeMinima @estoque.Produto.Unidade
                                                         </div>
                                                     }
                                                 </div>
@@ -695,12 +752,20 @@
                                         }
                                     </div>
                                 }
-                                else if (!showProdutoForm)
+                                else if (!showEstoqueForm && (currentCliente.IDCliente > 0 || estoquesTemporarios.Any()))
                                 {
                                     <div class="text-center py-8 text-slate-400">
                                         <i class="fas fa-box text-4xl mb-4"></i>
-                                        <p class="text-lg">Nenhum produto cadastrado</p>
-                                        <p class="text-sm mt-2">Clique em "Novo Produto" para adicionar</p>
+                                        <p class="text-lg">Nenhum item no estoque</p>
+                                        <p class="text-sm mt-2">Clique em "Novo Item no Estoque" para adicionar</p>
+                                    </div>
+                                }
+                                else if (currentCliente.IDCliente <= 0 && !estoquesTemporarios.Any())
+                                {
+                                    <div class="text-center py-8 text-slate-400">
+                                        <i class="fas fa-user-plus text-4xl mb-4"></i>
+                                        <p class="text-lg">Cliente não salvo</p>
+                                        <p class="text-sm mt-2">Salve o cliente primeiro para gerenciar estoque</p>
                                     </div>
                                 }
                             </div>
@@ -743,8 +808,8 @@
                                         <div class="flex items-center space-x-3">
                                             <i class="fas fa-box text-cyan-400"></i>
                                             <div>
-                                                <h6 class="text-sm font-medium text-slate-200">Produtos</h6>
-                                                <p class="text-sm text-slate-400">@(produtos?.Count ?? 0) produto(s) cadastrado(s)</p>
+                                                <h6 class="text-sm font-medium text-slate-200">Estoque</h6>
+                                                <p class="text-sm text-slate-400">@(estoques?.Count ?? 0) item(s) cadastrado(s) + @estoquesTemporarios.Count temporário(s)</p>
                                             </div>
                                         </div>
                                     </div>
@@ -754,7 +819,7 @@
                                         <ul class="text-sm text-slate-300 space-y-1">
                                             <li>• Todos os dados serão salvos em uma única transação</li>
                                             <li>• Se houver erro em qualquer item, nada será salvo</li>
-                                            <li>• Produtos são globais e ficam disponíveis para todos os clientes</li>
+                                            <li>• Estoque é específico do cliente e inclui produtos e quantidades</li>
                                             <li>• Piscinas e equipamentos são específicos do cliente</li>
                                         </ul>
                                     </div>
@@ -806,24 +871,27 @@
     private List<Cliente>? clientes;
     private List<Piscina>? piscinas;
     private List<Equipamento>? equipamentos;
-    private List<Produto>? produtos;
+    private List<EstoqueCliente>? estoques;
+    private List<Produto>? produtos; // Lista de produtos disponíveis
     private List<Piscina> piscinasTemporarias = new List<Piscina>();
     private List<Equipamento> equipamentosTemporarios = new List<Equipamento>();
+    private List<EstoqueCliente> estoquesTemporarios = new List<EstoqueCliente>();
     private bool isLoading = false;
     private bool showConfirmDialog = false;
-    private bool showProdutoForm = false;
+    private bool showEstoqueForm = false;
     private bool showPiscinaForm = false;
     private bool showEquipamentoForm = false;
     private Cliente currentCliente = new Cliente();
     private Piscina currentPiscina = new Piscina();
     private Equipamento currentEquipamento = new Equipamento();
-    private Produto currentProduto = new Produto();
+    private EstoqueCliente currentEstoque = new EstoqueCliente();
     private object? itemToDelete = null;
     private string searchTerm = "";
     private string selectedType = "";
     private string currentView = "lista";
     private string viewMode = "lista"; // "lista" ou "cards"
     private string activeTab = "dados";
+    private int selectedProdutoId;
 
     private IEnumerable<Cliente> filteredClientes => clientes?.Where(c => 
         (string.IsNullOrEmpty(searchTerm) || c.Nome.ToLower().Contains(searchTerm.ToLower())) &&
@@ -866,13 +934,13 @@
                 // Carregar dados em paralelo para melhor performance
                 var piscinasTask = ApiService.GetPiscinasByClienteAsync(currentCliente.IDCliente);
                 var equipamentosTask = ApiService.GetEquipamentosByClienteAsync(currentCliente.IDCliente);
-                var produtosTask = ApiService.GetProdutosByClienteAsync(currentCliente.IDCliente);
+                var estoquesTask = ApiService.GetEstoqueByClienteAsync(currentCliente.IDCliente);
 
-                await Task.WhenAll(piscinasTask, equipamentosTask, produtosTask);
+                await Task.WhenAll(piscinasTask, equipamentosTask, estoquesTask);
 
                 piscinas = await piscinasTask;
                 equipamentos = await equipamentosTask;
-                produtos = await produtosTask;
+                estoques = await estoquesTask;
                 
                 // Forçar atualização da UI
                 StateHasChanged();
@@ -882,7 +950,7 @@
                 Console.WriteLine($"Erro ao carregar dados relacionados: {ex.Message}");
                 piscinas = new List<Piscina>();
                 equipamentos = new List<Equipamento>();
-                produtos = new List<Produto>();
+                estoques = new List<EstoqueCliente>();
             }
         }
         else
@@ -890,7 +958,7 @@
             // Limpar dados se não há cliente selecionado
             piscinas = new List<Piscina>();
             equipamentos = new List<Equipamento>();
-            produtos = new List<Produto>();
+            estoques = new List<EstoqueCliente>();
         }
     }
 
@@ -931,12 +999,13 @@
         currentCliente = new Cliente();
         piscinas = null;
         equipamentos = null;
-        produtos = null;
+        estoques = null;
         piscinasTemporarias.Clear();
         equipamentosTemporarios.Clear();
+        estoquesTemporarios.Clear();
         showPiscinaForm = false;
         showEquipamentoForm = false;
-        showProdutoForm = false;
+        showEstoqueForm = false;
         StateHasChanged();
     }
 
@@ -1153,52 +1222,156 @@
         showConfirmDialog = true;
     }
 
-    // Métodos para Produtos
-    private void ShowCreateProduto()
+    // Métodos para Estoque
+    private void ShowCreateEstoque()
     {
-        currentProduto = new Produto();
-        showProdutoForm = true;
-    }
-
-    private void ShowEditProduto(Produto produto)
-    {
-        currentProduto = new Produto
-        {
-            IDProduto = produto.IDProduto,
-            Nome = produto.Nome,
-            Concentracao = produto.Concentracao,
-            Unidade = produto.Unidade
+        currentEstoque = new EstoqueCliente 
+        { 
+            IDCliente = currentCliente.IDCliente,
+            Produto = new Produto(),
+            QuantidadeAtual = 0,
+            QuantidadeMinima = null
         };
-        showProdutoForm = true;
+        selectedProdutoId = 0;
+        showEstoqueForm = true;
     }
 
-    private void CloseProdutoForm()
+    private void ShowEditEstoque(EstoqueCliente estoque)
     {
-        showProdutoForm = false;
-        currentProduto = new Produto();
+        currentEstoque = new EstoqueCliente
+        {
+            IDEstoque = estoque.IDEstoque,
+            IDCliente = estoque.IDCliente,
+            IDProduto = estoque.IDProduto,
+            QuantidadeAtual = estoque.QuantidadeAtual,
+            QuantidadeMinima = estoque.QuantidadeMinima,
+            Produto = new Produto
+            {
+                IDProduto = estoque.Produto.IDProduto,
+                Nome = estoque.Produto.Nome,
+                Concentracao = estoque.Produto.Concentracao,
+                Unidade = estoque.Produto.Unidade
+            }
+        };
+        selectedProdutoId = estoque.IDProduto;
+        showEstoqueForm = true;
     }
 
-    private async Task HandleSaveProduto()
+    private void CloseEstoqueForm()
+    {
+        showEstoqueForm = false;
+        currentEstoque = new EstoqueCliente();
+        selectedProdutoId = 0;
+    }
+
+    private void RemoveEstoqueTemporario(EstoqueCliente estoque)
+    {
+        estoquesTemporarios.Remove(estoque);
+        StateHasChanged();
+    }
+
+    private async Task HandleSaveEstoque()
     {
         isLoading = true;
         try
         {
-            if (currentProduto.IDProduto > 0)
+            // Validações básicas
+            if (currentEstoque.IDCliente <= 0)
             {
-                await ApiService.UpdateProdutoAsync(currentProduto);
-                ShowToast("Sucesso", "Produto atualizado com sucesso!", "success");
+                currentEstoque.IDCliente = currentCliente.IDCliente;
+            }
+
+            // Validações adicionais
+            if (selectedProdutoId <= 0)
+            {
+                ShowToast("Erro", "Selecione um produto", "error");
+                return;
+            }
+
+            if (currentEstoque.QuantidadeAtual < 0)
+            {
+                ShowToast("Erro", "Quantidade atual deve ser maior ou igual a zero", "error");
+                return;
+            }
+
+            // Garantir que o produto está correto
+            var produtoSelecionado = produtos?.FirstOrDefault(p => p.IDProduto == selectedProdutoId);
+            if (produtoSelecionado != null)
+            {
+                currentEstoque.Produto = new Produto
+                {
+                    IDProduto = produtoSelecionado.IDProduto,
+                    Nome = produtoSelecionado.Nome,
+                    Concentracao = produtoSelecionado.Concentracao,
+                    Unidade = produtoSelecionado.Unidade
+                };
+                currentEstoque.IDProduto = produtoSelecionado.IDProduto;
             }
             else
             {
-                await ApiService.CreateProdutoAsync(currentProduto);
-                ShowToast("Sucesso", "Produto criado com sucesso!", "success");
+                ShowToast("Erro", "Produto selecionado não encontrado", "error");
+                return;
             }
+
+            // Validações adicionais para o produto
+            if (string.IsNullOrWhiteSpace(currentEstoque.Produto?.Nome))
+            {
+                ShowToast("Erro", "Nome do produto é obrigatório", "error");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(currentEstoque.Produto?.Unidade))
+            {
+                ShowToast("Erro", "Unidade do produto é obrigatória", "error");
+                return;
+            }
+
+            // SEMPRE adicionar à lista temporária se o cliente não foi salvo via "Salvar Tudo"
+            // ou se há estoques temporários (indicando que estamos no modo transação única)
+            if (currentCliente.IDCliente <= 0 || estoquesTemporarios.Any())
+            {
+                estoquesTemporarios.Add(new EstoqueCliente
+                {
+                    IDEstoque = -(estoquesTemporarios.Count + 1), // ID negativo para identificar como temporário
+                    IDCliente = 0,
+                    IDProduto = currentEstoque.IDProduto,
+                    QuantidadeAtual = currentEstoque.QuantidadeAtual,
+                    QuantidadeMinima = currentEstoque.QuantidadeMinima,
+                    Produto = new Produto
+                    {
+                        IDProduto = currentEstoque.IDProduto,
+                        Nome = currentEstoque.Produto.Nome,
+                        Concentracao = currentEstoque.Produto.Concentracao,
+                        Unidade = currentEstoque.Produto.Unidade
+                    }
+                });
+                
+                ShowToast("Sucesso", "Item do estoque adicionado temporariamente. Use 'Salvar Tudo' para confirmar.", "success");
+                CloseEstoqueForm();
+                StateHasChanged();
+                return;
+            }
+
+            // Se o cliente já foi salvo E não há estoques temporários, salvar normalmente
+            if (currentEstoque.IDEstoque > 0)
+            {
+                await ApiService.UpdateEstoqueAsync(currentEstoque);
+                ShowToast("Sucesso", "Item do estoque atualizado com sucesso!", "success");
+            }
+            else
+            {
+                await ApiService.CreateEstoqueAsync(currentEstoque);
+                ShowToast("Sucesso", "Item do estoque criado com sucesso!", "success");
+            }
+            
+            // Recarregar dados relacionados
             await LoadRelatedData();
-            CloseProdutoForm();
+            CloseEstoqueForm();
+            StateHasChanged();
         }
         catch (Exception ex)
         {
-            ShowToast("Erro", $"Erro ao salvar produto: {ex.Message}", "error");
+            ShowToast("Erro", $"Erro ao salvar item do estoque: {ex.Message}", "error");
         }
         finally
         {
@@ -1206,9 +1379,9 @@
         }
     }
 
-    private void DeleteProduto(Produto produto)
+    private void DeleteEstoque(EstoqueCliente estoque)
     {
-        itemToDelete = produto;
+        itemToDelete = estoque;
         showConfirmDialog = true;
     }
 
@@ -1285,10 +1458,10 @@
                         await LoadRelatedData();
                         ShowToast("Sucesso", "Equipamento excluído com sucesso!", "success");
                         break;
-                    case Produto produto:
-                        await ApiService.DeleteProdutoAsync(produto.IDProduto);
+                    case EstoqueCliente estoque:
+                        await ApiService.DeleteEstoqueAsync(estoque.IDEstoque);
                         await LoadRelatedData();
-                        ShowToast("Sucesso", "Produto excluído com sucesso!", "success");
+                        ShowToast("Sucesso", "Item do estoque excluído com sucesso!", "success");
                         break;
                 }
                 StateHasChanged();
@@ -1363,10 +1536,17 @@
         }
     }
 
-    private async void SetProdutosTab()
+    private async void SetEstoqueTab()
     {
         activeTab = "produtos";
-        if (currentCliente.IDCliente > 0 && (produtos == null || !produtos.Any()))
+        
+        // Carregar produtos se ainda não foram carregados
+        if (produtos == null || !produtos.Any())
+        {
+            await LoadProdutos();
+        }
+        
+        if (currentCliente.IDCliente > 0 && (estoques == null || !estoques.Any()))
         {
             await LoadRelatedData();
         }
@@ -1414,7 +1594,7 @@
                 Observacoes = currentCliente.Observacoes,
                 Piscinas = new List<PiscinaDTO>(),
                 Equipamentos = new List<EquipamentoDTO>(),
-                Produtos = new List<ProdutoDTO>()
+                Estoques = new List<EstoqueClienteDTO>()
             };
 
             // Adicionar piscinas (incluindo temporárias)
@@ -1477,19 +1657,73 @@
                 });
             }
 
-            // Adicionar produtos
-            if (produtos != null)
+            // Adicionar estoques (incluindo temporários)
+            if (estoques != null)
             {
-                foreach (var produto in produtos)
+                foreach (var estoque in estoques)
                 {
-                    clienteCompleto.Produtos.Add(new ProdutoDTO
+                    clienteCompleto.Estoques.Add(new EstoqueClienteDTO
                     {
-                        IDProduto = produto.IDProduto,
-                        Nome = produto.Nome,
-                        Concentracao = produto.Concentracao,
-                        Unidade = produto.Unidade
+                        IDEstoque = estoque.IDEstoque,
+                        IDCliente = estoque.IDCliente,
+                        IDProduto = estoque.IDProduto,
+                        QuantidadeAtual = estoque.QuantidadeAtual,
+                        QuantidadeMinima = estoque.QuantidadeMinima,
+                        NomeProduto = estoque.Produto.Nome,
+                        ConcentracaoProduto = estoque.Produto.Concentracao,
+                        UnidadeProduto = estoque.Produto.Unidade
                     });
                 }
+            }
+            
+            // Adicionar estoques temporários
+            foreach (var estoque in estoquesTemporarios)
+            {
+                // Validações para garantir que os dados estão corretos
+                if (string.IsNullOrWhiteSpace(estoque.Produto?.Nome))
+                {
+                    ShowToast("Erro", "Nome do produto é obrigatório", "error");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(estoque.Produto?.Unidade))
+                {
+                    ShowToast("Erro", "Unidade do produto é obrigatória", "error");
+                    return;
+                }
+
+                clienteCompleto.Estoques.Add(new EstoqueClienteDTO
+                {
+                    IDEstoque = 0, // Novo estoque
+                    IDCliente = 0, // Será definido pelo servidor
+                    IDProduto = 0, // Novo produto
+                    QuantidadeAtual = estoque.QuantidadeAtual,
+                    QuantidadeMinima = estoque.QuantidadeMinima,
+                    NomeProduto = estoque.Produto.Nome.Trim(),
+                    ConcentracaoProduto = !string.IsNullOrWhiteSpace(estoque.Produto.Concentracao) 
+                        ? estoque.Produto.Concentracao.Trim() 
+                        : null,
+                    UnidadeProduto = estoque.Produto.Unidade.Trim()
+                });
+            }
+
+            // Validações finais antes de enviar
+            if (string.IsNullOrWhiteSpace(clienteCompleto.Nome))
+            {
+                ShowToast("Erro", "Nome do cliente é obrigatório", "error");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(clienteCompleto.Tipo))
+            {
+                ShowToast("Erro", "Tipo do cliente é obrigatório", "error");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(clienteCompleto.Endereco))
+            {
+                ShowToast("Erro", "Endereço do cliente é obrigatório", "error");
+                return;
             }
 
             // Salvar tudo em uma transação
@@ -1507,17 +1741,85 @@
             // Limpar listas temporárias
             piscinasTemporarias.Clear();
             equipamentosTemporarios.Clear();
+            estoquesTemporarios.Clear();
             
             // Voltar para a lista
             ShowListView();
         }
         catch (Exception ex)
         {
+            // Log detalhado do erro para debug
+            Console.WriteLine($"Erro ao salvar dados completos: {ex.Message}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+            }
+            
             ShowToast("Erro", $"Erro ao salvar dados completos: {ex.Message}", "error");
         }
         finally
         {
             isLoading = false;
         }
+    }
+
+    private async Task LoadProdutos()
+    {
+        try
+        {
+            produtos = await ApiService.GetProdutosAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar produtos: {ex.Message}");
+            produtos = new List<Produto>();
+        }
+    }
+
+    private void OnProdutoSelected(ChangeEventArgs e)
+    {
+        try
+        {
+            if (e.Value != null && int.TryParse(e.Value.ToString(), out int produtoId))
+            {
+                if (produtoId > 0)
+                {
+                    selectedProdutoId = produtoId;
+                    var produtoSelecionado = produtos?.FirstOrDefault(p => p.IDProduto == produtoId);
+                    if (produtoSelecionado != null)
+                    {
+                        currentEstoque.Produto = new Produto
+                        {
+                            IDProduto = produtoSelecionado.IDProduto,
+                            Nome = produtoSelecionado.Nome,
+                            Concentracao = produtoSelecionado.Concentracao,
+                            Unidade = produtoSelecionado.Unidade
+                        };
+                        currentEstoque.IDProduto = produtoSelecionado.IDProduto;
+                    }
+                }
+                else
+                {
+                    selectedProdutoId = 0;
+                    currentEstoque.Produto = new Produto();
+                    currentEstoque.IDProduto = 0;
+                }
+            }
+            else
+            {
+                selectedProdutoId = 0;
+                currentEstoque.Produto = new Produto();
+                currentEstoque.IDProduto = 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao selecionar produto: {ex.Message}");
+            selectedProdutoId = 0;
+            currentEstoque.Produto = new Produto();
+            currentEstoque.IDProduto = 0;
+        }
+        
+        StateHasChanged();
     }
 } 

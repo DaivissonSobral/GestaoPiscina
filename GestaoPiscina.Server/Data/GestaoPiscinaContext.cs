@@ -14,7 +14,7 @@ namespace GestaoPiscina.Server.Data
         public DbSet<Piscina> Piscinas { get; set; }
         public DbSet<Produto> Produtos { get; set; }
         public DbSet<OrdemDeServico> OrdensDeServico { get; set; }
-        public DbSet<EstoqueCliente> EstoquesCliente { get; set; }
+        public DbSet<EstoqueCliente> EstoqueClientes { get; set; }
         public DbSet<Equipamento> Equipamentos { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Perfil> Perfis { get; set; }
