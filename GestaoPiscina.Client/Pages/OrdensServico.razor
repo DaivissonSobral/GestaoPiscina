@@ -17,23 +17,24 @@
         </div>
     </div>
 
-    <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 mb-4">
-        <input @bind="termoBusca" @bind:event="oninput" @onkeyup="FiltrarOS" type="text" placeholder="Buscar OS..." 
-               class="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-        <select @bind="FiltroStatus" @bind:event="onchange" class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-            <option value="">Todos os Status</option>
-            <option value="Em Aberto">Em Aberto</option>
-            <option value="Em Andamento">Em Andamento</option>
-            <option value="Finalizada">Finalizada</option>
-            <option value="Reagendada">Reagendada</option>
-            <option value="Cancelada">Cancelada</option>
-        </select>
-        <select @bind="FiltroData" @bind:event="onchange" class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-            <option value="">Todas as Datas</option>
-            <option value="hoje">Hoje</option>
-            <option value="semana">Esta Semana</option>
-            <option value="mes">Este Mês</option>
-        </select>
+    <div class="flex justify-between items-center mb-4">
+        <div class="flex space-x-2">
+            <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar OS..." class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+            <select @bind="filtroStatus" @bind:event="onchange" class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                <option value="">Todos os Status</option>
+                <option value="Em Aberto">Em Aberto</option>
+                <option value="Em Andamento">Em Andamento</option>
+                <option value="Finalizada">Finalizada</option>
+                <option value="Reagendada">Reagendada</option>
+                <option value="Cancelada">Cancelada</option>
+            </select>
+            <select @bind="filtroData" @bind:event="onchange" class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                <option value="">Todas as Datas</option>
+                <option value="hoje">Hoje</option>
+                <option value="semana">Esta Semana</option>
+                <option value="mes">Este Mês</option>
+            </select>
+        </div>
     </div>
 
     @if (carregando)
@@ -142,26 +143,33 @@
     private bool confirmacaoExclusaoVisible = false;
     private bool carregando = true;
     private string termoBusca = "";
-    private string filtroStatus = "";
-    private string filtroData = "";
+    private string _filtroStatus = "";
+    private string _filtroData = "";
 
-    private string FiltroStatus
+    // Propriedades para detectar mudanças nos filtros
+    public string filtroStatus
     {
-        get => filtroStatus;
+        get => _filtroStatus;
         set
         {
-            filtroStatus = value;
-            FiltrarOS();
+            if (_filtroStatus != value)
+            {
+                _filtroStatus = value;
+                FiltrarOS();
+            }
         }
     }
 
-    private string FiltroData
+    public string filtroData
     {
-        get => filtroData;
+        get => _filtroData;
         set
         {
-            filtroData = value;
-            FiltrarOS();
+            if (_filtroData != value)
+            {
+                _filtroData = value;
+                FiltrarOS();
+            }
         }
     }
     private OrdemDeServico? osParaExcluir;
