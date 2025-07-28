@@ -15,11 +15,12 @@
                 <i class="fas fa-plus mr-2"></i>Nova OS
             </button>
         </div>
+        
     </div>
 
     <div class="flex justify-between items-center mb-4">
         <div class="flex space-x-2">
-            <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar OS..." class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+            <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar OS..." class="flex bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
             <select @bind="filtroStatus" @bind:event="onchange" class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
                 <option value="">Todos os Status</option>
                 <option value="Em Aberto">Em Aberto</option>
@@ -35,6 +36,20 @@
                 <option value="mes">Este Mês</option>
             </select>
         </div>
+
+        <div class="flex space-x-2">
+            <button @onclick="SetListView" 
+                    class="@GetListViewButtonClass()"
+                    title="Lista">
+                <i class="fas fa-list"></i>
+            </button>
+            <button @onclick="SetCardsView" 
+                    class="@GetCardsViewButtonClass()"
+                    title="Cards por Status">
+                <i class="fas fa-columns"></i>
+            </button>
+        </div>
+
     </div>
 
     @if (carregando)
@@ -43,65 +58,187 @@
     }
     else if (ordensFiltradas?.Any() == true)
     {
-        <div class="bg-slate-800 rounded-xl overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-slate-700">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">OS</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Cliente</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Piscina</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Data</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Checklist</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-700">
-                        @foreach (var os in ordensFiltradas)
-                        {
-                            <tr class="hover:bg-slate-700">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-slate-100">#@os.IDOS</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-slate-100">@os.Piscina?.Cliente?.Nome</div>
-                                    <div class="text-sm text-slate-400">@os.Piscina?.Cliente?.Tipo</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-slate-300">@os.Piscina?.Tipo</div>
-                                    <div class="text-sm text-slate-400">@os.Piscina?.VolumeLitros L</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
-                                    @os.DataExecucao.ToString("dd/MM/yyyy")
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="@GetStatusClass(os.Status) px-2 py-1 text-xs font-semibold rounded-full">
-                                        @os.Status
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="@(os.ChecklistConcluido ? "text-green-400" : "text-red-400") text-sm">
-                                        @(os.ChecklistConcluido ? "✓" : "✗")
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <button @onclick="() => VerDetalhes(os)" class="text-blue-400 hover:text-blue-300 mr-3" title="Ver Detalhes">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <button @onclick="() => EditarOS(os)" class="text-cyan-400 hover:text-cyan-300 mr-3" title="Editar">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button @onclick="() => ExcluirOS(os)" class="text-red-400 hover:text-red-300" title="Excluir">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
+        @if (viewMode == "lista")
+        {
+            <!-- Tabela Responsiva -->
+            <div class="bg-slate-800 rounded-xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-slate-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">OS</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Cliente</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Piscina</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Data</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Checklist</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Ações</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody class="divide-y divide-slate-700">
+                            @foreach (var os in ordensFiltradas)
+                            {
+                                <tr class="hover:bg-slate-700">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-slate-100">#@os.IDOS</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-slate-100">@os.Piscina?.Cliente?.Nome</div>
+                                        <div class="text-sm text-slate-400">@os.Piscina?.Cliente?.Tipo</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-slate-300">@os.Piscina?.Tipo</div>
+                                        <div class="text-sm text-slate-400">@os.Piscina?.VolumeLitros L</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                                        @os.DataExecucao.ToString("dd/MM/yyyy")
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="@GetStatusClass(os.Status) px-2 py-1 text-xs font-semibold rounded-full">
+                                            @os.Status
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="@(os.ChecklistConcluido ? "text-green-400" : "text-red-400") text-sm">
+                                            @(os.ChecklistConcluido ? "✓" : "✗")
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button @onclick="() => VerDetalhes(os)" class="text-blue-400 hover:text-blue-300 mr-3" title="Ver Detalhes">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button @onclick="() => EditarOS(os)" class="text-cyan-400 hover:text-cyan-300 mr-3" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button @onclick="() => ExcluirOS(os)" class="text-red-400 hover:text-red-300" title="Excluir">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        }
+        else if (viewMode == "cards")
+        {
+            <!-- Visão em Cards por Status - Layout Kanban -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+
+                <!-- Coluna: Em Aberto -->
+                <div class="bg-slate-800 rounded-lg p-3 border-2 border-yellow-500">
+                    <h3 class="text-yellow-400 font-bold text-center mb-3 text-sm">Em Aberto</h3>
+                    <div class="space-y-2">
+                        @foreach (var os in GetOrdensPorStatus("Em Aberto"))
+                        {
+                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
+                                <div class="text-white font-bold">#@os.IDOS</div>
+                                <div class="text-white truncate">@os.Piscina?.Cliente?.Nome</div>
+                                <div class="text-sm text-slate-400">@os.Piscina?.Cliente?.Tipo</div>
+                                <div class="text-sm text-slate-400 font-bold">@os.Piscina?.Tipo</div>
+                                <div class="text-slate-400 text-xs">@os.DataExecucao.ToString("dd/MM/yyyy")</div>
+                            </div>
+                        }
+                        @if (!GetOrdensPorStatus("Em Aberto").Any())
+                        {
+                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
+                                <div class="text-slate-500 text-center text-xs">Nenhuma OS</div>
+                            </div>                        
+                        }
+                    </div>
+                </div>
+
+                <!-- Coluna: Em Andamento -->
+                <div class="bg-slate-800 rounded-lg p-3 border-2 border-blue-500">
+                    <h3 class="text-blue-400 font-bold text-center mb-3 text-sm">Em Andamento</h3>
+                    <div class="space-y-2">
+                        @foreach (var os in GetOrdensPorStatus("Em Andamento"))
+                        {
+                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
+                                <div class="text-white font-bold">#@os.IDOS</div>
+                                <div class="text-white truncate">@os.Piscina?.Cliente?.Nome</div>
+                                <div class="text-sm text-slate-400">@os.Piscina?.Cliente?.Tipo</div>
+                                <div class="text-sm text-slate-400 font-bold">@os.Piscina?.Tipo</div>
+                                <div class="text-slate-400 text-xs">@os.DataExecucao.ToString("dd/MM/yyyy")</div>
+                            </div>
+                        }
+                        @if (!GetOrdensPorStatus("Em Andamento").Any())
+                        {
+                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
+                                <div class="text-slate-500 text-center text-xs">Nenhuma OS</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Coluna: Finalizada -->
+                <div class="bg-slate-800 rounded-lg p-3 border-2 border-green-500">
+                    <h3 class="text-green-400 font-bold text-center mb-3 text-sm">Finalizada</h3>
+                    <div class="space-y-2">
+                        @foreach (var os in GetOrdensPorStatus("Finalizada"))
+                        {
+                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
+                                <div class="text-white font-bold">#@os.IDOS</div>
+                                <div class="text-white truncate">@os.Piscina?.Cliente?.Nome</div>
+                                <div class="text-sm text-slate-400">@os.Piscina?.Cliente?.Tipo</div>
+                                <div class="text-sm text-slate-400 font-bold">@os.Piscina?.Tipo</div>
+                                <div class="text-slate-400 text-xs">@os.DataExecucao.ToString("dd/MM/yyyy")</div>
+                            </div>
+                        }
+                        @if (!GetOrdensPorStatus("Finalizada").Any())
+                        {
+                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
+                                <div class="text-slate-500 text-center text-xs">Nenhuma OS</div>
+                            </div>                           }
+                    </div>
+                </div>
+
+                <!-- Coluna: Reagendada -->
+                <div class="bg-slate-800 rounded-lg p-3 border-2 border-orange-500">
+                    <h3 class="text-orange-400 font-bold text-center mb-3 text-sm">Reagendada</h3>
+                    <div class="space-y-2">
+                        @foreach (var os in GetOrdensPorStatus("Reagendada"))
+                        {
+                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
+                                <div class="text-white font-bold">#@os.IDOS</div>
+                                <div class="text-white truncate">@os.Piscina?.Cliente?.Nome</div>
+                                <div class="text-sm text-slate-400">@os.Piscina?.Cliente?.Tipo</div>
+                                <div class="text-sm text-slate-400 font-bold">@os.Piscina?.Tipo</div>
+                                <div class="text-slate-400 text-xs">@os.DataExecucao.ToString("dd/MM/yyyy")</div>
+                            </div>
+                        }
+                        @if (!GetOrdensPorStatus("Reagendada").Any())
+                        {
+                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
+                                <div class="text-slate-500 text-center text-xs">Nenhuma OS</div>
+                            </div>                           }
+                    </div>
+                </div>
+
+                <!-- Coluna: Cancelada -->
+                <div class="bg-slate-800 rounded-lg p-3 border-2 border-red-500">
+                    <h3 class="text-red-400 font-bold text-center mb-3 text-sm">Cancelada</h3>
+                    <div class="space-y-2">
+                        @foreach (var os in GetOrdensPorStatus("Cancelada"))
+                        {
+                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
+                                <div class="text-white font-bold">#@os.IDOS</div>
+                                <div class="text-white truncate">@os.Piscina?.Cliente?.Nome</div>
+                                <div class="text-sm text-slate-400">@os.Piscina?.Cliente?.Tipo</div>
+                                <div class="text-sm text-slate-400 font-bold">@os.Piscina?.Tipo</div>
+                                <div class="text-slate-400 text-xs">@os.DataExecucao.ToString("dd/MM/yyyy")</div>
+                            </div>
+                        }
+                        @if (!GetOrdensPorStatus("Cancelada").Any())
+                        {
+                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
+                                <div class="text-slate-500 text-center text-xs">Nenhuma OS</div>
+                            </div>                           }
+                    </div>
+                </div>
+            </div>
+        }
     }
     else
     {
@@ -145,6 +282,7 @@
     private string termoBusca = "";
     private string _filtroStatus = "";
     private string _filtroData = "";
+    private string viewMode = "lista"; // "lista" ou "cards"
 
     // Propriedades para detectar mudanças nos filtros
     public string filtroStatus
@@ -249,6 +387,37 @@
         }
 
         StateHasChanged();
+    }
+
+    private IEnumerable<OrdemDeServico> GetOrdensPorStatus(string status)
+    {
+        return ordensFiltradas?.Where(os => os.Status == status) ?? new List<OrdemDeServico>();
+    }
+
+    private void SetListView()
+    {
+        viewMode = "lista";
+        StateHasChanged();
+    }
+
+    private void SetCardsView()
+    {
+        viewMode = "cards";
+        StateHasChanged();
+    }
+
+    private string GetListViewButtonClass()
+    {
+        return viewMode == "lista" 
+            ? "px-3 py-2 rounded-lg transition-colors bg-cyan-600 text-white" 
+            : "px-3 py-2 rounded-lg transition-colors bg-slate-700 text-slate-300 hover:bg-slate-600";
+    }
+
+    private string GetCardsViewButtonClass()
+    {
+        return viewMode == "cards" 
+            ? "px-3 py-2 rounded-lg transition-colors bg-cyan-600 text-white" 
+            : "px-3 py-2 rounded-lg transition-colors bg-slate-700 text-slate-300 hover:bg-slate-600";
     }
 
     private void AbrirModalNovaOS()
