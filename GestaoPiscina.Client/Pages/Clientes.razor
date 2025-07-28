@@ -174,77 +174,80 @@
                     <DataAnnotationsValidator />
 
                     <!-- Sistema de Abas -->
-                    <div class="mb-8">
-                        <nav class="flex flex-wrap gap-2 md:gap-4">
+                    <div>
+                        <nav class="flex flex-wrap">
                             @if (activeTab == "dados")
                             {
                                 <button @onclick="SetDadosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600 rounded-tl-lg">
-                                    <i class="fas fa-user mr-2"></i>Dados
+                                    <i class="fas fa-user mr-2"></i><span class="hidden md:inline">Dados</span>
+                                    
                                 </button>
                             }
                             else
                             {
                                 <button @onclick="SetDadosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent rounded-tl-lg">
-                                    <i class="fas fa-user mr-2"></i>Dados
+                                    <i class="fas fa-user mr-2"></i><span class="hidden md:inline">Dados</span>                                
                                 </button>
                             }
                             
                             @if (activeTab == "piscinas")
                             {
                                 <button @onclick="SetPiscinasTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600">
-                                    <i class="fas fa-swimming-pool mr-2"></i>Piscinas
+                                    <i class="fas fa-swimming-pool mr-2"></i><span class="hidden md:inline">Piscinas</span>
                                 </button>
                             }
                             else
                             {
                                 <button @onclick="SetPiscinasTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent">
-                                    <i class="fas fa-swimming-pool mr-2"></i>Piscinas
+                                    <i class="fas fa-swimming-pool mr-2"></i><span class="hidden md:inline">Piscinas</span>
                                 </button>
                             }
                             
                             @if (activeTab == "equipamentos")
                             {
                                 <button @onclick="SetEquipamentosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600">
-                                    <i class="fas fa-robot mr-2"></i>Equipamentos
+                                    <i class="fas fa-robot mr-2"></i><span class="hidden md:inline">Equipamentos</span>
                                 </button>
                             }
                             else
                             {
                                 <button @onclick="SetEquipamentosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent">
-                                    <i class="fas fa-robot mr-2"></i>Equipamentos
+                                    <i class="fas fa-robot mr-2"></i><span class="hidden md:inline">Equipamentos</span>
                                 </button>
                             }
                             
                             @if (activeTab == "produtos")
                             {
                                 <button @onclick="SetEstoqueTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600">
-                                    <i class="fas fa-box mr-2"></i>Produtos
+                                    <i class="fas fa-box mr-2"></i><span class="hidden md:inline">Produtos</span>
                                 </button>
                             }
                             else
                             {
                                 <button @onclick="SetEstoqueTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent">
-                                    <i class="fas fa-box mr-2"></i>Produtos
+                                    <i class="fas fa-box mr-2"></i><span class="hidden md:inline">Produtos</span>
                                 </button>
                             }
                             
                             @if (activeTab == "salvar")
                             {
                                 <button @onclick="SetSalvarTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600 rounded-tr-lg">
-                                    <i class="fas fa-save mr-2"></i>Salvar Tudo
+                                    <i class="fas fa-save mr-2"></i><span class="hidden md:inline">Salvar Tudo</span>
                                 </button>
                             }
                             else
                             {
                                 <button @onclick="SetSalvarTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent rounded-tr-lg">
-                                    <i class="fas fa-save mr-2"></i>Salvar Tudo
+                                    <i class="fas fa-save mr-2"></i><span class="hidden md:inline">Salvar Tudo</span>
                                 </button>
                             }
                         </nav>
+                        <hr class="border-t-2 border-white mt-0" />
+
                     </div>
 
                     <!-- Conteúdo das Abas -->
-                    <div class="mt-8 bg-slate-900 rounded-lg shadow p-6">
+                    <div class="bg-slate-900 rounded-lg rounded-tl-none shadow p-6">
                         @if (activeTab == "dados")
                         {
                             <div @key="activeTab" class="space-y-6">
