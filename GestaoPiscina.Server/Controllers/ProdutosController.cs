@@ -24,6 +24,20 @@ namespace GestaoPiscina.Server.Controllers
                 .ToListAsync();
         }
 
+        [HttpGet("cliente/{clienteId}")]
+        public async Task<ActionResult<IEnumerable<Produto>>> GetProdutosByCliente(int clienteId)
+        {
+            // Buscar produtos que estão em estoque do cliente específico
+            var produtos = await _context.EstoquesCliente
+                .Where(ec => ec.IDCliente == clienteId && ec.QuantidadeAtual > 0)
+                .Include(ec => ec.Produto)
+                .Select(ec => ec.Produto)
+                .Distinct()
+                .ToListAsync();
+
+            return produtos;
+        }
+
         [HttpGet("{id}")]
         public async Task<ActionResult<Produto>> GetProduto(int id)
         {

@@ -866,7 +866,7 @@
                 // Carregar dados em paralelo para melhor performance
                 var piscinasTask = ApiService.GetPiscinasByClienteAsync(currentCliente.IDCliente);
                 var equipamentosTask = ApiService.GetEquipamentosByClienteAsync(currentCliente.IDCliente);
-                var produtosTask = ApiService.GetProdutosAsync();
+                var produtosTask = ApiService.GetProdutosByClienteAsync(currentCliente.IDCliente);
 
                 await Task.WhenAll(piscinasTask, equipamentosTask, produtosTask);
 
@@ -1366,7 +1366,7 @@
     private async void SetProdutosTab()
     {
         activeTab = "produtos";
-        if (produtos == null || !produtos.Any())
+        if (currentCliente.IDCliente > 0 && (produtos == null || !produtos.Any()))
         {
             await LoadRelatedData();
         }

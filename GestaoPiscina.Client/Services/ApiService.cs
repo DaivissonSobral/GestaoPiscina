@@ -377,6 +377,18 @@ namespace GestaoPiscina.Client.Services
             }
         }
 
+        public async Task<List<Produto>> GetProdutosByClienteAsync(int clienteId)
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<List<Produto>>($"{_baseUrl}produtos/cliente/{clienteId}") ?? new List<Produto>();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao buscar produtos do cliente: {ex.Message}");
+            }
+        }
+
         public async Task<Produto> CreateProdutoAsync(Produto produto)
         {
             try
