@@ -20,6 +20,7 @@ builder.Services.AddScoped(sp =>
 builder.Services.AddScoped<ApiService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
+builder.Services.AddScoped<ClienteStateService>();
 
 // Configurar logging para debug
 builder.Logging.SetMinimumLevel(LogLevel.Information);

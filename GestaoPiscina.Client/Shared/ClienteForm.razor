@@ -1,0 +1,48 @@
+@using GestaoPiscina.Client.Models
+
+<div class="space-y-6">
+    <h5 class="text-lg font-semibold text-slate-200 mb-4 flex items-center">
+        <i class="fas fa-user text-cyan-400 mr-2"></i>Dados do Cliente
+    </h5>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="space-y-3">
+            <label class="block text-sm font-medium text-slate-300 mb-2">Nome *</label>
+            <InputText @bind-Value="Cliente.Nome" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="Nome completo" />
+            <ValidationMessage For="@(() => Cliente.Nome)" class="text-red-500 text-sm" />
+        </div>
+        <div class="space-y-3">
+            <label class="block text-sm font-medium text-slate-300 mb-2">Tipo *</label>
+            <InputSelect @bind-Value="Cliente.Tipo" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500">
+                <option value="">Selecione...</option>
+                <option value="residencial">Residencial</option>
+                <option value="comercial">Comercial</option>
+                <option value="condominio">Condomínio</option>
+            </InputSelect>
+            <ValidationMessage For="@(() => Cliente.Tipo)" class="text-red-500 text-sm" />
+        </div>
+        <div class="space-y-3">
+            <label class="block text-sm font-medium text-slate-300 mb-2">Telefone</label>
+            <InputText @bind-Value="Cliente.Telefone" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="(11) 99999-9999" />
+        </div>
+        <div class="space-y-3">
+            <label class="block text-sm font-medium text-slate-300 mb-2">Email</label>
+            <InputText @bind-Value="Cliente.Email" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="email@exemplo.com" />
+            <ValidationMessage For="@(() => Cliente.Email)" class="text-red-500 text-sm" />
+        </div>
+        <div class="md:col-span-2 space-y-3">
+            <label class="block text-sm font-medium text-slate-300 mb-2">Endereço</label>
+            <InputText @bind-Value="Cliente.Endereco" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="Endereço completo" />
+            <ValidationMessage For="@(() => Cliente.Endereco)" class="text-red-500 text-sm" />
+        </div>
+        <div class="md:col-span-2 space-y-3">
+            <label class="block text-sm font-medium text-slate-300 mb-2">Observações</label>
+            <InputTextArea @bind-Value="Cliente.Observacoes" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" rows="4" placeholder="Observações adicionais..." />
+            <ValidationMessage For="@(() => Cliente.Observacoes)" class="text-red-500 text-sm" />
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Cliente Cliente { get; set; } = new();
+}

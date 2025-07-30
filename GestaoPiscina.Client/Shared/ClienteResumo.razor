@@ -1,0 +1,76 @@
+@using GestaoPiscina.Client.Models
+
+<div class="space-y-6">
+    <div class="flex items-center justify-between mb-4">
+        <h5 class="text-lg font-semibold text-slate-200 flex items-center">
+            <i class="fas fa-save text-cyan-400 mr-2"></i>Salvar Tudo em Uma Transação
+        </h5>
+    </div>
+
+    <div class="bg-slate-700 rounded-lg p-6 border border-slate-600">
+        <div class="space-y-4">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-user text-cyan-400"></i>
+                <div>
+                    <h6 class="text-sm font-medium text-slate-200">Dados do Cliente</h6>
+                    <p class="text-sm text-slate-400">@Cliente.Nome - @Cliente.Tipo</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-swimming-pool text-cyan-400"></i>
+                <div>
+                    <h6 class="text-sm font-medium text-slate-200">Piscinas</h6>
+                    <p class="text-sm text-slate-400">@(Piscinas?.Count ?? 0) piscina(s) cadastrada(s) + @PiscinasTemporarias.Count temporária(s)</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-robot text-cyan-400"></i>
+                <div>
+                    <h6 class="text-sm font-medium text-slate-200">Equipamentos</h6>
+                    <p class="text-sm text-slate-400">@(Equipamentos?.Count ?? 0) equipamento(s) cadastrado(s) + @EquipamentosTemporarios.Count temporário(s)</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-box text-cyan-400"></i>
+                <div>
+                    <h6 class="text-sm font-medium text-slate-200">Estoque</h6>
+                    <p class="text-sm text-slate-400">@(Estoques?.Count ?? 0) item(s) cadastrado(s) + @EstoquesTemporarios.Count temporário(s)</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-6 p-4 bg-slate-600 rounded-lg">
+            <h6 class="text-sm font-medium text-slate-200 mb-2">Informações Importantes:</h6>
+            <ul class="text-sm text-slate-300 space-y-1">
+                <li>• Todos os dados serão salvos em uma única transação</li>
+                <li>• Se houver erro em qualquer item, nada será salvo</li>
+                <li>• Estoque é específico do cliente e inclui produtos e quantidades</li>
+                <li>• Piscinas e equipamentos são específicos do cliente</li>
+            </ul>
+        </div>
+        
+        <div class="flex space-x-3 mt-6">
+            <button @onclick="OnSaveCompleto" class="bg-green-600 hover:bg-green-500 px-6 py-3 rounded-lg text-white transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-slate-800">
+                <i class="fas fa-save mr-2"></i>Salvar Tudo
+            </button>
+            <button @onclick="OnCancel" class="bg-slate-600 hover:bg-slate-500 px-6 py-3 rounded-lg text-white transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-800">
+                <i class="fas fa-times mr-2"></i>Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Cliente Cliente { get; set; } = new();
+    [Parameter] public List<Piscina>? Piscinas { get; set; }
+    [Parameter] public List<Piscina> PiscinasTemporarias { get; set; } = new();
+    [Parameter] public List<Equipamento>? Equipamentos { get; set; }
+    [Parameter] public List<Equipamento> EquipamentosTemporarios { get; set; } = new();
+    [Parameter] public List<EstoqueCliente>? Estoques { get; set; }
+    [Parameter] public List<EstoqueCliente> EstoquesTemporarios { get; set; } = new();
+    [Parameter] public EventCallback OnSaveCompleto { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+}

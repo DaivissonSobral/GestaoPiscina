@@ -1,0 +1,61 @@
+@using GestaoPiscina.Client.Models
+
+<div class="bg-slate-800 rounded-xl overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-slate-700">
+                <tr>
+                    <th class="px-3 md:px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider w-1/3 md:w-1/4 lg:w-1/4">Nome</th>
+                    <th class="px-3 md:px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider w-1/4 md:w-1/6 lg:w-1/6">Tipo</th>
+                    <th class="hidden md:table-cell px-3 md:px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider w-1/3 md:w-1/3 lg:w-1/3">Endereço</th>
+                    <th class="hidden lg:table-cell px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider w-1/6">Piscinas</th>
+                    <th class="px-3 md:px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider w-20 md:w-20 lg:w-24 sticky right-0 bg-slate-700 z-10">Ações</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700">
+                @foreach (var cliente in Clientes)
+                {
+                    <tr class="hover:bg-slate-700">
+                        <td class="px-3 md:px-4 py-3 md:py-4">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-slate-100">@cliente.Nome</h4>
+                                <span class="text-sm text-slate-400">@cliente.Telefone</span>
+                                <span class="text-sm text-slate-300">  </span>
+                                <span class="text-sm text-slate-400">@cliente.Email</span>
+                            </div>
+                        </td>
+                        <td class="px-3 md:px-4 py-3 md:py-4">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                @(cliente.Tipo == "condominio" ? "bg-blue-100 text-blue-800" : 
+                                cliente.Tipo == "comercial" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800")">
+                                @cliente.Tipo
+                            </span>
+                        </td>
+                        <td class="hidden md:table-cell px-3 md:px-4 py-3 md:py-4">
+                            <div class="text-sm text-slate-300 break-words">@cliente.Endereco</div>
+                        </td>
+                        <td class="hidden lg:table-cell px-4 py-4">
+                            <div class="text-sm text-slate-300">@cliente.Piscinas.Count piscina(s)</div>
+                        </td>
+                        <td class="px-3 md:px-4 py-3 md:py-4 text-sm font-medium sticky right-0 bg-slate-800 hover:bg-slate-700 z-10">
+                            <div class="flex space-x-2 md:space-x-3 justify-center">
+                                <button @onclick="() => OnEdit.InvokeAsync(cliente)" class="text-cyan-400 hover:text-cyan-300 p-2 rounded transition-colors" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button @onclick="() => OnDelete.InvokeAsync(cliente)" class="text-red-400 hover:text-red-300 p-2 rounded transition-colors" title="Excluir">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<Cliente> Clientes { get; set; } = new();
+    [Parameter] public EventCallback<Cliente> OnEdit { get; set; }
+    [Parameter] public EventCallback<Cliente> OnDelete { get; set; }
+}
