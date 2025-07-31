@@ -164,6 +164,33 @@ namespace GestaoPiscina.Client.Services
             }
         }
 
+        public async Task<Cliente> UpdateClienteCompletoAsync(ClienteCompletoDTO clienteCompleto)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}clientes/completo/{clienteCompleto.IDCliente}", clienteCompleto);
+                
+                if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+                
+                var updatedCliente = await response.Content.ReadFromJsonAsync<Cliente>();
+                return updatedCliente ?? new Cliente();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao atualizar cliente completo: {ex.Message}");
+            }
+        }
+
         public async Task UpdateClienteAsync(Cliente cliente)
         {
             try

@@ -360,6 +360,7 @@
                 return;
             }
 
+            // Se for um cliente novo (IDCliente <= 0) ou se já existem piscinas temporárias, sempre adicionar temporariamente
             if (StateService.CurrentCliente.IDCliente <= 0 || StateService.PiscinasTemporarias.Any())
             {
                 StateService.AddPiscinaTemporaria(new Piscina
@@ -376,17 +377,36 @@
                 return;
             }
 
+            // Se for edição de piscina existente (IDPiscina > 0), atualizar normalmente
             if (StateService.CurrentPiscina.IDPiscina > 0)
             {
                 await ApiService.UpdatePiscinaAsync(StateService.CurrentPiscina);
                 ShowToast("Sucesso", "Piscina atualizada com sucesso!", "success");
+                await LoadRelatedData();
+                ClosePiscinaForm();
+                return;
             }
-            else
+
+            // Se for cliente existente e nova piscina, adicionar temporariamente
+            if (StateService.CurrentCliente.IDCliente > 0)
             {
-                await ApiService.CreatePiscinaAsync(StateService.CurrentPiscina);
-                ShowToast("Sucesso", "Piscina criada com sucesso!", "success");
+                StateService.AddPiscinaTemporaria(new Piscina
+                {
+                    IDPiscina = -(StateService.PiscinasTemporarias.Count + 1),
+                    IDCliente = 0,
+                    Tipo = StateService.CurrentPiscina.Tipo,
+                    VolumeLitros = StateService.CurrentPiscina.VolumeLitros,
+                    Localizacao = StateService.CurrentPiscina.Localizacao
+                });
+                
+                ShowToast("Sucesso", "Piscina adicionada temporariamente. Use 'Salvar Tudo' para confirmar.", "success");
+                ClosePiscinaForm();
+                return;
             }
-            
+
+            // Caso padrão: criar piscina normalmente (apenas para clientes novos sem piscinas temporárias)
+            await ApiService.CreatePiscinaAsync(StateService.CurrentPiscina);
+            ShowToast("Sucesso", "Piscina criada com sucesso!", "success");
             await LoadRelatedData();
             ClosePiscinaForm();
         }
@@ -457,6 +477,7 @@
             if (StateService.CurrentEquipamento.IDCliente <= 0)
                 StateService.CurrentEquipamento.IDCliente = StateService.CurrentCliente.IDCliente;
 
+            // Se for um cliente novo (IDCliente <= 0) ou se já existem equipamentos temporários, sempre adicionar temporariamente
             if (StateService.CurrentCliente.IDCliente <= 0 || StateService.EquipamentosTemporarios.Any())
             {
                 StateService.AddEquipamentoTemporario(new Equipamento
@@ -474,16 +495,37 @@
                 return;
             }
 
+            // Se for edição de equipamento existente (IDEquipamento > 0), atualizar normalmente
             if (StateService.CurrentEquipamento.IDEquipamento > 0)
             {
                 await ApiService.UpdateEquipamentoAsync(StateService.CurrentEquipamento);
                 ShowToast("Sucesso", "Equipamento atualizado com sucesso!", "success");
+                await LoadRelatedData();
+                CloseEquipamentoForm();
+                return;
             }
-            else
+
+            // Se for cliente existente e novo equipamento, adicionar temporariamente
+            if (StateService.CurrentCliente.IDCliente > 0)
             {
-                await ApiService.CreateEquipamentoAsync(StateService.CurrentEquipamento);
-                ShowToast("Sucesso", "Equipamento criado com sucesso!", "success");
+                StateService.AddEquipamentoTemporario(new Equipamento
+                {
+                    IDEquipamento = -(StateService.EquipamentosTemporarios.Count + 1),
+                    IDCliente = 0,
+                    Tipo = StateService.CurrentEquipamento.Tipo,
+                    NumeroSerie = StateService.CurrentEquipamento.NumeroSerie,
+                    UltimaCalibragem = StateService.CurrentEquipamento.UltimaCalibragem,
+                    Observacao = StateService.CurrentEquipamento.Observacao
+                });
+                
+                ShowToast("Sucesso", "Equipamento adicionado temporariamente. Use 'Salvar Tudo' para confirmar.", "success");
+                CloseEquipamentoForm();
+                return;
             }
+
+            // Caso padrão: criar equipamento normalmente (apenas para clientes novos sem equipamentos temporários)
+            await ApiService.CreateEquipamentoAsync(StateService.CurrentEquipamento);
+            ShowToast("Sucesso", "Equipamento criado com sucesso!", "success");
             await LoadRelatedData();
             CloseEquipamentoForm();
         }
@@ -610,6 +652,7 @@
                 return;
             }
 
+            // Se for um cliente novo (IDCliente <= 0) ou se já existem estoques temporários, sempre adicionar temporariamente
             if (StateService.CurrentCliente.IDCliente <= 0 || StateService.EstoquesTemporarios.Any())
             {
                 StateService.AddEstoqueTemporario(new EstoqueCliente
@@ -633,17 +676,43 @@
                 return;
             }
 
+            // Se for edição de estoque existente (IDEstoque > 0), atualizar normalmente
             if (StateService.CurrentEstoque.IDEstoque > 0)
             {
                 await ApiService.UpdateEstoqueAsync(StateService.CurrentEstoque);
                 ShowToast("Sucesso", "Item do estoque atualizado com sucesso!", "success");
+                await LoadRelatedData();
+                CloseEstoqueForm();
+                return;
             }
-            else
+
+            // Se for cliente existente e novo estoque, adicionar temporariamente
+            if (StateService.CurrentCliente.IDCliente > 0)
             {
-                await ApiService.CreateEstoqueAsync(StateService.CurrentEstoque);
-                ShowToast("Sucesso", "Item do estoque criado com sucesso!", "success");
+                StateService.AddEstoqueTemporario(new EstoqueCliente
+                {
+                    IDEstoque = -(StateService.EstoquesTemporarios.Count + 1),
+                    IDCliente = 0,
+                    IDProduto = StateService.CurrentEstoque.IDProduto,
+                    QuantidadeAtual = StateService.CurrentEstoque.QuantidadeAtual,
+                    QuantidadeMinima = StateService.CurrentEstoque.QuantidadeMinima,
+                    Produto = new Produto
+                    {
+                        IDProduto = StateService.CurrentEstoque.IDProduto,
+                        Nome = StateService.CurrentEstoque.Produto.Nome,
+                        Concentracao = StateService.CurrentEstoque.Produto.Concentracao,
+                        Unidade = StateService.CurrentEstoque.Produto.Unidade
+                    }
+                });
+                
+                ShowToast("Sucesso", "Item do estoque adicionado temporariamente. Use 'Salvar Tudo' para confirmar.", "success");
+                CloseEstoqueForm();
+                return;
             }
-            
+
+            // Caso padrão: criar estoque normalmente (apenas para clientes novos sem estoques temporários)
+            await ApiService.CreateEstoqueAsync(StateService.CurrentEstoque);
+            ShowToast("Sucesso", "Item do estoque criado com sucesso!", "success");
             await LoadRelatedData();
             CloseEstoqueForm();
         }
@@ -758,9 +827,21 @@
                 return;
             }
 
-            var clienteSalvo = await ApiService.CreateClienteCompletoAsync(clienteCompleto);
+            Cliente clienteSalvo;
             
-            ShowToast("Sucesso", "Cliente e todos os dados relacionados foram salvos com sucesso em uma única transação!", "success");
+            // Verificar se é criação ou edição
+            if (StateService.CurrentCliente.IDCliente > 0)
+            {
+                // É edição - usar PUT
+                clienteSalvo = await ApiService.UpdateClienteCompletoAsync(clienteCompleto);
+                ShowToast("Sucesso", "Cliente e todos os dados relacionados foram atualizados com sucesso em uma única transação!", "success");
+            }
+            else
+            {
+                // É criação - usar POST
+                clienteSalvo = await ApiService.CreateClienteCompletoAsync(clienteCompleto);
+                ShowToast("Sucesso", "Cliente e todos os dados relacionados foram salvos com sucesso em uma única transação!", "success");
+            }
             
             StateService.CurrentCliente = clienteSalvo;
             
