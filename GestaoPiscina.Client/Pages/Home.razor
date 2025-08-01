@@ -1,4 +1,5 @@
 ﻿@page "/"
+@inject NavigationManager Navigation
 
 <section class="p-4 space-y-6">
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -27,22 +28,22 @@
     <div>
         <h2 class="text-lg font-semibold mb-3">Atalhos Rápidos</h2>
         <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-            <button class="bg-cyan-600 hover:bg-cyan-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
+            <button @onclick="NovaOS" class="bg-cyan-600 hover:bg-cyan-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
                 <i class="fas fa-plus-circle text-2xl mb-2"></i> Nova OS
             </button>
-            <button class="bg-blue-600 hover:bg-blue-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
+            <button @onclick="Relatorios" class="bg-blue-600 hover:bg-blue-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
                 <i class="fas fa-chart-pie text-2xl mb-2"></i> Relatórios
             </button>
-            <button class="bg-teal-600 hover:bg-teal-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
+            <button @onclick="Rotas" class="bg-teal-600 hover:bg-teal-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
                 <i class="fas fa-route text-2xl mb-2"></i> Rotas
             </button>
-            <button class="bg-green-600 hover:bg-green-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
+            <button @onclick="ClientesRefatorado" class="bg-green-600 hover:bg-green-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
                 <i class="fas fa-user-plus text-2xl mb-2"></i> Cliente
             </button>
-            <button class="bg-yellow-600 hover:bg-yellow-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
+            <button @onclick="Produtos" class="bg-yellow-600 hover:bg-yellow-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
                 <i class="fas fa-box text-2xl mb-2"></i> Produto
             </button>
-            <button class="bg-purple-600 hover:bg-purple-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
+            <button @onclick="Configuracoes" class="bg-purple-600 hover:bg-purple-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
                 <i class="fas fa-cog text-2xl mb-2"></i> Configuração
             </button>
         </div>
@@ -91,3 +92,42 @@
         </div>
     </div>
 </section>
+
+@code {
+    private void NovaOS()
+    {
+        Navigation.NavigateTo("/ordens-servico");
+    }
+
+    private void Relatorios()
+    {
+        Navigation.NavigateTo("/relatorios");
+    }
+
+    private void Rotas()
+    {
+        // Como não existe uma página específica de rotas, vou redirecionar para ordens de serviço
+        // ou você pode criar uma página específica para rotas
+        Navigation.NavigateTo("/ordens-servico");
+    }
+
+    private void Clientes()
+    {
+        Navigation.NavigateTo("/clientes");
+    }
+
+    private void ClientesRefatorado()
+    {
+        Navigation.NavigateTo("/clientes-refatorado");
+    }
+
+    private void Produtos()
+    {
+        Navigation.NavigateTo("/produtos");
+    }
+
+    private void Configuracoes()
+    {
+        Navigation.NavigateTo("/configuracoes");
+    }
+}
