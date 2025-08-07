@@ -7,6 +7,8 @@
     <RunAOTCompilation>false</RunAOTCompilation>
     <BlazorWebAssemblyEnableLinking>false</BlazorWebAssemblyEnableLinking>
     <BlazorWebAssemblyEnableCompression>false</BlazorWebAssemblyEnableCompression>
+    <BlazorEnableCompression>false</BlazorEnableCompression>
+    <BlazorWebAssemblyEnableRuntimeInformation>true</BlazorWebAssemblyEnableRuntimeInformation>
   </PropertyGroup>
 
   <ItemGroup>
