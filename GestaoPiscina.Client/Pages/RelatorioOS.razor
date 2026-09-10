@@ -262,7 +262,6 @@
                                         {
                                             <th>@parametro.Nome</th>
                                         }
-                                        <th>Observações</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -279,7 +278,6 @@
                                                 var dentroDoPadrao = valor >= parametro.IdealMin && valor <= parametro.IdealMax;
                                                 <td class="@(dentroDoPadrao ? "" : "flag")">@FormatarValor(parametro, valor)@parametro.Unidade</td>
                                             }
-                                            <td>@os.Observacoes</td>
                                         </tr>
                                     }
                                 </tbody>
