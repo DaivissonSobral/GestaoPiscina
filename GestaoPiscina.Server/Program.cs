@@ -72,6 +72,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowBlazorApp");
+app.UseStaticFiles(); // Serve as fotos enviadas em wwwroot/uploads (ver UploadsController)
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

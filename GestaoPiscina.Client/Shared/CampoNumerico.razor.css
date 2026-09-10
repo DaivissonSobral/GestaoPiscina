@@ -1,0 +1,17 @@
+/* Remove as setas nativas do spin button (redundantes com os botões -/+
+   grandes do componente) e garante fundo transparente em todo navegador —
+   alguns motores aplicam um fundo próprio a inputs numéricos que ignora
+   a cor de fundo definida via classe utilitária. */
+.campo-numerico-input {
+    -moz-appearance: textfield;
+}
+
+.campo-numerico-input::-webkit-outer-spin-button,
+.campo-numerico-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.campo-numerico-input:focus {
+    background-color: transparent;
+}

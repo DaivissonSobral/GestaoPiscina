@@ -1,0 +1,86 @@
+<div>
+    <label class="block text-sm font-medium text-slate-300 mb-2">@Label</label>
+    <div class="flex items-stretch gap-2">
+        <button type="button" @onclick="Decrementar"
+                class="w-14 h-14 shrink-0 rounded-lg bg-slate-600 hover:bg-slate-500 active:bg-cyan-600 text-white text-xl flex items-center justify-center select-none transition-colors"
+                aria-label="Diminuir @Label">
+            <i class="fas fa-minus"></i>
+        </button>
+        <div class="flex-1 flex flex-col items-center justify-center bg-slate-700 border border-slate-600 rounded-lg">
+            <input type="number"
+                   inputmode="decimal"
+                   step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                   min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                   value="@Value.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                   @onchange="OnDigitado"
+                   class="campo-numerico-input w-full appearance-none text-center text-2xl font-semibold text-slate-100 py-2 focus:outline-none"
+                   style="background-color: transparent;" />
+            @if (!string.IsNullOrEmpty(Unidade))
+            {
+                <span class="text-[11px] text-slate-400 -mt-1 mb-1">@Unidade</span>
+            }
+        </div>
+        <button type="button" @onclick="Incrementar"
+                class="w-14 h-14 shrink-0 rounded-lg bg-slate-600 hover:bg-slate-500 active:bg-cyan-600 text-white text-xl flex items-center justify-center select-none transition-colors"
+                aria-label="Aumentar @Label">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public decimal Value { get; set; }
+    [Parameter] public EventCallback<decimal> ValueChanged { get; set; }
+    [Parameter] public decimal Step { get; set; } = 0.1m;
+    [Parameter] public decimal Min { get; set; } = 0m;
+    [Parameter] public decimal? Max { get; set; }
+    [Parameter] public string? Unidade { get; set; }
+
+    private Task Incrementar()
+    {
+        var novoValor = Value + Step;
+        if (Max.HasValue && novoValor > Max.Value)
+        {
+            novoValor = Max.Value;
+        }
+
+        return Atualizar(novoValor);
+    }
+
+    private Task Decrementar()
+    {
+        var novoValor = Value - Step;
+        if (novoValor < Min)
+        {
+            novoValor = Min;
+        }
+
+        return Atualizar(novoValor);
+    }
+
+    private Task OnDigitado(ChangeEventArgs e)
+    {
+        if (!decimal.TryParse(e.Value?.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var novoValor))
+        {
+            return Task.CompletedTask;
+        }
+
+        if (novoValor < Min)
+        {
+            novoValor = Min;
+        }
+        else if (Max.HasValue && novoValor > Max.Value)
+        {
+            novoValor = Max.Value;
+        }
+
+        return Atualizar(novoValor);
+    }
+
+    private Task Atualizar(decimal novoValor)
+    {
+        Value = Math.Round(novoValor, 2);
+        return ValueChanged.InvokeAsync(Value);
+    }
+}

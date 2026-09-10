@@ -1,0 +1,84 @@
+@using Microsoft.AspNetCore.Components.Forms
+@using GestaoPiscina.Client.Services
+@inject ApiService ApiService
+
+<div>
+    <label class="block text-sm font-medium text-slate-300 mb-2">@Label</label>
+
+    <div class="flex flex-wrap gap-3">
+        @foreach (var url in UrlsList)
+        {
+            <div class="relative w-20 h-20 rounded-lg overflow-hidden border border-slate-600">
+                <img src="@url" alt="Foto" class="w-full h-full object-cover" />
+                <button type="button" @onclick="() => RemoverFoto(url)"
+                        class="absolute top-0.5 right-0.5 w-6 h-6 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center text-xs"
+                        title="Remover foto">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        }
+
+        <label class="w-20 h-20 rounded-lg border-2 border-dashed border-slate-500 hover:border-cyan-500 flex flex-col items-center justify-center cursor-pointer text-slate-400 hover:text-cyan-400 transition-colors">
+            @if (enviando)
+            {
+                <i class="fas fa-spinner fa-spin text-xl"></i>
+            }
+            else
+            {
+                <i class="fas fa-camera text-xl"></i>
+                <span class="text-[10px] mt-1">Adicionar</span>
+            }
+            <InputFile OnChange="OnArquivosSelecionados" accept="image/*" multiple class="hidden" disabled="@enviando" />
+        </label>
+    </div>
+
+    @if (!string.IsNullOrEmpty(erro))
+    {
+        <p class="text-red-400 text-xs mt-2"><i class="fas fa-exclamation-circle mr-1"></i>@erro</p>
+    }
+</div>
+
+@code {
+    [Parameter] public string Label { get; set; } = "Fotos";
+    [Parameter] public string? Urls { get; set; }
+    [Parameter] public EventCallback<string?> UrlsChanged { get; set; }
+
+    private bool enviando;
+    private string? erro;
+
+    private List<string> UrlsList => string.IsNullOrWhiteSpace(Urls)
+        ? new List<string>()
+        : Urls.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+    private async Task OnArquivosSelecionados(InputFileChangeEventArgs e)
+    {
+        erro = null;
+        enviando = true;
+        StateHasChanged();
+
+        var listaAtual = UrlsList;
+
+        foreach (var arquivo in e.GetMultipleFiles(10))
+        {
+            try
+            {
+                var url = await ApiService.UploadFotoAsync(arquivo);
+                listaAtual.Add(url);
+            }
+            catch (Exception ex)
+            {
+                erro = ex.Message;
+            }
+        }
+
+        enviando = false;
+        await UrlsChanged.InvokeAsync(listaAtual.Any() ? string.Join(",", listaAtual) : null);
+    }
+
+    private async Task RemoverFoto(string url)
+    {
+        var listaAtual = UrlsList;
+        listaAtual.Remove(url);
+        await UrlsChanged.InvokeAsync(listaAtual.Any() ? string.Join(",", listaAtual) : null);
+    }
+}

@@ -32,3 +32,7 @@ wwwroot/dist/
 GestaoPiscina.Server/GestaoPiscina.db
 GestaoPiscina.Server/GestaoPiscina.db-wal
 GestaoPiscina.Server/GestaoPiscina.db-shm
+
+# Fotos enviadas pelos técnicos (armazenamento local de dev, não versionar)
+GestaoPiscina.Server/wwwroot/uploads/os/*
+!GestaoPiscina.Server/wwwroot/uploads/os/.gitkeep

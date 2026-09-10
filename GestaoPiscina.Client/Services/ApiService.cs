@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using GestaoPiscina.Client.Models;
 using System.Text.Json;
 using Microsoft.JSInterop;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace GestaoPiscina.Client.Services
 {
@@ -62,6 +63,44 @@ namespace GestaoPiscina.Client.Services
             catch
             {
                 // Ignorar erros de autenticação
+            }
+        }
+
+        // Uploads
+        private class UploadFotoResponse
+        {
+            public string Url { get; set; } = string.Empty;
+        }
+
+        public async Task<string> UploadFotoAsync(IBrowserFile arquivo)
+        {
+            try
+            {
+                const long tamanhoMaximo = 10 * 1024 * 1024; // 10MB, deve bater com o limite do UploadsController
+
+                using var content = new MultipartFormDataContent();
+                using var streamContent = new StreamContent(arquivo.OpenReadStream(tamanhoMaximo));
+                streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(arquivo.ContentType);
+                content.Add(streamContent, "arquivo", arquivo.Name);
+
+                var response = await _httpClient.PostAsync($"{_baseUrl}uploads/foto", content);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+
+                var resultado = await response.Content.ReadFromJsonAsync<UploadFotoResponse>();
+                if (string.IsNullOrEmpty(resultado?.Url))
+                {
+                    throw new Exception("Resposta inválida do servidor ao enviar a foto.");
+                }
+
+                return resultado.Url;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao enviar foto: {ex.Message}");
             }
         }
 
