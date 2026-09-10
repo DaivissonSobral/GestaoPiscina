@@ -185,10 +185,16 @@
                                 </div>
                             }
                         </div>
+                        @if (DescricaoRecorrencia(piscina) is { } descricaoRecorrencia)
+                        {
+                            <div class="text-xs text-slate-500 border-t border-slate-700 pt-2 mt-2">
+                                <i class="fas fa-redo mr-2"></i>@descricaoRecorrencia
+                            </div>
+                        }
                     </div>
                 }
             }
-            
+
             @foreach (var piscina in PiscinasTemporarias)
             {
                 <div class="bg-slate-700 rounded-xl p-4 space-y-3 border-2 border-dashed border-cyan-400">
@@ -214,6 +220,12 @@
                             </div>
                         }
                     </div>
+                    @if (DescricaoRecorrencia(piscina) is { } descricaoRecorrenciaTemp)
+                    {
+                        <div class="text-xs text-slate-500 border-t border-slate-600 pt-2 mt-2">
+                            <i class="fas fa-redo mr-2"></i>@descricaoRecorrenciaTemp
+                        </div>
+                    }
                 </div>
             }
         </div>
@@ -269,6 +281,44 @@
         {
             Piscina.RecorrenciaDataInicio = DateTime.Today;
         }
+    }
+
+    private string? DescricaoRecorrencia(Piscina piscina)
+    {
+        if (piscina.RecorrenciaFrequencia == "Nenhuma")
+        {
+            return null;
+        }
+
+        var intervalo = piscina.RecorrenciaIntervalo;
+        string baseTexto;
+
+        switch (piscina.RecorrenciaFrequencia)
+        {
+            case "Diaria":
+                baseTexto = intervalo <= 1 ? "Repete diariamente" : $"Repete a cada {intervalo} dias";
+                break;
+            case "Semanal":
+                var dias = string.IsNullOrWhiteSpace(piscina.RecorrenciaDiasSemana) ? "" : $" às {piscina.RecorrenciaDiasSemana.Replace(",", ", ")}";
+                baseTexto = (intervalo <= 1 ? "Repete semanalmente" : $"Repete a cada {intervalo} semanas") + dias;
+                break;
+            case "Mensal":
+                var dia = piscina.RecorrenciaDataInicio?.Day;
+                var noDia = dia.HasValue ? $" no dia {dia}" : "";
+                baseTexto = (intervalo <= 1 ? "Repete mensalmente" : $"Repete a cada {intervalo} meses") + noDia;
+                break;
+            default:
+                return null;
+        }
+
+        var termino = piscina.RecorrenciaTermino switch
+        {
+            "Data" when piscina.RecorrenciaDataFim.HasValue => $", até {piscina.RecorrenciaDataFim.Value:dd/MM/yyyy}",
+            "Ocorrencias" when piscina.RecorrenciaOcorrencias.HasValue => $", por {piscina.RecorrenciaOcorrencias} vez(es)",
+            _ => ""
+        };
+
+        return baseTexto + termino;
     }
 
     private void ToggleDiaSemana(string dia)
