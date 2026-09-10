@@ -1,0 +1,153 @@
+﻿@page "/checklist-conformidade"
+@using GestaoPiscina.Client.Models
+
+<section class="p-4 space-y-6">
+    <h2 class="text-2xl font-semibold text-slate-100">Checklist de Conformidade</h2>
+
+    <div class="bg-slate-800 rounded-xl p-6 shadow-md space-y-6">
+        <!-- cabeçalho com informações da vistoria -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm text-slate-400">Nome do cliente:</label>
+                <input class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" @bind="ClienteNome" />
+            </div>
+            <div>
+                <label class="block text-sm text-slate-400">Data da vistoria:</label>
+                <input type="date" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" @bind="DataVistoria" />
+            </div>
+            <div>
+                <label class="block text-sm text-slate-400">Responsável pela vistoria:</label>
+                <input class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" @bind="Responsavel" />
+            </div>
+            <div>
+                <label class="block text-sm text-slate-400">Unidade/Local:</label>
+                <input class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" @bind="UnidadeLocal" />
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm text-slate-400">Responsável técnico (se houver):</label>
+                <input class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" @bind="ResponsavelTecnico" />
+            </div>
+        </div>
+
+        <!-- tabela de itens -->
+        <div class="overflow-x-auto">
+            <table class="w-full table-auto text-sm text-slate-100">
+                <thead class="bg-slate-700">
+                    <tr>
+                        <th class="px-3 py-2">Conformidade</th>
+                        <th class="px-3 py-2">Descrição</th>
+                        <th class="px-3 py-2">Classificação esperada</th>
+                        <th class="px-3 py-2">Classificação obtida</th>
+                        <th class="px-3 py-2">Status</th>
+                        <th class="px-3 py-2">Observação</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-700">
+                    @foreach (var item in checklistItems)
+                    {
+                        <tr class="hover:bg-slate-700">
+                            <td class="px-3 py-2 text-center">
+                                <input type="checkbox" class="form-checkbox h-4 w-4 text-green-500" @bind="item.Confirmed" />
+                            </td>
+                            <td class="px-3 py-2">@item.Description</td>
+                            <td class="px-3 py-2 text-center">@item.ExpectedPoints</td>
+                            <td class="px-3 py-2 text-center">
+                                <input type="number" min="0" class="w-16 bg-slate-700 border border-slate-600 rounded-lg px-1 py-1 text-slate-100 text-center" @bind="item.ObtainedPoints" />
+                            </td>
+                            <td class="px-3 py-2">
+                                <select class="bg-slate-700 border border-slate-600 rounded-lg px-2 py-1 text-slate-100" @bind="item.Status">
+                                    <option value=""></option>
+                                    <option value="Aprovado">Aprovado</option>
+                                    <option value="Recusado">Recusado</option>
+                                </select>
+                            </td>
+                            <td class="px-3 py-2">
+                                <input type="text" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-2 py-1 text-slate-100" @bind="item.Observation" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <button @onclick="SalvarChecklist" class="mt-6 bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-lg transition-colors">
+            <i class="fas fa-save mr-2"></i>Salvar checklist
+        </button>
+
+        @if (mensagemSalvo != null)
+        {
+            <div class="mt-4 p-4 bg-green-700 text-white rounded-lg">
+                @mensagemSalvo
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    private string ClienteNome = "";
+    private DateTime? DataVistoria;
+    private string Responsavel = "";
+    private string UnidadeLocal = "";
+    private string ResponsavelTecnico = "";
+
+    private List<ChecklistItem> checklistItems = new()
+    {
+        new ChecklistItem { Section = "1) Identificação e Responsabilidade Técnica", Description = "Possui responsável técnico formal (documentado)", ExpectedPoints = 10 },
+        new ChecklistItem { Section = "1) Identificação e Responsabilidade Técnica", Description = "Possui ART/RT do CRQ para tratamento químico e controle da água (Resolução CFQ nº 332/2025)", ExpectedPoints = 10 },
+        new ChecklistItem { Section = "1) Identificação e Responsabilidade Técnica", Description = "Possui ART/TRT/RRT para serviços/instalações físicas (hidráulica/elétrica/mecânica), quando aplicável", ExpectedPoints = 7 },
+        new ChecklistItem { Section = "1) Identificação e Responsabilidade Técnica", Description = "Plano de tratamento químico documentado (POP/rotina)", ExpectedPoints = 7 },
+        new ChecklistItem { Section = "1) Identificação e Responsabilidade Técnica", Description = "Registros operacionais (análises/ajustes) arquivados e disponíveis", ExpectedPoints = 7 },
+        new ChecklistItem { Section = "2) Segurança Física  Sucção, Aprisionamento e Proteções", Description = "Ralos de fundo existentes e em bom estado", ExpectedPoints = 10 },
+        new ChecklistItem { Section = "2) Segurança Física  Sucção, Aprisionamento e Proteções", Description = "Grelhas antiaprisionamento instaladas", ExpectedPoints = 10 },
+        new ChecklistItem { Section = "2) Segurança Física  Sucção, Aprisionamento e Proteções", Description = "Tampas/grelhas firmemente fixadas (sem folgas)", ExpectedPoints = 10 },
+        new ChecklistItem { Section = "2) Segurança Física  Sucção, Aprisionamento e Proteções", Description = "Ralos interligados em paralelo (reduz risco de aprisionamento)", ExpectedPoints = 7 },
+        new ChecklistItem { Section = "2) Segurança Física  Sucção, Aprisionamento e Proteções", Description = "Dispositivo de segurança contra sucção/aprisionamento (conforme projeto)", ExpectedPoints = 10 },
+        new ChecklistItem { Section = "2) Segurança Física  Sucção, Aprisionamento e Proteções", Description = "Grade de proteção/cobertura em canaletas (transbordo) íntegra e contínua", ExpectedPoints = 7 },
+        new ChecklistItem { Section = "2) Segurança Física  Sucção, Aprisionamento e Proteções", Description = "Grade/elemento de proteção em pontos de captação/ralos evita acesso direto", ExpectedPoints = 10 },
+        new ChecklistItem { Section = "2) Segurança Física  Sucção, Aprisionamento e Proteções", Description = "Não há sucção direta pelo ralo (configuração perigosa)", ExpectedPoints = 10 },
+        new ChecklistItem { Section = "3) Segurança Física  Acesso, Quedas e Uso", Description = "Piso do entorno antiderrapante e íntegro", ExpectedPoints = 4 },
+        new ChecklistItem { Section = "3) Segurança Física  Acesso, Quedas e Uso", Description = "Bordas sem arestas cortantes/partes quebradas", ExpectedPoints = 7 },
+        new ChecklistItem { Section = "3) Segurança Física  Acesso, Quedas e Uso", Description = "Degraus de acesso/descanso visíveis e em bom estado", ExpectedPoints = 4 },
+        new ChecklistItem { Section = "3) Segurança Física  Acesso, Quedas e Uso", Description = "Corrimãos quando aplicável", ExpectedPoints = 4 },
+        new ChecklistItem { Section = "3) Segurança Física  Acesso, Quedas e Uso", Description = "Guarda-corpos quando aplicável", ExpectedPoints = 4 },
+        new ChecklistItem { Section = "3) Segurança Física  Acesso, Quedas e Uso", Description = "Profundidades demarcadas corretamente e visíveis", ExpectedPoints = 7 },
+        new ChecklistItem { Section = "3) Segurança Física  Acesso, Quedas e Uso", Description = "Regras de uso e sinalização de segurança visíveis", ExpectedPoints = 4 },
+        new ChecklistItem { Section = "3) Segurança Física  Acesso, Quedas e Uso", Description = "Acesso controlado para crianças (portões/cercamento quando necessário)", ExpectedPoints = 7 },
+        new ChecklistItem { Section = "4) Segurança Elétrica e Emergência", Description = "Dispositivo DR instalado e funcional", ExpectedPoints = 10 },
+        new ChecklistItem { Section = "4) Segurança Elétrica e Emergência", Description = "DPS instalado (proteção contra surtos)", ExpectedPoints = 7 },
+        new ChecklistItem { Section = "4) Segurança Elétrica e Emergência", Description = "Aterramento adequado do sistema (casa de máquinas e equipamentos)", ExpectedPoints = 10 },
+        new ChecklistItem { Section = "4) Segurança Elétrica e Emergência", Description = "Iluminação subaquática/instalações próximas à água com isolamento e proteção adequados", ExpectedPoints = 10 },
+        new ChecklistItem { Section = "4) Segurança Elétrica e Emergência", Description = "Botão de parada de emergência (botão antipânico) acessível e identificado", ExpectedPoints = 10 },
+        new ChecklistItem { Section = "4) Segurança Elétrica e Emergência", Description = "Quadro elétrico exclusivo/protegido e identificado", ExpectedPoints = 7 },
+        new ChecklistItem { Section = "4) Segurança Elétrica e Emergência", Description = "Casa de máquinas protegida contra alagamento e com drenagem", ExpectedPoints = 7 },
+        new ChecklistItem { Section = "5) Filtração e Recirculação", Description = "Filtro compatível com volume/uso (dimensionamento)", ExpectedPoints = 7 },
+        new ChecklistItem { Section = "5) Filtração e Recirculação", Description = "Meio filtrante adequado e em condições", ExpectedPoints = 4 },
+        new ChecklistItem { Section = "5) Filtração e Recirculação", Description = "Vazão/recirculação adequadas (sem zonas mortas)", ExpectedPoints = 7 },
+        new ChecklistItem { Section = "5) Filtração e Recirculação", Description = "Tempo de filtração suficiente para demanda de uso", ExpectedPoints = 7 },
+        new ChecklistItem { Section = "5) Filtração e Recirculação", Description = "Manômetro funcionando (leitura de pressão)", ExpectedPoints = 4 },
+        new ChecklistItem { Section = "5) Filtração e Recirculação", Description = "Retrolavagem/limpeza do filtro com periodicidade registrada", ExpectedPoints = 4 },
+        new ChecklistItem { Section = "6) Segurança Química da Água", Description = "Sistema de desinfecção ativo e operante (cloro/sal/UV/ozônio com cloro complementar)", ExpectedPoints = 10 },
+        new ChecklistItem { Section = "6) Segurança Química da Água", Description = "Dosador automático quando aplicável e calibrado", ExpectedPoints = 7 },
+        new ChecklistItem { Section = "6) Segurança Química da Água", Description = "Cloro residual livre dentro da faixa operacional segura (registro)", ExpectedPoints = 10 },
+        new ChecklistItem { Section = "6) Segurança Química da Água", Description = "pH dentro da faixa operacional segura (registro)", ExpectedPoints = 10 },
+        new ChecklistItem { Section = "6) Segurança Química da Água", Description = "Turbidez aceitável (água límpida)", ExpectedPoints = 7 },
+        new ChecklistItem { Section = "6) Segurança Química da Água", Description = "Ausência de algas visíveis", ExpectedPoints = 7 },
+        new ChecklistItem { Section = "6) Segurança Química da Água", Description = "Registro diário de parâmetros (pH, cloro, etc.)", ExpectedPoints = 7 },
+        new ChecklistItem { Section = "6) Segurança Química da Água", Description = "Plano/procedimento de supercloração e contingências (contaminação fecal, etc.)", ExpectedPoints = 7 },
+        new ChecklistItem { Section = "7) Casa de Máquinas e Produtos Químicos", Description = "Acesso restrito/controle de acesso", ExpectedPoints = 4 },
+        new ChecklistItem { Section = "7) Casa de Máquinas e Produtos Químicos", Description = "Ventilação adequada", ExpectedPoints = 4 },
+        new ChecklistItem { Section = "7) Casa de Máquinas e Produtos Químicos", Description = "Iluminação adequada", ExpectedPoints = 4 },
+        new ChecklistItem { Section = "7) Casa de Máquinas e Produtos Químicos", Description = "Piso lavável/antiderrapante e organização", ExpectedPoints = 4 },
+        new ChecklistItem { Section = "7) Casa de Máquinas e Produtos Químicos", Description = "Produtos químicos separados por compatibilidade e armazenados com segurança", ExpectedPoints = 7 },
+        new ChecklistItem { Section = "7) Casa de Máquinas e Produtos Químicos", Description = "EPIs disponíveis e em uso (luvas, óculos, etc.)", ExpectedPoints = 4 },
+        new ChecklistItem { Section = "7) Casa de Máquinas e Produtos Químicos", Description = "FISPQs disponíveis e atualizadas", ExpectedPoints = 4 },
+        new ChecklistItem { Section = "7) Casa de Máquinas e Produtos Químicos", Description = "Sinalização de risco e emergência (ex.: corrosivo, oxidante)", ExpectedPoints = 4 }
+    };
+
+    private string? mensagemSalvo;
+
+    private void SalvarChecklist()
+    {
+        mensagemSalvo = "Checklist salvo com sucesso!";
+    }
+}
