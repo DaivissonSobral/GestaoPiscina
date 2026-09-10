@@ -334,7 +334,7 @@
 /* ---------- TRENDS ---------- */
 .relatorio-page .trend-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 18px;
 }
 
@@ -429,6 +429,20 @@
 .relatorio-page .tl-date svg {
     width: 15px;
     height: 15px;
+}
+
+.relatorio-page .tl-visita + .tl-visita {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 2px solid #DCE9EA;
+}
+
+.relatorio-page .tl-piscina {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 13.5px;
+    color: #0E3B4D;
+    margin-bottom: 2px;
 }
 
 .relatorio-page .tl-hour {

@@ -225,20 +225,23 @@
                                     </div>
                                     @foreach (var os in grupo.OrderBy(o => NomePiscina(PiscinaDe(o.IDPiscina))))
                                     {
-                                        <div class="tl-hour">@os.HoraInicio.ToString("HH:mm") · @NomePiscina(PiscinaDe(os.IDPiscina))</div>
-                                        <span class="tl-badge">@(os.ChecklistConcluido ? "Checklist concluído" : "Checklist pendente")</span>
-                                        <div class="tl-rows">
-                                            @foreach (var parametro in parametros)
+                                        <div class="tl-visita">
+                                            <div class="tl-piscina">@NomePiscina(PiscinaDe(os.IDPiscina))</div>
+                                            <div class="tl-hour">@os.HoraInicio.ToString("HH:mm")</div>
+                                            <span class="tl-badge">@(os.ChecklistConcluido ? "Checklist concluído" : "Checklist pendente")</span>
+                                            <div class="tl-rows">
+                                                @foreach (var parametro in parametros)
+                                                {
+                                                    var valor = parametro.Valor(os);
+                                                    var dentroDoPadrao = valor >= parametro.IdealMin && valor <= parametro.IdealMax;
+                                                    <div><span>@parametro.Nome</span><span class="@(dentroDoPadrao ? "" : "flag")">@FormatarValor(parametro, valor)@parametro.Unidade</span></div>
+                                                }
+                                            </div>
+                                            @if (!string.IsNullOrWhiteSpace(os.Observacoes))
                                             {
-                                                var valor = parametro.Valor(os);
-                                                var dentroDoPadrao = valor >= parametro.IdealMin && valor <= parametro.IdealMax;
-                                                <div><span>@parametro.Nome</span><span class="@(dentroDoPadrao ? "" : "flag")">@FormatarValor(parametro, valor)@parametro.Unidade</span></div>
+                                                <p class="tl-note">@os.Observacoes</p>
                                             }
                                         </div>
-                                        @if (!string.IsNullOrWhiteSpace(os.Observacoes))
-                                        {
-                                            <p class="tl-note">@os.Observacoes</p>
-                                        }
                                     }
                                 </div>
                             }
