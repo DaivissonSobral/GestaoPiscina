@@ -630,7 +630,11 @@
     /* Sem isso, a maioria dos navegadores descarta cores de fundo/gradientes
        ao imprimir (mesmo com "Imprimir plano de fundo" ligado no diálogo em
        alguns casos), deixando o relatório quase todo em branco/preto. */
-    .relatorio-page, .relatorio-page * {
+    /* Exclui <svg> e seus filhos: cor de preenchimento de SVG já imprime
+       normalmente (não é afetada pela opção "imprimir plano de fundo"), e
+       forçar color-adjust neles faz o motor de impressão do Chrome
+       recalcular o tamanho dos gráficos de forma diferente da tela. */
+    .relatorio-page, .relatorio-page :not(svg):not(svg *) {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
         color-adjust: exact !important;
