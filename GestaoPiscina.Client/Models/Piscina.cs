@@ -26,6 +26,15 @@ namespace GestaoPiscina.Client.Models
         [Required(ErrorMessage = "Aquecida é obrigatório")]
         public bool Aquecida { get; set; }
 
+        // Recorrência de manutenção (periodicidade de limpeza)
+        public string RecorrenciaFrequencia { get; set; } = "Nenhuma"; // Nenhuma, Diaria, Semanal, Mensal
+        public int RecorrenciaIntervalo { get; set; } = 1;
+        public string? RecorrenciaDiasSemana { get; set; } // Ex: "Seg,Qua,Sex"
+        public DateTime? RecorrenciaDataInicio { get; set; }
+        public string RecorrenciaTermino { get; set; } = "Nunca"; // Nunca, Data, Ocorrencias
+        public DateTime? RecorrenciaDataFim { get; set; }
+        public int? RecorrenciaOcorrencias { get; set; }
+
         public Cliente Cliente { get; set; } = null!;
         public List<OrdemDeServico> OrdensDeServico { get; set; } = new List<OrdemDeServico>();
     }

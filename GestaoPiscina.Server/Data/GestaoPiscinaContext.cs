@@ -45,6 +45,9 @@ namespace GestaoPiscina.Server.Data
                 entity.Property(e => e.Localizacao).HasMaxLength(255);
                 entity.Property(e => e.Coberta).IsRequired().HasMaxLength(10);
                 entity.Property(e => e.Aquecida).IsRequired();
+                entity.Property(e => e.RecorrenciaFrequencia).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.RecorrenciaDiasSemana).HasMaxLength(50);
+                entity.Property(e => e.RecorrenciaTermino).IsRequired().HasMaxLength(15);
                 entity.HasOne(e => e.Cliente)
                     .WithMany(c => c.Piscinas)
                     .HasForeignKey(e => e.IDCliente)

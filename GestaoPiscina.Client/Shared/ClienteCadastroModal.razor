@@ -381,7 +381,14 @@
             VolumeLitros = piscina.VolumeLitros,
             Localizacao = piscina.Localizacao,
             Coberta = piscina.Coberta,
-            Aquecida = piscina.Aquecida
+            Aquecida = piscina.Aquecida,
+            RecorrenciaFrequencia = piscina.RecorrenciaFrequencia,
+            RecorrenciaIntervalo = piscina.RecorrenciaIntervalo,
+            RecorrenciaDiasSemana = piscina.RecorrenciaDiasSemana,
+            RecorrenciaDataInicio = piscina.RecorrenciaDataInicio,
+            RecorrenciaTermino = piscina.RecorrenciaTermino,
+            RecorrenciaDataFim = piscina.RecorrenciaDataFim,
+            RecorrenciaOcorrencias = piscina.RecorrenciaOcorrencias
         };
         StateService.ShowPiscinaForm = true;
     }
@@ -409,6 +416,33 @@
             {
                 ShowToast("Erro", "Volume deve ser maior que zero", "error");
                 return;
+            }
+
+            if (StateService.CurrentPiscina.RecorrenciaFrequencia != "Nenhuma")
+            {
+                if (StateService.CurrentPiscina.RecorrenciaDataInicio == null)
+                {
+                    ShowToast("Erro", "Informe a data de início da recorrência", "error");
+                    return;
+                }
+
+                if (StateService.CurrentPiscina.RecorrenciaFrequencia == "Semanal" && string.IsNullOrWhiteSpace(StateService.CurrentPiscina.RecorrenciaDiasSemana))
+                {
+                    ShowToast("Erro", "Selecione ao menos um dia da semana para a recorrência", "error");
+                    return;
+                }
+
+                if (StateService.CurrentPiscina.RecorrenciaTermino == "Data" && StateService.CurrentPiscina.RecorrenciaDataFim == null)
+                {
+                    ShowToast("Erro", "Informe a data de término da recorrência", "error");
+                    return;
+                }
+
+                if (StateService.CurrentPiscina.RecorrenciaTermino == "Ocorrencias" && (StateService.CurrentPiscina.RecorrenciaOcorrencias ?? 0) <= 0)
+                {
+                    ShowToast("Erro", "Informe um número de ocorrências maior que zero", "error");
+                    return;
+                }
             }
 
             if (StateService.CurrentPiscina.IDPiscina > 0)

@@ -68,8 +68,79 @@
                         <label class="block text-sm font-medium text-slate-300 mb-2">Localização</label>
                         <InputText @bind-Value="Piscina.Localizacao" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="Ex: Fundos, Lateral..." style="background-color: white !important; color: #111827 !important;" />
                     </div>
+
+                    <div class="md:col-span-2 space-y-3 bg-slate-800 rounded-lg p-4 border border-slate-600">
+                        <label class="block text-sm font-medium text-slate-300">
+                            <i class="fas fa-redo text-cyan-400 mr-2"></i>Periodicidade de Limpeza
+                        </label>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="block text-xs text-slate-400">Repetir</label>
+                                <InputSelect TValue="string" Value="Piscina.RecorrenciaFrequencia" ValueChanged="OnFrequenciaChanged" ValueExpression="() => Piscina.RecorrenciaFrequencia" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900" style="background-color: white !important; color: #111827 !important;">
+                                    <option value="Nenhuma">Não se repete</option>
+                                    <option value="Diaria">Diariamente</option>
+                                    <option value="Semanal">Semanalmente</option>
+                                    <option value="Mensal">Mensalmente</option>
+                                </InputSelect>
+                            </div>
+
+                            @if (Piscina.RecorrenciaFrequencia != "Nenhuma")
+                            {
+                                <div class="space-y-2">
+                                    <label class="block text-xs text-slate-400">Data de início</label>
+                                    <InputDate @bind-Value="Piscina.RecorrenciaDataInicio" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900" style="background-color: white !important; color: #111827 !important;" />
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="block text-xs text-slate-400">Repetir a cada</label>
+                                    <div class="flex items-center space-x-2">
+                                        <InputNumber @bind-Value="Piscina.RecorrenciaIntervalo" class="w-20 bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900" style="background-color: white !important; color: #111827 !important;" min="1" />
+                                        <span class="text-sm text-slate-300">@UnidadeIntervalo</span>
+                                    </div>
+                                </div>
+
+                                @if (Piscina.RecorrenciaFrequencia == "Semanal")
+                                {
+                                    <div class="md:col-span-2 space-y-2">
+                                        <label class="block text-xs text-slate-400">Repetir nos dias</label>
+                                        <div class="flex flex-wrap gap-2">
+                                            @foreach (var dia in diasSemana)
+                                            {
+                                                <button type="button" @onclick="() => ToggleDiaSemana(dia)"
+                                                        class="@(DiasSemanaSelecionados.Contains(dia) ? "bg-cyan-600 text-white" : "bg-slate-600 text-slate-300 hover:bg-slate-500") w-10 h-10 rounded-full text-xs font-semibold transition-colors">
+                                                    @dia.Substring(0, 1)
+                                                </button>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+
+                                <div class="md:col-span-2 space-y-2">
+                                    <label class="block text-xs text-slate-400">Termina</label>
+                                    <InputRadioGroup @bind-Value="Piscina.RecorrenciaTermino" class="space-y-2 block">
+                                        <div class="flex items-center space-x-2">
+                                            <InputRadio Value="@("Nunca")" />
+                                            <span class="text-sm text-slate-300">Nunca</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <InputRadio Value="@("Data")" />
+                                            <span class="text-sm text-slate-300">Em</span>
+                                            <InputDate @bind-Value="Piscina.RecorrenciaDataFim" disabled="@(Piscina.RecorrenciaTermino != "Data")" class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 disabled:opacity-50" style="background-color: white !important; color: #111827 !important;" />
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <InputRadio Value="@("Ocorrencias")" />
+                                            <span class="text-sm text-slate-300">Após</span>
+                                            <InputNumber @bind-Value="Piscina.RecorrenciaOcorrencias" disabled="@(Piscina.RecorrenciaTermino != "Ocorrencias")" class="w-20 bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 disabled:opacity-50" style="background-color: white !important; color: #111827 !important;" min="1" />
+                                            <span class="text-sm text-slate-300">ocorrência(s)</span>
+                                        </div>
+                                    </InputRadioGroup>
+                                </div>
+                            }
+                        </div>
+                    </div>
                 </div>
-                
+
                 <div class="flex space-x-3 mt-8">
                     <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-2 rounded-lg text-white transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-slate-800">
                         <i class="fas fa-save mr-2"></i>Salvar
@@ -177,4 +248,37 @@
     [Parameter] public EventCallback<Piscina> OnEdit { get; set; }
     [Parameter] public EventCallback<Piscina> OnDelete { get; set; }
     [Parameter] public EventCallback<Piscina> OnRemoveTemporario { get; set; }
+
+    private readonly string[] diasSemana = { "Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab" };
+
+    private List<string> DiasSemanaSelecionados =>
+        (Piscina.RecorrenciaDiasSemana ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+
+    private string UnidadeIntervalo => Piscina.RecorrenciaFrequencia switch
+    {
+        "Diaria" => Piscina.RecorrenciaIntervalo == 1 ? "dia" : "dias",
+        "Semanal" => Piscina.RecorrenciaIntervalo == 1 ? "semana" : "semanas",
+        "Mensal" => Piscina.RecorrenciaIntervalo == 1 ? "mês" : "meses",
+        _ => ""
+    };
+
+    private void OnFrequenciaChanged(string frequencia)
+    {
+        Piscina.RecorrenciaFrequencia = frequencia;
+        if (frequencia != "Nenhuma" && Piscina.RecorrenciaDataInicio == null)
+        {
+            Piscina.RecorrenciaDataInicio = DateTime.Today;
+        }
+    }
+
+    private void ToggleDiaSemana(string dia)
+    {
+        var dias = DiasSemanaSelecionados;
+        if (!dias.Remove(dia))
+        {
+            dias.Add(dia);
+        }
+
+        Piscina.RecorrenciaDiasSemana = string.Join(",", diasSemana.Where(d => dias.Contains(d)));
+    }
 }

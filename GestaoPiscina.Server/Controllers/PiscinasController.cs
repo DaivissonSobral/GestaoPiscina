@@ -274,6 +274,15 @@ namespace GestaoPiscina.Server.Controllers
                 piscinaExistente.VolumeLitros = piscina.VolumeLitros;
                 piscinaExistente.Localizacao = piscina.Localizacao;
                 piscinaExistente.IDCliente = piscina.IDCliente;
+                piscinaExistente.Coberta = piscina.Coberta;
+                piscinaExistente.Aquecida = piscina.Aquecida;
+                piscinaExistente.RecorrenciaFrequencia = piscina.RecorrenciaFrequencia;
+                piscinaExistente.RecorrenciaIntervalo = piscina.RecorrenciaIntervalo;
+                piscinaExistente.RecorrenciaDiasSemana = piscina.RecorrenciaDiasSemana;
+                piscinaExistente.RecorrenciaDataInicio = piscina.RecorrenciaDataInicio;
+                piscinaExistente.RecorrenciaTermino = piscina.RecorrenciaTermino;
+                piscinaExistente.RecorrenciaDataFim = piscina.RecorrenciaDataFim;
+                piscinaExistente.RecorrenciaOcorrencias = piscina.RecorrenciaOcorrencias;
 
                 _context.Entry(piscinaExistente).State = EntityState.Modified;
 
