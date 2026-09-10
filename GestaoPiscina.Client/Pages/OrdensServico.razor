@@ -126,141 +126,61 @@
         {
             <!-- Visão em Cards por Status - Layout Kanban -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-
-                <!-- Coluna: Em Aberto -->
-                <div class="bg-slate-800 rounded-lg p-3 border-2 border-yellow-500">
-                    <h3 class="text-yellow-400 font-bold text-center mb-3 text-sm">Em Aberto</h3>
-                    <div class="space-y-2">
-                        @foreach (var os in GetOrdensPorStatus("Em Aberto"))
-                        {
-                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
-                                <div class="text-white font-bold">#@os.IDOS</div>
-                                <div class="text-white truncate">@os.Piscina?.Cliente?.Nome</div>
-                                <div class="text-sm text-slate-400">@os.Piscina?.Cliente?.Tipo</div>
-                                <div class="text-sm text-slate-400 font-bold">@os.Piscina?.Tipo</div>
-                                <div class="text-slate-400 text-xs">@os.DataExecucao.ToString("dd/MM/yyyy")</div>
-                            </div>
-                        }
-                        @if (!GetOrdensPorStatus("Em Aberto").Any())
-                        {
-                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
-                                <div class="text-slate-500 text-center text-xs">Nenhuma OS</div>
-                            </div>                        
-                        }
+                @foreach (var coluna in colunasKanban)
+                {
+                    var ordensColuna = GetOrdensPorStatus(coluna.Status).ToList();
+                    <div class="bg-slate-800 rounded-lg p-3 border-2 @coluna.CorBorda">
+                        <h3 class="@coluna.CorTexto font-bold text-center mb-3 text-sm flex items-center justify-center gap-2">
+                            @coluna.Label
+                            <span class="bg-slate-900 text-slate-300 text-xs font-semibold rounded-full px-2 py-0.5">@ordensColuna.Count</span>
+                        </h3>
+                        <div class="space-y-2 max-h-[65vh] overflow-y-auto pr-1">
+                            @foreach (var os in ordensColuna)
+                            {
+                                <div @onclick="() => VerDetalhes(os)"
+                                     class="group relative bg-slate-700 rounded-lg p-3 text-xs hover:bg-slate-600 cursor-pointer transition-colors @(EstaAtrasada(os) ? "ring-2 ring-red-500" : "")">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <span class="text-white font-bold">#@os.IDOS</span>
+                                        <div class="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity" @onclick:stopPropagation="true">
+                                            <button @onclick="() => EditarOS(os)" class="text-cyan-400 hover:text-cyan-300" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button @onclick="() => ExcluirOS(os)" class="text-red-400 hover:text-red-300" title="Excluir">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="text-white font-medium truncate mt-1">@os.Piscina?.Cliente?.Nome</div>
+                                    <div class="text-slate-400 truncate">@os.Piscina?.Tipo · @os.Piscina?.Cliente?.Tipo</div>
+                                    @if (!string.IsNullOrEmpty(NomeTecnico(os)))
+                                    {
+                                        <div class="text-slate-400 truncate mt-1">
+                                            <i class="fas fa-user-hard-hat mr-1"></i>@NomeTecnico(os)
+                                        </div>
+                                    }
+                                    <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-600">
+                                        <span class="@(EstaAtrasada(os) ? "text-red-400 font-semibold" : "text-slate-400")">
+                                            <i class="fas fa-calendar-alt mr-1"></i>@os.DataExecucao.ToString("dd/MM/yyyy")
+                                        </span>
+                                        <span class="@(os.ChecklistConcluido ? "text-green-400" : "text-slate-500")" title="@(os.ChecklistConcluido ? "Checklist concluído" : "Checklist pendente")">
+                                            <i class="fas @(os.ChecklistConcluido ? "fa-check-circle" : "fa-circle")"></i>
+                                        </span>
+                                    </div>
+                                    @if (EstaAtrasada(os))
+                                    {
+                                        <div class="text-red-400 font-semibold mt-1">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i>Atrasada
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            @if (!ordensColuna.Any())
+                            {
+                                <div class="text-slate-500 text-center text-xs py-6">Nenhuma OS</div>
+                            }
+                        </div>
                     </div>
-                </div>
-
-                <!-- Coluna: Em Andamento -->
-                <div class="bg-slate-800 rounded-lg p-3 border-2 border-blue-500">
-                    <h3 class="text-blue-400 font-bold text-center mb-3 text-sm">Em Andamento</h3>
-                    <div class="space-y-2">
-                        @foreach (var os in GetOrdensPorStatus("Em Andamento"))
-                        {
-                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
-                                <div class="text-white font-bold">#@os.IDOS</div>
-                                <div class="text-white truncate">@os.Piscina?.Cliente?.Nome</div>
-                                <div class="text-sm text-slate-400">@os.Piscina?.Cliente?.Tipo</div>
-                                <div class="text-sm text-slate-400 font-bold">@os.Piscina?.Tipo</div>
-                                <div class="text-slate-400 text-xs">@os.DataExecucao.ToString("dd/MM/yyyy")</div>
-                            </div>
-                        }
-                        @if (!GetOrdensPorStatus("Em Andamento").Any())
-                        {
-                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
-                                <div class="text-slate-500 text-center text-xs">Nenhuma OS</div>
-                            </div>
-                        }
-                    </div>
-                </div>
-
-                <!-- Coluna: Finalizada -->
-                <div class="bg-slate-800 rounded-lg p-3 border-2 border-green-500">
-                    <h3 class="text-green-400 font-bold text-center mb-3 text-sm">Finalizada</h3>
-                    <div class="space-y-2">
-                        @foreach (var os in GetOrdensPorStatus("Finalizada"))
-                        {
-                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
-                                <div class="text-white font-bold">#@os.IDOS</div>
-                                <div class="text-white truncate">@os.Piscina?.Cliente?.Nome</div>
-                                <div class="text-sm text-slate-400">@os.Piscina?.Cliente?.Tipo</div>
-                                <div class="text-sm text-slate-400 font-bold">@os.Piscina?.Tipo</div>
-                                <div class="text-slate-400 text-xs">@os.DataExecucao.ToString("dd/MM/yyyy")</div>
-                            </div>
-                        }
-                        @if (!GetOrdensPorStatus("Finalizada").Any())
-                        {
-                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
-                                <div class="text-slate-500 text-center text-xs">Nenhuma OS</div>
-                            </div>                           }
-                    </div>
-                </div>
-
-                <!-- Coluna: Ocorrência -->
-                <div class="bg-slate-800 rounded-lg p-3 border-2 border-purple-500">
-                    <h3 class="text-purple-400 font-bold text-center mb-3 text-sm">Ocorrência</h3>
-                    <div class="space-y-2">
-                        @foreach (var os in GetOrdensPorStatus("Ocorrência"))
-                        {
-                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
-                                <div class="text-white font-bold">#@os.IDOS</div>
-                                <div class="text-white truncate">@os.Piscina?.Cliente?.Nome</div>
-                                <div class="text-sm text-slate-400">@os.Piscina?.Cliente?.Tipo</div>
-                                <div class="text-sm text-slate-400 font-bold">@os.Piscina?.Tipo</div>
-                                <div class="text-slate-400 text-xs">@os.DataExecucao.ToString("dd/MM/yyyy")</div>
-                            </div>
-                        }
-                        @if (!GetOrdensPorStatus("Ocorrência").Any())
-                        {
-                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
-                                <div class="text-slate-500 text-center text-xs">Nenhuma OS</div>
-                            </div>
-                        }
-                    </div>
-                </div>
-
-                <!-- Coluna: Reagendada -->
-                <div class="bg-slate-800 rounded-lg p-3 border-2 border-orange-500">
-                    <h3 class="text-orange-400 font-bold text-center mb-3 text-sm">Reagendada</h3>
-                    <div class="space-y-2">
-                        @foreach (var os in GetOrdensPorStatus("Reagendada"))
-                        {
-                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
-                                <div class="text-white font-bold">#@os.IDOS</div>
-                                <div class="text-white truncate">@os.Piscina?.Cliente?.Nome</div>
-                                <div class="text-sm text-slate-400">@os.Piscina?.Cliente?.Tipo</div>
-                                <div class="text-sm text-slate-400 font-bold">@os.Piscina?.Tipo</div>
-                                <div class="text-slate-400 text-xs">@os.DataExecucao.ToString("dd/MM/yyyy")</div>
-                            </div>
-                        }
-                        @if (!GetOrdensPorStatus("Reagendada").Any())
-                        {
-                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
-                                <div class="text-slate-500 text-center text-xs">Nenhuma OS</div>
-                            </div>                           }
-                    </div>
-                </div>
-
-                <!-- Coluna: Cancelada -->
-                <div class="bg-slate-800 rounded-lg p-3 border-2 border-red-500">
-                    <h3 class="text-red-400 font-bold text-center mb-3 text-sm">Cancelada</h3>
-                    <div class="space-y-2">
-                        @foreach (var os in GetOrdensPorStatus("Cancelada"))
-                        {
-                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
-                                <div class="text-white font-bold">#@os.IDOS</div>
-                                <div class="text-white truncate">@os.Piscina?.Cliente?.Nome</div>
-                                <div class="text-sm text-slate-400">@os.Piscina?.Cliente?.Tipo</div>
-                                <div class="text-sm text-slate-400 font-bold">@os.Piscina?.Tipo</div>
-                                <div class="text-slate-400 text-xs">@os.DataExecucao.ToString("dd/MM/yyyy")</div>
-                            </div>
-                        }
-                        @if (!GetOrdensPorStatus("Cancelada").Any())
-                        {
-                            <div class="bg-slate-700 rounded p-2 text-xs hover:bg-slate-600 cursor-pointer">
-                                <div class="text-slate-500 text-center text-xs">Nenhuma OS</div>
-                            </div>                           }
-                    </div>
-                </div>
+                }
             </div>
         }
     }
@@ -342,6 +262,22 @@
     private bool toastVisible = false;
     private string mensagemToast = "";
     private string tipoToast = "success";
+
+    private record ColunaKanban(string Status, string Label, string CorBorda, string CorTexto);
+
+    private readonly List<ColunaKanban> colunasKanban = new()
+    {
+        new("Em Aberto", "Em Aberto", "border-yellow-500", "text-yellow-400"),
+        new("Em Andamento", "Em Andamento", "border-blue-500", "text-blue-400"),
+        new("Finalizada", "Finalizada", "border-green-500", "text-green-400"),
+        new("Ocorrência", "Ocorrência", "border-purple-500", "text-purple-400"),
+        new("Reagendada", "Reagendada", "border-orange-500", "text-orange-400"),
+        new("Cancelada", "Cancelada", "border-red-500", "text-red-400"),
+    };
+
+    private string? NomeTecnico(OrdemDeServico os) => usuarios?.FirstOrDefault(u => u.IDUsuario == os.IDUsuario)?.Nome;
+
+    private bool EstaAtrasada(OrdemDeServico os) => os.Status == "Em Aberto" && os.DataExecucao.Date < DateTime.Today;
 
     protected override async Task OnInitializedAsync()
     {
