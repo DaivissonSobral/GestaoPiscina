@@ -116,14 +116,22 @@ cd ../GestaoPiscina.Server
 dotnet restore
 ```
 
-### 2. **Configurar Banco de Dados**
+### 2. **Configurar Segredo do JWT**
+A chave usada para assinar os tokens JWT não fica no `appsettings.json` (nunca deve ir para o git). Configure-a localmente via `user-secrets`:
+```bash
+cd GestaoPiscina.Server
+dotnet user-secrets set "Jwt:SecretKey" "<gere uma string aleatória de pelo menos 32 caracteres>"
+```
+Em produção, defina a variável de ambiente `Jwt__SecretKey` (ou o equivalente no serviço de hospedagem) em vez de usar `user-secrets`.
+
+### 3. **Configurar Banco de Dados**
 ```bash
 # Aplicar migrations
 cd GestaoPiscina.Server
 dotnet ef database update
 ```
 
-### 3. **Executar Projetos**
+### 4. **Executar Projetos**
 ```bash
 # Terminal 1 - Backend (Porta 7001)
 cd GestaoPiscina.Server
@@ -134,7 +142,7 @@ cd GestaoPiscina.Client
 dotnet run --urls "http://localhost:7000"
 ```
 
-### 4. **Acessar Aplicação**
+### 5. **Acessar Aplicação**
 - **Frontend**: http://localhost:7000
 - **API**: http://localhost:7001
 - **Swagger**: http://localhost:7001/swagger

@@ -8,7 +8,13 @@ using GestaoPiscina.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+    {
+        // Sem isso, o ASP.NET Core trata propriedades de navegação do EF (não anuláveis, ex: OrdemDeServico.Piscina)
+        // como implicitamente [Required] no binding do corpo da requisição, mesmo quando o cliente
+        // só envia a chave estrangeira (ex: IDPiscina) e não o objeto aninhado.
+        options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+    })
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
@@ -35,7 +41,8 @@ builder.Services.AddCors(options =>
 });
 
 // Configuração do JWT
-var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] ?? "SuaChaveSecretaMuitoLongaParaJWT2024";
+var jwtSecretKey = builder.Configuration["Jwt:SecretKey"]
+    ?? throw new InvalidOperationException("Configuração 'Jwt:SecretKey' não encontrada. Configure via 'dotnet user-secrets' (dev) ou variável de ambiente (produção).");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
