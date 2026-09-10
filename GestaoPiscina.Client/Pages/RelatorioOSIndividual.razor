@@ -1,0 +1,378 @@
+@page "/relatorios/os/{IdOS:int}"
+@using System.Globalization
+@using GestaoPiscina.Client.Services
+@using GestaoPiscina.Client.Models
+@inject ApiService ApiService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<HeadContent>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600;700&family=Caveat:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</HeadContent>
+
+<section class="p-4 space-y-6">
+    <div class="no-print flex items-center gap-3">
+        <button @onclick="Voltar" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-white transition-colors">
+            <i class="fas fa-arrow-left mr-2"></i>Voltar
+        </button>
+        @if (os != null)
+        {
+            <button @onclick="Imprimir" class="bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded-lg text-white transition-colors">
+                <i class="fas fa-print mr-2"></i>Imprimir / Salvar PDF
+            </button>
+        }
+    </div>
+
+    @if (carregando)
+    {
+        <p class="text-slate-400">Carregando relatório...</p>
+    }
+    else if (erro != null)
+    {
+        <p class="text-red-400"><i class="fas fa-exclamation-circle mr-1"></i>@erro</p>
+    }
+    else if (os != null)
+    {
+        <div class="relatorio-page">
+            <div class="page">
+
+                <header class="top">
+                    <div class="top-row">
+                        <div>
+                            <div class="brand-tag">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c4 5 7 8.5 7 12a7 7 0 1 1-14 0c0-3.5 3-7 7-12Z" /></svg>
+                                Manutenção de piscinas
+                            </div>
+                            <h1>@os.Piscina.Cliente.Nome</h1>
+                            <p class="sub">Relatório técnico de visita — @NomePiscina(os.Piscina)</p>
+                            <div class="meta-lines">
+                                Data da visita: @os.DataExecucao.ToString("dd 'de' MMMM 'de' yyyy", CultureInfo.GetCultureInfo("pt-BR"))
+                                @if (!string.IsNullOrWhiteSpace(os.Piscina.Cliente.CNPJ))
+                                {
+                                    <br />
+                                    @CnpjTexto
+                                }
+                            </div>
+                        </div>
+                        <div class="contact-card">
+                            <div class="label">Responsável técnica</div>
+                            <div class="name">@QuimicaResponsavel</div>
+                            <div class="role">Química responsável<br>@CrqResponsavel</div>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="hero">
+                    <div class="hero-top">
+                        <div class="hero-icon @(TodosParametrosOk() ? "" : "warn")">
+                            @if (TodosParametrosOk())
+                            {
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M8 12.5l2.5 2.5L16 9.5" /></svg>
+                            }
+                            else
+                            {
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01" /><circle cx="12" cy="12" r="9" /></svg>
+                            }
+                        </div>
+                        <div>
+                            <h2>Situação da piscina nesta visita</h2>
+                            <p class="hero-body">@ResumoVisita()</p>
+                        </div>
+                    </div>
+                    <div class="chip-row">
+                        <span class="chip">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2" /><path d="M3.5 9.5h17" /><path d="M8 3v4M16 3v4" /></svg>
+                            @os.DataExecucao.ToString("dd/MM/yyyy") @os.HoraInicio.ToString("HH:mm")–@os.HoraTermino.ToString("HH:mm")
+                        </span>
+                        <span class="chip">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6 7.5V19l-4 2v-8.5L4 5Z" /></svg>
+                            Técnico: @NomeTecnico()
+                        </span>
+                        <span class="chip">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c4 5 7 8.5 7 12a7 7 0 1 1-14 0c0-3.5 3-7 7-12Z" /></svg>
+                            Status: @os.Status
+                        </span>
+                        <span class="chip">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M8 12.5l2.5 2.5L16 9.5" /></svg>
+                            Checklist @(os.ChecklistConcluido ? "concluído" : "pendente")
+                        </span>
+                    </div>
+                </div>
+
+                <section>
+                    <div class="section-head">
+                        <h3>Parâmetros da água</h3>
+                        <p>A faixa azul mostra o intervalo recomendado; o ponto mostra onde a leitura desta visita caiu.</p>
+                    </div>
+                    <div class="gauge-grid">
+                        @foreach (var parametro in parametros)
+                        {
+                            var valor = parametro.Valor(os);
+                            var dentroDoPadrao = valor >= parametro.IdealMin && valor <= parametro.IdealMax;
+                            <div class="gauge-card">
+                                <div class="gauge-card-head">
+                                    <div class="ic"><i class="fas @parametro.Icone"></i></div>
+                                    <h4>@parametro.Nome</h4>
+                                </div>
+                                <div class="ideal">Ideal: @FormatarValor(parametro, parametro.IdealMin) – @FormatarValor(parametro, parametro.IdealMax)@parametro.Unidade</div>
+                                <div class="gauge-row">
+                                    <div class="gauge-row-top">
+                                        <span class="pool">@NomePiscina(os.Piscina)</span>
+                                        <span class="val-status">
+                                            <span class="val">@FormatarValor(parametro, valor)@parametro.Unidade</span>
+                                            <span class="status-dot @(dentroDoPadrao ? "status-ok" : "status-warn")">@(dentroDoPadrao ? "No padrão" : "Fora do ideal")</span>
+                                        </span>
+                                    </div>
+                                    <div class="track">
+                                        <div class="band" style="left:@(Inv(BandaEsquerda(parametro)))%; width:@(Inv(BandaLargura(parametro)))%;"></div>
+                                        <div class="dot @(dentroDoPadrao ? "" : "warn")" style="left:@(Inv(PosicaoNaFaixa(parametro, valor)))%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+
+                <section>
+                    <div class="section-head">
+                        <h3>Dosagem de Produtos Aplicados</h3>
+                        <p>Produtos e quantidades utilizados nesta visita para reestabelecer a qualidade da água.</p>
+                    </div>
+                    @if (dosagens.Any())
+                    {
+                        <div class="dose-grid">
+                            @foreach (var dosagem in dosagens)
+                            {
+                                <div class="dose-card">
+                                    <div class="ic"><i class="fas fa-flask"></i></div>
+                                    <div>
+                                        <div class="nome">@dosagem.Produto.Nome</div>
+                                        <div class="qtd">@dosagem.Quantidade.ToString("0.##", CultureInfo.InvariantCulture) @dosagem.Produto.Unidade</div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-sm" style="color:#5C7A80;">Nenhum produto foi dosado nesta visita.</p>
+                    }
+                </section>
+
+                @if (TemFotos())
+                {
+                    <section>
+                        <div class="section-head">
+                            <h3>Registro Fotográfico</h3>
+                            <p>Fotos registradas pelo técnico durante a visita.</p>
+                        </div>
+
+                        @if (FotosAntes.Any())
+                        {
+                            <div class="photo-block">
+                                <h4>Antes</h4>
+                                <div class="photo-grid">
+                                    @foreach (var foto in FotosAntes)
+                                    {
+                                        <img src="@foto" alt="Foto antes" />
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        @if (FotosDepois.Any())
+                        {
+                            <div class="photo-block">
+                                <h4>Depois</h4>
+                                <div class="photo-grid">
+                                    @foreach (var foto in FotosDepois)
+                                    {
+                                        <img src="@foto" alt="Foto depois" />
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        @if (FotosOcorrencias.Any())
+                        {
+                            <div class="photo-block">
+                                <h4>Ocorrência</h4>
+                                <div class="photo-grid">
+                                    @foreach (var foto in FotosOcorrencias)
+                                    {
+                                        <img src="@foto" alt="Foto da ocorrência" />
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </section>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(os.Observacoes))
+                {
+                    <section>
+                        <div class="section-head">
+                            <h3>Observações do Técnico</h3>
+                        </div>
+                        <p style="font-size:14px; color:#0E3B4D; line-height:1.6;">@os.Observacoes</p>
+                    </section>
+                }
+
+                <footer>
+                    <div>
+                        <h4>Responsável técnica</h4>
+                        <div class="sig">@QuimicaResponsavel</div>
+                        <div class="sig-line"></div>
+                        <div class="sig-name">@QuimicaResponsavel</div>
+                        <div class="sig-role">Química responsável<br>@CrqResponsavel</div>
+                    </div>
+                    <div class="meta-block">
+                        <h4>Dados do condomínio</h4>
+                        <p>
+                            <b>@os.Piscina.Cliente.Nome</b>
+                            @if (!string.IsNullOrWhiteSpace(os.Piscina.Cliente.CNPJ))
+                            {
+                                <br />
+                                @CnpjTexto
+                            }
+                            <br />
+                            @VolumeTexto
+                        </p>
+                        <div class="badge-row">
+                            @foreach (var selo in SelosEmpresa)
+                            {
+                                <span class="badge">@selo</span>
+                            }
+                        </div>
+                    </div>
+                </footer>
+
+            </div>
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter] public int IdOS { get; set; }
+
+    private const string QuimicaResponsavel = "Talina da Silva Ferreira dos Santos";
+    private const string CrqResponsavel = "CRQ/CE nº 101000447";
+    private static readonly string[] SelosEmpresa = { "Elias Mendes Consultoria", "Aqua Limpe", "CRQ", "ANAPP" };
+
+    private record Parametro(string Nome, string Unidade, string Icone, decimal IdealMin, decimal IdealMax, decimal DispMin, decimal DispMax, string Formato, Func<OrdemDeServico, decimal> Valor);
+
+    private readonly List<Parametro> parametros = new()
+    {
+        new("pH", "", "fa-tint", 7.2m, 7.8m, 6.8m, 8.0m, "0.0", o => o.pH),
+        new("Cloro Livre", "ppm", "fa-flask", 0.8m, 3m, 0m, 4m, "0.0", o => o.CloroLivre),
+        new("Alcalinidade", "ppm", "fa-water", 80m, 120m, 60m, 140m, "0", o => o.Alcalinidade),
+        new("Dureza Cálcica", "ppm", "fa-gem", 200m, 400m, 150m, 420m, "0", o => o.DurezaCalcica),
+    };
+
+    private OrdemDeServico? os;
+    private List<Usuario> usuarios = new();
+    private List<DosagemProduto> dosagens = new();
+    private bool carregando = true;
+    private string? erro;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        carregando = true;
+        erro = null;
+        try
+        {
+            var tarefaOS = ApiService.GetOrdemDeServicoAsync(IdOS);
+            var tarefaUsuarios = ApiService.GetUsuariosAsync();
+            var tarefaDosagens = ApiService.GetDosagensPorOSAsync(IdOS);
+            await Task.WhenAll(tarefaOS, tarefaUsuarios, tarefaDosagens);
+
+            os = await tarefaOS;
+            usuarios = await tarefaUsuarios;
+            dosagens = await tarefaDosagens;
+
+            if (os == null)
+            {
+                erro = "Ordem de serviço não encontrada.";
+            }
+        }
+        catch (Exception ex)
+        {
+            erro = $"Erro ao carregar relatório: {ex.Message}";
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    private void Voltar() => Navigation.NavigateTo("/ordens-servico");
+
+    private Task Imprimir() => JSRuntime.InvokeVoidAsync("print").AsTask();
+
+    private string NomePiscina(Piscina piscina) => piscina.Tipo switch
+    {
+        "adulto" => "piscina adulta",
+        "infantil" => "piscina infantil",
+        "espelho" => "espelho d'água",
+        _ => piscina.Tipo
+    };
+
+    private string NomeTecnico() => usuarios.FirstOrDefault(u => u.IDUsuario == os!.IDUsuario)?.Nome ?? "—";
+
+    private string CnpjTexto => os == null ? string.Empty : $"CNPJ {os.Piscina.Cliente.CNPJ}";
+
+    private string VolumeTexto => os == null
+        ? string.Empty
+        : $"Volume: {(os.Piscina.VolumeLitros / 1000).ToString("0.##", CultureInfo.GetCultureInfo("pt-BR"))}m³ ({NomePiscina(os.Piscina)})";
+
+    private List<string> FotosAntes => SepararFotos(os?.FotosAntes);
+    private List<string> FotosDepois => SepararFotos(os?.FotosDepois);
+    private List<string> FotosOcorrencias => SepararFotos(os?.FotosOcorrencias);
+
+    private static List<string> SepararFotos(string? urls) => string.IsNullOrWhiteSpace(urls)
+        ? new List<string>()
+        : urls.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+    private bool TemFotos() => FotosAntes.Any() || FotosDepois.Any() || FotosOcorrencias.Any();
+
+    private string FormatarValor(Parametro parametro, decimal valor) => valor.ToString(parametro.Formato, CultureInfo.InvariantCulture);
+
+    private static string Inv(double valor) => valor.ToString("0.####", CultureInfo.InvariantCulture);
+
+    private double BandaEsquerda(Parametro p) => (double)((p.IdealMin - p.DispMin) / (p.DispMax - p.DispMin)) * 100;
+    private double BandaLargura(Parametro p) => (double)((p.IdealMax - p.IdealMin) / (p.DispMax - p.DispMin)) * 100;
+
+    private double PosicaoNaFaixa(Parametro p, decimal valor)
+    {
+        var pos = (double)((valor - p.DispMin) / (p.DispMax - p.DispMin));
+        return Math.Clamp(pos, 0, 1) * 100;
+    }
+
+    private bool TodosParametrosOk() => os != null && parametros.All(p =>
+    {
+        var v = p.Valor(os);
+        return v >= p.IdealMin && v <= p.IdealMax;
+    });
+
+    private string ResumoVisita()
+    {
+        if (os == null)
+        {
+            return string.Empty;
+        }
+
+        var foraDoPadrao = parametros.Where(p =>
+        {
+            var v = p.Valor(os);
+            return v < p.IdealMin || v > p.IdealMax;
+        }).Select(p => p.Nome).ToList();
+
+        if (!foraDoPadrao.Any())
+        {
+            return "Todos os parâmetros medidos (pH, cloro livre, alcalinidade e dureza cálcica) estavam dentro da faixa recomendada nesta visita.";
+        }
+
+        return $"Ponto de atenção nesta visita: {string.Join(", ", foraDoPadrao)} fora da faixa recomendada. A dosagem aplicada visa corrigir esse desvio.";
+    }
+}

@@ -1,4 +1,5 @@
 @using GestaoPiscina.Client.Models
+@inject NavigationManager Navigation
 
 <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 @(IsVisible ? "" : "hidden")">
     <div class="bg-slate-800 rounded-xl p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
@@ -167,6 +168,9 @@
         </div>
 
         <div class="flex space-x-3 mt-6">
+            <button @onclick="AbrirRelatorio" class="flex-1 bg-teal-600 hover:bg-teal-500 px-4 py-2 rounded-lg text-white transition-colors">
+                <i class="fas fa-file-alt mr-2"></i>Relatório
+            </button>
             <button @onclick="() => OnEdit.InvokeAsync(OrdemDeServico)" class="flex-1 bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
                 <i class="fas fa-edit mr-2"></i>Editar
             </button>
@@ -187,6 +191,11 @@
     {
         IsVisible = false;
         await IsVisibleChanged.InvokeAsync(false);
+    }
+
+    private void AbrirRelatorio()
+    {
+        Navigation.NavigateTo($"/relatorios/os/{OrdemDeServico.IDOS}");
     }
 
     private string GetStatusClass(string status)

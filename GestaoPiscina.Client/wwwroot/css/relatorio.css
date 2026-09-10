@@ -1,5 +1,9 @@
-/* Adaptado do modelo relatorio-piscina-luminus.html fornecido pelo usuário.
-   Isolado via Blazor CSS scoping (não vaza para o resto do app). */
+/* Estilo compartilhado dos relatórios técnicos (mensal por cliente e
+   individual por OS), adaptado do modelo relatorio-piscina-luminus.html
+   fornecido pelo usuário. Global (não isolado por componente) para que
+   RelatorioOS.razor e RelatorioOSIndividual.razor usem exatamente o
+   mesmo visual sem duplicar CSS — todo seletor é prefixado com
+   .relatorio-page para não vazar para o resto do app. */
 
 .relatorio-page {
     background: #EAF5F6;
@@ -137,6 +141,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.relatorio-page .hero-icon.warn {
+    background: #FBEDD7;
+    color: #C9820F;
 }
 
 .relatorio-page .hero-icon svg {
@@ -463,6 +472,11 @@
     margin-bottom: 12px;
 }
 
+.relatorio-page .tl-badge.warn {
+    color: #C9820F;
+    background: #FBEDD7;
+}
+
 .relatorio-page .tl-rows {
     font-size: 12.5px;
     color: #0E3B4D;
@@ -538,6 +552,77 @@
     font-size: 12px;
     color: #5C7A80;
     padding: 12px 4px 0;
+}
+
+/* ---------- DOSAGEM (relatório individual) ---------- */
+.relatorio-page .dose-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.relatorio-page .dose-card {
+    background: #FFFFFF;
+    border: 1px solid #DCE9EA;
+    border-radius: 16px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.relatorio-page .dose-card .ic {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #EAF5F6;
+    color: #0B5560;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    font-size: 16px;
+}
+
+.relatorio-page .dose-card .nome {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #0E3B4D;
+}
+
+.relatorio-page .dose-card .qtd {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: #5C7A80;
+    margin-top: 2px;
+}
+
+/* ---------- REGISTRO FOTOGRÁFICO (relatório individual) ---------- */
+.relatorio-page .photo-block + .photo-block {
+    margin-top: 28px;
+}
+
+.relatorio-page .photo-block h4 {
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.relatorio-page .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+.relatorio-page .photo-grid img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 14px;
+    border: 1px solid #DCE9EA;
+    background: #FBF8F1;
 }
 
 /* ---------- FOOTER ---------- */
@@ -637,7 +722,7 @@
         padding: 36px 20px 0;
     }
 
-    .relatorio-page .gauge-grid, .relatorio-page .trend-grid, .relatorio-page .timeline {
+    .relatorio-page .gauge-grid, .relatorio-page .trend-grid, .relatorio-page .timeline, .relatorio-page .dose-grid {
         grid-template-columns: 1fr;
     }
 
