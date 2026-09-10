@@ -23,7 +23,6 @@ namespace GestaoPiscina.Server.Models
         
         public string? Observacoes { get; set; }
         
-        [Required]
         [StringLength(20)]
         public string Telefone { get; set; } = string.Empty;
 
