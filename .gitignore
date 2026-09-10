@@ -26,6 +26,9 @@ wwwroot/dist/
 
 # Outros arquivos temporários
 *.log
-*.tmp 
+*.tmp
+
+# Banco de dados local (recriado via migrations + SeedData, não deve ir para o git)
+GestaoPiscina.Server/GestaoPiscina.db
 GestaoPiscina.Server/GestaoPiscina.db-wal
 GestaoPiscina.Server/GestaoPiscina.db-shm
