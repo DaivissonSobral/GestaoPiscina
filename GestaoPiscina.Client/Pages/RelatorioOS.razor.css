@@ -605,7 +605,7 @@
     border-radius: 999px;
 }
 
-@media (max-width: 720px) {
+@media screen and (max-width: 720px) {
     .relatorio-page header.top {
         padding: 32px 22px 70px;
     }
@@ -651,6 +651,10 @@
     .relatorio-page {
         background: #fff;
         padding: 0;
+    }
+
+    .relatorio-page .page {
+        max-width: 100%;
     }
 
     .relatorio-page .hero {
