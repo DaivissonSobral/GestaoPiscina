@@ -539,6 +539,76 @@ namespace GestaoPiscina.Client.Services
             }
         }
 
+        // Dosagens de produtos (aplicadas numa OS)
+        public async Task<List<DosagemProduto>> GetDosagensPorOSAsync(int osId)
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<List<DosagemProduto>>($"{_baseUrl}dosagens/os/{osId}") ?? new List<DosagemProduto>();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao buscar dosagens da OS: {ex.Message}");
+            }
+        }
+
+        public async Task<DosagemProduto> CreateDosagemAsync(DosagemProduto dosagem)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}dosagens", dosagem);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+
+                var criada = await response.Content.ReadFromJsonAsync<DosagemProduto>();
+                return criada ?? dosagem;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao registrar dosagem: {ex.Message}");
+            }
+        }
+
+        public async Task UpdateDosagemAsync(DosagemProduto dosagem)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}dosagens/{dosagem.IDDosagem}", dosagem);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao atualizar dosagem: {ex.Message}");
+            }
+        }
+
+        public async Task DeleteDosagemAsync(int id)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{_baseUrl}dosagens/{id}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao excluir dosagem: {ex.Message}");
+            }
+        }
+
         // Ordens de Serviço
         public async Task<List<OrdemDeServico>> GetOrdensDeServicoAsync()
         {

@@ -1,0 +1,189 @@
+@using GestaoPiscina.Client.Models
+@using GestaoPiscina.Client.Services
+@inject ApiService ApiService
+
+<div class="space-y-4">
+    <div class="flex items-center justify-between">
+        <h5 class="text-lg font-semibold text-slate-200 flex items-center">
+            <i class="fas fa-flask text-cyan-400 mr-2"></i>Dosagem de Produtos
+        </h5>
+        @if (produtos.Any())
+        {
+            <button type="button" @onclick="Salvar" disabled="@salvando" class="bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 px-3 py-2 rounded-lg text-white text-sm transition-colors">
+                <i class="fas fa-save mr-1"></i>@(salvando ? "Salvando..." : "Salvar Dosagem")
+            </button>
+        }
+    </div>
+
+    @if (carregando)
+    {
+        <p class="text-slate-400 text-sm">Carregando...</p>
+    }
+    else if (!produtos.Any())
+    {
+        <p class="text-amber-400 text-sm">
+            <i class="fas fa-info-circle mr-1"></i>Este cliente não tem produtos cadastrados no estoque. Cadastre em Clientes &gt; Produtos antes de registrar uma dosagem.
+        </p>
+    }
+    else
+    {
+        <p class="text-xs text-slate-400">Ajuste a quantidade de cada produto utilizado nesta OS. Os que ficarem em 0 não são registrados como usados.</p>
+
+        <div class="space-y-4">
+            @foreach (var produto in produtos)
+            {
+                <CampoNumerico Label="@produto.Nome"
+                               Unidade="@produto.Unidade"
+                               Value="@valores.GetValueOrDefault(produto.IDProduto)"
+                               ValueChanged="@(v => valores[produto.IDProduto] = v)"
+                               Step="@PassoPara(produto)"
+                               Min="0m"
+                               Max="@maximos.GetValueOrDefault(produto.IDProduto, 10m)" />
+            }
+        </div>
+
+        @if (!string.IsNullOrEmpty(erro))
+        {
+            <p class="text-red-400 text-sm"><i class="fas fa-exclamation-circle mr-1"></i>@erro</p>
+        }
+        @if (!string.IsNullOrEmpty(sucesso))
+        {
+            <p class="text-green-400 text-sm"><i class="fas fa-check-circle mr-1"></i>@sucesso</p>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public int OsId { get; set; }
+    [Parameter] public int ClienteId { get; set; }
+
+    private List<Produto> produtos = new();
+    private Dictionary<int, decimal> valorInicial = new();
+    private Dictionary<int, decimal> valores = new();
+    private Dictionary<int, decimal> maximos = new();
+    private Dictionary<int, int?> dosagemIdExistente = new();
+    private bool carregando = true;
+    private bool salvando;
+    private string? erro;
+    private string? sucesso;
+    private int osIdCarregado = -1;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (OsId > 0 && OsId != osIdCarregado)
+        {
+            osIdCarregado = OsId;
+            await CarregarDados();
+        }
+    }
+
+    private async Task CarregarDados()
+    {
+        carregando = true;
+        erro = null;
+        sucesso = null;
+        try
+        {
+            var tarefaEstoque = ApiService.GetEstoqueByClienteAsync(ClienteId);
+            var tarefaDosagens = ApiService.GetDosagensPorOSAsync(OsId);
+            await Task.WhenAll(tarefaEstoque, tarefaDosagens);
+            var estoque = await tarefaEstoque;
+            var dosagens = await tarefaDosagens;
+
+            produtos = estoque.Select(e => e.Produto).OrderBy(p => p.Nome).ToList();
+            valores.Clear();
+            valorInicial.Clear();
+            maximos.Clear();
+            dosagemIdExistente.Clear();
+
+            foreach (var item in estoque)
+            {
+                var dosagemAtual = dosagens.FirstOrDefault(d => d.IDProduto == item.IDProduto);
+                var quantidadeJaDosada = dosagemAtual?.Quantidade ?? 0m;
+
+                valores[item.IDProduto] = quantidadeJaDosada;
+                valorInicial[item.IDProduto] = quantidadeJaDosada;
+                // O estoque atual já desconta o que foi dosado nesta OS (se já salvo antes),
+                // então o teto real que o técnico pode arrastar é estoque + o que já usou aqui.
+                maximos[item.IDProduto] = item.QuantidadeAtual + quantidadeJaDosada;
+                dosagemIdExistente[item.IDProduto] = dosagemAtual?.IDDosagem;
+            }
+        }
+        catch (Exception ex)
+        {
+            erro = ex.Message;
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    private decimal PassoPara(Produto produto)
+    {
+        var max = maximos.GetValueOrDefault(produto.IDProduto, 10m);
+        if (max <= 5m)
+        {
+            return 0.1m;
+        }
+        if (max <= 20m)
+        {
+            return 0.5m;
+        }
+        if (max <= 100m)
+        {
+            return 1m;
+        }
+        return 5m;
+    }
+
+    private async Task Salvar()
+    {
+        salvando = true;
+        erro = null;
+        sucesso = null;
+        var alteracoes = 0;
+
+        try
+        {
+            foreach (var produto in produtos)
+            {
+                var novoValor = valores.GetValueOrDefault(produto.IDProduto);
+                var valorAnterior = valorInicial.GetValueOrDefault(produto.IDProduto);
+
+                if (novoValor == valorAnterior)
+                {
+                    continue;
+                }
+
+                var idExistente = dosagemIdExistente.GetValueOrDefault(produto.IDProduto);
+
+                if (novoValor <= 0m && idExistente.HasValue)
+                {
+                    await ApiService.DeleteDosagemAsync(idExistente.Value);
+                }
+                else if (novoValor > 0m && !idExistente.HasValue)
+                {
+                    await ApiService.CreateDosagemAsync(new DosagemProduto { IDOS = OsId, IDProduto = produto.IDProduto, Quantidade = novoValor });
+                }
+                else if (novoValor > 0m && idExistente.HasValue)
+                {
+                    await ApiService.UpdateDosagemAsync(new DosagemProduto { IDDosagem = idExistente.Value, IDOS = OsId, IDProduto = produto.IDProduto, Quantidade = novoValor });
+                }
+
+                alteracoes++;
+            }
+
+            sucesso = alteracoes > 0 ? "Dosagem salva com sucesso!" : "Nenhuma alteração para salvar.";
+            await CarregarDados();
+        }
+        catch (Exception ex)
+        {
+            erro = ex.Message;
+        }
+        finally
+        {
+            salvando = false;
+        }
+    }
+}

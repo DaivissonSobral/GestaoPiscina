@@ -118,6 +118,21 @@
                 <ValidationMessage For="@(() => OrdemDeServico.Observacoes)" />
             </div>
 
+            <div class="mt-6">
+                @if (OrdemDeServico.IDOS > 0)
+                {
+                    <DosagemForm OsId="OrdemDeServico.IDOS" ClienteId="ClienteIdDaOS" />
+                }
+                else
+                {
+                    <p class="text-sm text-amber-400">
+                        <i class="fas fa-info-circle mr-1"></i>Salve a OS com os parâmetros da água primeiro para registrar a dosagem de produtos.
+                    </p>
+                }
+            </div>
+
+            <hr class="border-slate-700 my-6" />
+
             <div class="mt-4">
                 <UploadFotos Label="Fotos Antes" @bind-Urls="OrdemDeServico.FotosAntes" />
             </div>
@@ -150,6 +165,11 @@
     [Parameter] public List<Usuario>? Usuarios { get; set; }
     [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
     [Parameter] public EventCallback<OrdemDeServico> OnSave { get; set; }
+
+    private int ClienteIdDaOS =>
+        OrdemDeServico.Piscina?.Cliente?.IDCliente
+        ?? Piscinas?.FirstOrDefault(p => p.IDPiscina == OrdemDeServico.IDPiscina)?.Cliente?.IDCliente
+        ?? 0;
 
     protected override void OnInitialized()
     {

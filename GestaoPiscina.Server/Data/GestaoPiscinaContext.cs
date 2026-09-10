@@ -20,6 +20,7 @@ namespace GestaoPiscina.Server.Data
         public DbSet<Perfil> Perfis { get; set; }
         public DbSet<Gestor> Gestores { get; set; }
         public DbSet<GestorCliente> GestorClientes { get; set; }
+        public DbSet<DosagemProduto> DosagensProdutos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -83,6 +84,20 @@ namespace GestaoPiscina.Server.Data
                 entity.HasOne(e => e.AprovadorUsuario)
                     .WithMany()
                     .HasForeignKey(e => e.Aprovador)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<DosagemProduto>(entity =>
+            {
+                entity.HasKey(e => e.IDDosagem);
+                entity.Property(e => e.Quantidade).IsRequired().HasPrecision(10, 2);
+                entity.HasOne(e => e.OrdemDeServico)
+                    .WithMany(o => o.Dosagens)
+                    .HasForeignKey(e => e.IDOS)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Produto)
+                    .WithMany()
+                    .HasForeignKey(e => e.IDProduto)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 

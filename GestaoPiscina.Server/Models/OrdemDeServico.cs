@@ -59,5 +59,6 @@ namespace GestaoPiscina.Server.Models
         public virtual Piscina Piscina { get; set; } = null!;
         public virtual Usuario Tecnico { get; set; } = null!;
         public virtual Usuario? AprovadorUsuario { get; set; }
+        public virtual ICollection<DosagemProduto> Dosagens { get; set; } = new List<DosagemProduto>();
     }
 } 
