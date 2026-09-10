@@ -90,7 +90,7 @@
             <div class="bg-slate-900 rounded-lg rounded-tl-none shadow p-6">
                 @if (StateService.ActiveTab == "dados")
                 {
-                    <ClienteForm Cliente="StateService.CurrentCliente" />
+                    <ClienteForm Cliente="StateService.CurrentCliente" Gestores="gestores" SelectedGestorId="selectedGestorId" OnGestorSelected="OnGestorSelected" />
                 }
                 else if (StateService.ActiveTab == "piscinas")
                 {
@@ -171,11 +171,73 @@
     private bool showConfirmDialog = false;
     private object? itemToDelete = null;
     private bool ClienteSalvo => StateService.CurrentCliente.IDCliente > 0;
+    private List<Gestor>? gestores;
+    private int selectedGestorId;
+    private int gestorVinculadoOriginalId;
+    private bool wasVisible = false;
 
     protected override Task OnInitializedAsync()
     {
         StateService.StateChanged += StateHasChanged;
         return Task.CompletedTask;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsVisible && !wasVisible)
+        {
+            await LoadGestores();
+        }
+        wasVisible = IsVisible;
+    }
+
+    private async Task LoadGestores()
+    {
+        try
+        {
+            gestores = await ApiService.GetGestoresAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar gestores: {ex.Message}");
+            gestores = new List<Gestor>();
+        }
+
+        var gestorVinculado = gestores.FirstOrDefault(g => g.GestorClientes.Any(gc => gc.IDCliente == StateService.CurrentCliente.IDCliente));
+        selectedGestorId = gestorVinculado?.IDGestor ?? 0;
+        gestorVinculadoOriginalId = selectedGestorId;
+    }
+
+    private void OnGestorSelected(int gestorId)
+    {
+        selectedGestorId = gestorId;
+    }
+
+    private async Task ReconcileGestorAsync(int clienteId)
+    {
+        if (selectedGestorId == gestorVinculadoOriginalId)
+        {
+            return;
+        }
+
+        try
+        {
+            if (gestorVinculadoOriginalId > 0)
+            {
+                await ApiService.DesvincularGestorClienteAsync(gestorVinculadoOriginalId, clienteId);
+            }
+
+            if (selectedGestorId > 0)
+            {
+                await ApiService.VincularGestorClienteAsync(selectedGestorId, clienteId);
+            }
+
+            gestorVinculadoOriginalId = selectedGestorId;
+        }
+        catch (Exception ex)
+        {
+            ShowToast("Erro", $"Erro ao vincular gestor: {ex.Message}", "error");
+        }
     }
 
     public void Dispose()
@@ -592,14 +654,16 @@
             if (cliente.IDCliente > 0)
             {
                 await ApiService.UpdateClienteAsync(cliente);
+                await ReconcileGestorAsync(cliente.IDCliente);
                 ShowToast("Sucesso", "Cliente atualizado com sucesso!", "success");
             }
             else
             {
                 var novoCliente = await ApiService.CreateClienteAsync(cliente);
                 StateService.CurrentCliente.IDCliente = novoCliente.IDCliente;
+                await ReconcileGestorAsync(novoCliente.IDCliente);
                 ShowToast("Sucesso", "Cliente criado com sucesso!", "success");
-                
+
                 await LoadRelatedData();
                 return;
             }
