@@ -1,6 +1,5 @@
 using System.Net.Http.Json;
 using GestaoPiscina.Client.Models;
-using GestaoPiscina.Client.Models.DTOs;
 using System.Text.Json;
 using Microsoft.JSInterop;
 
@@ -134,60 +133,6 @@ namespace GestaoPiscina.Client.Services
             catch (Exception ex)
             {
                 throw new Exception($"Erro ao criar cliente: {ex.Message}");
-            }
-        }
-
-        public async Task<Cliente> CreateClienteCompletoAsync(ClienteCompletoDTO clienteCompleto)
-        {
-            try
-            {
-                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}clientes/completo", clienteCompleto);
-                
-                if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
-                {
-                    var errorMessage = await GetErrorMessageAsync(response);
-                    throw new Exception(errorMessage);
-                }
-                
-                if (!response.IsSuccessStatusCode)
-                {
-                    var errorMessage = await GetErrorMessageAsync(response);
-                    throw new Exception(errorMessage);
-                }
-                
-                var createdCliente = await response.Content.ReadFromJsonAsync<Cliente>();
-                return createdCliente ?? new Cliente();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Erro ao criar cliente completo: {ex.Message}");
-            }
-        }
-
-        public async Task<Cliente> UpdateClienteCompletoAsync(ClienteCompletoDTO clienteCompleto)
-        {
-            try
-            {
-                var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}clientes/completo/{clienteCompleto.IDCliente}", clienteCompleto);
-                
-                if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
-                {
-                    var errorMessage = await GetErrorMessageAsync(response);
-                    throw new Exception(errorMessage);
-                }
-                
-                if (!response.IsSuccessStatusCode)
-                {
-                    var errorMessage = await GetErrorMessageAsync(response);
-                    throw new Exception(errorMessage);
-                }
-                
-                var updatedCliente = await response.Content.ReadFromJsonAsync<Cliente>();
-                return updatedCliente ?? new Cliente();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Erro ao atualizar cliente completo: {ex.Message}");
             }
         }
 
