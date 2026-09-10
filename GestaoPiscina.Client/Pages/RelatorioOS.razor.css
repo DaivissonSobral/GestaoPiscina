@@ -358,6 +358,17 @@
     margin-bottom: 10px;
 }
 
+/* O viewBox (420x150) só garante a proporção certa quando width/height
+   também são fixados via CSS — sem isso, o motor de impressão do navegador
+   recalcula um tamanho diferente do que aparece na tela, distorcendo o
+   gráfico. */
+.relatorio-page .trend-card svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 420 / 150;
+}
+
 .relatorio-page .legend {
     display: flex;
     gap: 14px;
