@@ -10,7 +10,6 @@ namespace GestaoPiscina.Server.Controllers
     public class ClientesController : ControllerBase
     {
         private readonly GestaoPiscinaContext _context;
-        private static readonly string[] TiposClienteValidos = { "Uso Coletivo", "Residencial Privativa" };
 
         public ClientesController(GestaoPiscinaContext context)
         {
