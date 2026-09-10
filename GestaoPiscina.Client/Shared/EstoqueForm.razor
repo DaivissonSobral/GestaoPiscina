@@ -31,7 +31,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-3">
                         <label class="block text-sm font-medium text-slate-300 mb-2">Produto *</label>
-                        <InputSelect @bind-Value="SelectedProdutoId" @onchange="OnProdutoSelected" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" style="color: #f1f5f9 !important;">
+                        <InputSelect TValue="int" Value="SelectedProdutoId" ValueChanged="OnProdutoSelected" ValueExpression="() => SelectedProdutoId" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" style="color: #f1f5f9 !important;">
                             <option value="0">Selecione um produto...</option>
                             @if (Produtos != null)
                             {
@@ -189,5 +189,5 @@
     [Parameter] public EventCallback<EstoqueCliente> OnEdit { get; set; }
     [Parameter] public EventCallback<EstoqueCliente> OnDelete { get; set; }
     [Parameter] public EventCallback<EstoqueCliente> OnRemoveTemporario { get; set; }
-    [Parameter] public EventCallback<ChangeEventArgs> OnProdutoSelected { get; set; }
+    [Parameter] public EventCallback<int> OnProdutoSelected { get; set; }
 }

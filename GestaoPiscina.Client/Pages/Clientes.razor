@@ -638,7 +638,7 @@
                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div class="space-y-3">
                                                     <label class="block text-sm font-medium text-slate-300 mb-2">Produto *</label>
-                                                    <InputSelect @bind-Value="selectedProdutoId" @onchange="OnProdutoSelected" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" style="color: #f1f5f9 !important;">
+                                                    <InputSelect TValue="int" Value="selectedProdutoId" ValueChanged="OnProdutoSelected" ValueExpression="() => selectedProdutoId" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" style="color: #f1f5f9 !important;">
                                                         <option value="0">Selecione um produto...</option>
                                                         @if (produtos != null)
                                                         {
@@ -1794,50 +1794,26 @@
         }
     }
 
-    private void OnProdutoSelected(ChangeEventArgs e)
+    private void OnProdutoSelected(int produtoId)
     {
-        try
+        selectedProdutoId = produtoId;
+        var produtoSelecionado = produtoId > 0 ? produtos?.FirstOrDefault(p => p.IDProduto == produtoId) : null;
+
+        if (produtoSelecionado != null)
         {
-            if (e.Value != null && int.TryParse(e.Value.ToString(), out int produtoId))
+            currentEstoque.Produto = new Produto
             {
-                if (produtoId > 0)
-                {
-                    selectedProdutoId = produtoId;
-                    var produtoSelecionado = produtos?.FirstOrDefault(p => p.IDProduto == produtoId);
-                    if (produtoSelecionado != null)
-                    {
-                        currentEstoque.Produto = new Produto
-                        {
-                            IDProduto = produtoSelecionado.IDProduto,
-                            Nome = produtoSelecionado.Nome,
-                            Concentracao = produtoSelecionado.Concentracao,
-                            Unidade = produtoSelecionado.Unidade
-                        };
-                        currentEstoque.IDProduto = produtoSelecionado.IDProduto;
-                    }
-                }
-                else
-                {
-                    selectedProdutoId = 0;
-                    currentEstoque.Produto = new Produto();
-                    currentEstoque.IDProduto = 0;
-                }
-            }
-            else
-            {
-                selectedProdutoId = 0;
-                currentEstoque.Produto = new Produto();
-                currentEstoque.IDProduto = 0;
-            }
+                IDProduto = produtoSelecionado.IDProduto,
+                Nome = produtoSelecionado.Nome,
+                Concentracao = produtoSelecionado.Concentracao,
+                Unidade = produtoSelecionado.Unidade
+            };
+            currentEstoque.IDProduto = produtoSelecionado.IDProduto;
         }
-        catch (Exception ex)
+        else
         {
-            Console.WriteLine($"Erro ao selecionar produto: {ex.Message}");
-            selectedProdutoId = 0;
             currentEstoque.Produto = new Produto();
             currentEstoque.IDProduto = 0;
         }
-        
-        StateHasChanged();
     }
 } 

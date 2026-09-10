@@ -874,50 +874,28 @@
         }
     }
 
-    private void OnProdutoSelected(ChangeEventArgs e)
+    private void OnProdutoSelected(int produtoId)
     {
-        try
+        StateService.SelectedProdutoId = produtoId;
+        var produtoSelecionado = produtoId > 0 ? StateService.Produtos?.FirstOrDefault(p => p.IDProduto == produtoId) : null;
+
+        if (produtoSelecionado != null)
         {
-            if (e.Value != null && int.TryParse(e.Value.ToString(), out int produtoId))
+            StateService.CurrentEstoque.Produto = new Produto
             {
-                if (produtoId > 0)
-                {
-                    StateService.SelectedProdutoId = produtoId;
-                    var produtoSelecionado = StateService.Produtos?.FirstOrDefault(p => p.IDProduto == produtoId);
-                    if (produtoSelecionado != null)
-                    {
-                        StateService.CurrentEstoque.Produto = new Produto
-                        {
-                            IDProduto = produtoSelecionado.IDProduto,
-                            Nome = produtoSelecionado.Nome,
-                            Concentracao = produtoSelecionado.Concentracao,
-                            Unidade = produtoSelecionado.Unidade
-                        };
-                        StateService.CurrentEstoque.IDProduto = produtoSelecionado.IDProduto;
-                    }
-                }
-                else
-                {
-                    StateService.SelectedProdutoId = 0;
-                    StateService.CurrentEstoque.Produto = new Produto();
-                    StateService.CurrentEstoque.IDProduto = 0;
-                }
-            }
-            else
-            {
-                StateService.SelectedProdutoId = 0;
-                StateService.CurrentEstoque.Produto = new Produto();
-                StateService.CurrentEstoque.IDProduto = 0;
-            }
+                IDProduto = produtoSelecionado.IDProduto,
+                Nome = produtoSelecionado.Nome,
+                Concentracao = produtoSelecionado.Concentracao,
+                Unidade = produtoSelecionado.Unidade
+            };
+            StateService.CurrentEstoque.IDProduto = produtoSelecionado.IDProduto;
         }
-        catch (Exception ex)
+        else
         {
-            Console.WriteLine($"Erro ao selecionar produto: {ex.Message}");
-            StateService.SelectedProdutoId = 0;
             StateService.CurrentEstoque.Produto = new Produto();
             StateService.CurrentEstoque.IDProduto = 0;
         }
-        
+
         StateService.NotifyStateChanged();
     }
 
