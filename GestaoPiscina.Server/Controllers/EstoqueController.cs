@@ -28,6 +28,11 @@ namespace GestaoPiscina.Server.Controllers
         [HttpPost]
         public async Task<ActionResult<EstoqueCliente>> PostEstoque(EstoqueCliente estoque)
         {
+            // O cliente pode enviar Cliente/Produto aninhados (populados só para exibição no formulário);
+            // nunca confiar neles para o EF anexar/rastrear - só a chave estrangeira importa aqui.
+            estoque.Cliente = null!;
+            estoque.Produto = null!;
+
             // Verificar se o produto existe
             var produto = await _context.Produtos.FindAsync(estoque.IDProduto);
             if (produto == null)
@@ -69,6 +74,11 @@ namespace GestaoPiscina.Server.Controllers
             {
                 return BadRequest();
             }
+
+            // O cliente pode enviar Cliente/Produto aninhados (populados só para exibição no formulário);
+            // nunca confiar neles para o EF anexar/rastrear - só a chave estrangeira importa aqui.
+            estoque.Cliente = null!;
+            estoque.Produto = null!;
 
             // Verificar se o estoque existe
             var estoqueExistente = await _context.EstoqueClientes.FindAsync(id);
