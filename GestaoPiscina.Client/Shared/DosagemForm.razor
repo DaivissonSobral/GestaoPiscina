@@ -33,6 +33,7 @@
             @foreach (var produto in produtos)
             {
                 <CampoNumerico Label="@produto.Nome"
+                               Info="@($"Estoque atual: {estoqueAtual.GetValueOrDefault(produto.IDProduto).ToString("0.##")} {produto.Unidade}")"
                                Unidade="@produto.Unidade"
                                Value="@valores.GetValueOrDefault(produto.IDProduto)"
                                ValueChanged="@(v => valores[produto.IDProduto] = v)"
@@ -61,6 +62,7 @@
     private Dictionary<int, decimal> valorInicial = new();
     private Dictionary<int, decimal> valores = new();
     private Dictionary<int, decimal> maximos = new();
+    private Dictionary<int, decimal> estoqueAtual = new();
     private Dictionary<int, int?> dosagemIdExistente = new();
     private bool carregando = true;
     private bool salvando;
@@ -94,6 +96,7 @@
             valores.Clear();
             valorInicial.Clear();
             maximos.Clear();
+            estoqueAtual.Clear();
             dosagemIdExistente.Clear();
 
             foreach (var item in estoque)
@@ -103,6 +106,7 @@
 
                 valores[item.IDProduto] = quantidadeJaDosada;
                 valorInicial[item.IDProduto] = quantidadeJaDosada;
+                estoqueAtual[item.IDProduto] = item.QuantidadeAtual;
                 // O estoque atual já desconta o que foi dosado nesta OS (se já salvo antes),
                 // então o teto real que o técnico pode arrastar é estoque + o que já usou aqui.
                 maximos[item.IDProduto] = item.QuantidadeAtual + quantidadeJaDosada;
