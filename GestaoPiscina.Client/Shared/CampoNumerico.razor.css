@@ -1,7 +1,7 @@
-/* Remove as setas nativas do spin button (redundantes com os botões -/+
-   grandes do componente) e garante fundo transparente em todo navegador —
-   alguns motores aplicam um fundo próprio a inputs numéricos que ignora
-   a cor de fundo definida via classe utilitária. */
+/* Remove as setas nativas do spin button (redundantes com o modo de
+   digitação manual) e garante fundo consistente com o tema escuro —
+   alguns navegadores aplicam um fundo próprio a inputs numéricos que
+   ignora a cor de fundo definida via classe utilitária. */
 .campo-numerico-input {
     -moz-appearance: textfield;
 }
@@ -12,6 +12,40 @@
     margin: 0;
 }
 
-.campo-numerico-input:focus {
-    background-color: transparent;
+/* Slider com trilho e alça grandes o suficiente pra arrastar com o
+   polegar no celular, sem depender de precisão de clique. */
+.campo-numerico-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 10px;
+    border-radius: 999px;
+    background: #475569;
+    accent-color: #06b6d4;
+    cursor: pointer;
+}
+
+.campo-numerico-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #06b6d4;
+    border: 3px solid #0f172a;
+    cursor: pointer;
+}
+
+.campo-numerico-slider::-moz-range-thumb {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #06b6d4;
+    border: 3px solid #0f172a;
+    cursor: pointer;
+}
+
+.campo-numerico-slider::-moz-range-track {
+    height: 10px;
+    border-radius: 999px;
+    background: #475569;
 }

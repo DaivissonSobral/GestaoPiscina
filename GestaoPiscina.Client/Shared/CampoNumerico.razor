@@ -1,30 +1,44 @@
+@using System.Globalization
+
 <div>
-    <label class="block text-sm font-medium text-slate-300 mb-2">@Label</label>
-    <div class="flex items-stretch gap-2">
-        <button type="button" @onclick="Decrementar"
-                class="w-14 h-14 shrink-0 rounded-lg bg-slate-600 hover:bg-slate-500 active:bg-cyan-600 text-white text-xl flex items-center justify-center select-none transition-colors"
-                aria-label="Diminuir @Label">
-            <i class="fas fa-minus"></i>
+    <div class="flex items-center justify-between mb-2">
+        <label class="text-sm font-medium text-slate-300">@Label</label>
+        <button type="button" @onclick="AlternarModo" class="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1">
+            <i class="fas @(editandoManualmente ? "fa-sliders-h" : "fa-keyboard")"></i>
+            @(editandoManualmente ? "Usar controle deslizante" : "Digitar valor")
         </button>
-        <div class="flex-1 flex flex-col items-center justify-center bg-slate-700 border border-slate-600 rounded-lg">
+    </div>
+
+    <div class="bg-slate-700 border border-slate-600 rounded-lg px-4 py-3">
+        <div class="text-center text-3xl font-bold text-slate-100">
+            @Value.ToString("0.##", CultureInfo.InvariantCulture)@(string.IsNullOrEmpty(Unidade) ? "" : " " + Unidade)
+        </div>
+
+        @if (editandoManualmente)
+        {
             <input type="number"
                    inputmode="decimal"
-                   step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                   min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                   value="@Value.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                   @onchange="OnDigitado"
-                   class="campo-numerico-input w-full appearance-none text-center text-2xl font-semibold text-slate-100 py-2 focus:outline-none"
-                   style="background-color: transparent;" />
-            @if (!string.IsNullOrEmpty(Unidade))
-            {
-                <span class="text-[11px] text-slate-400 -mt-1 mb-1">@Unidade</span>
-            }
-        </div>
-        <button type="button" @onclick="Incrementar"
-                class="w-14 h-14 shrink-0 rounded-lg bg-slate-600 hover:bg-slate-500 active:bg-cyan-600 text-white text-xl flex items-center justify-center select-none transition-colors"
-                aria-label="Aumentar @Label">
-            <i class="fas fa-plus"></i>
-        </button>
+                   step="@Step.ToString(CultureInfo.InvariantCulture)"
+                   min="@Min.ToString(CultureInfo.InvariantCulture)"
+                   max="@Max.ToString(CultureInfo.InvariantCulture)"
+                   value="@Value.ToString(CultureInfo.InvariantCulture)"
+                   @onchange="OnAlterado"
+                   class="campo-numerico-input w-full appearance-none text-center text-lg bg-slate-800 border border-slate-600 rounded-md py-2 text-slate-100 mt-3 focus:outline-none focus:border-cyan-500" />
+        }
+        else
+        {
+            <input type="range"
+                   min="@Min.ToString(CultureInfo.InvariantCulture)"
+                   max="@Max.ToString(CultureInfo.InvariantCulture)"
+                   step="@Step.ToString(CultureInfo.InvariantCulture)"
+                   value="@Value.ToString(CultureInfo.InvariantCulture)"
+                   @oninput="OnAlterado"
+                   class="campo-numerico-slider w-full mt-3" />
+            <div class="flex justify-between text-[11px] text-slate-500 mt-1">
+                <span>@Min.ToString("0.##", CultureInfo.InvariantCulture)</span>
+                <span>@Max.ToString("0.##", CultureInfo.InvariantCulture)</span>
+            </div>
+        }
     </div>
 </div>
 
@@ -34,34 +48,19 @@
     [Parameter] public EventCallback<decimal> ValueChanged { get; set; }
     [Parameter] public decimal Step { get; set; } = 0.1m;
     [Parameter] public decimal Min { get; set; } = 0m;
-    [Parameter] public decimal? Max { get; set; }
+    [Parameter] public decimal Max { get; set; } = 100m;
     [Parameter] public string? Unidade { get; set; }
 
-    private Task Incrementar()
-    {
-        var novoValor = Value + Step;
-        if (Max.HasValue && novoValor > Max.Value)
-        {
-            novoValor = Max.Value;
-        }
+    private bool editandoManualmente;
 
-        return Atualizar(novoValor);
+    private void AlternarModo()
+    {
+        editandoManualmente = !editandoManualmente;
     }
 
-    private Task Decrementar()
+    private Task OnAlterado(ChangeEventArgs e)
     {
-        var novoValor = Value - Step;
-        if (novoValor < Min)
-        {
-            novoValor = Min;
-        }
-
-        return Atualizar(novoValor);
-    }
-
-    private Task OnDigitado(ChangeEventArgs e)
-    {
-        if (!decimal.TryParse(e.Value?.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var novoValor))
+        if (!decimal.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var novoValor))
         {
             return Task.CompletedTask;
         }
@@ -70,16 +69,11 @@
         {
             novoValor = Min;
         }
-        else if (Max.HasValue && novoValor > Max.Value)
+        else if (novoValor > Max)
         {
-            novoValor = Max.Value;
+            novoValor = Max;
         }
 
-        return Atualizar(novoValor);
-    }
-
-    private Task Atualizar(decimal novoValor)
-    {
         Value = Math.Round(novoValor, 2);
         return ValueChanged.InvokeAsync(Value);
     }
