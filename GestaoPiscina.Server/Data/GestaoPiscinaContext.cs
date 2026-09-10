@@ -35,6 +35,7 @@ namespace GestaoPiscina.Server.Data
                 entity.Property(e => e.DiasDeVisita).HasMaxLength(50);
                 entity.Property(e => e.Telefone).HasMaxLength(20);
                 entity.Property(e => e.Email).HasMaxLength(100);
+                entity.Property(e => e.CNPJ).HasMaxLength(18);
             });
 
             modelBuilder.Entity<Piscina>(entity =>

@@ -2,6 +2,7 @@
 @using GestaoPiscina.Client.Services
 @using GestaoPiscina.Client.Models
 @inject ApiService ApiService
+@inject NavigationManager Navigation
 
 <section class="p-4 space-y-6">
     <h3 class="text-xl font-bold mb-4">Relatórios</h3>
@@ -13,8 +14,8 @@
                 <h4 class="text-lg font-semibold text-slate-100">Relatório de OS</h4>
             </div>
             <p class="text-slate-400 text-sm mb-4">Análise detalhada das ordens de serviço por período</p>
-            <button class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors w-full">
-                <i class="fas fa-download mr-2"></i>Gerar PDF
+            <button @onclick='() => Navigation.NavigateTo("/relatorios/os")' class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors w-full">
+                <i class="fas fa-chart-line mr-2"></i>Abrir Relatório de OS
             </button>
         </div>
 

@@ -28,7 +28,10 @@ namespace GestaoPiscina.Server.Models
 
         [StringLength(100)]
         public string? Email { get; set; }
-        
+
+        [StringLength(18)]
+        public string? CNPJ { get; set; }
+
         // Navegação
         public virtual ICollection<Piscina> Piscinas { get; set; } = new List<Piscina>();
         public virtual ICollection<EstoqueCliente> Estoques { get; set; } = new List<EstoqueCliente>();

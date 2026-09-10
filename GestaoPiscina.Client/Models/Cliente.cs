@@ -20,7 +20,8 @@ namespace GestaoPiscina.Client.Models
 
         public string? DiasDeVisita { get; set; }
         public string? Observacoes { get; set; }
-        
+        public string? CNPJ { get; set; }
+
         public List<Piscina> Piscinas { get; set; } = new List<Piscina>();
         public List<EstoqueCliente> Estoques { get; set; } = new List<EstoqueCliente>();
         public List<Equipamento> Equipamentos { get; set; } = new List<Equipamento>();

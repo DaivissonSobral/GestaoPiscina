@@ -1,0 +1,511 @@
+@page "/relatorios/os"
+@using System.Globalization
+@using GestaoPiscina.Client.Services
+@using GestaoPiscina.Client.Models
+@inject ApiService ApiService
+@inject IJSRuntime JSRuntime
+
+<HeadContent>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600;700&family=Caveat:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</HeadContent>
+
+<section class="p-4 space-y-6">
+    <div class="no-print bg-slate-800 rounded-xl p-4 space-y-4">
+        <h3 class="text-xl font-bold flex items-center">
+            <i class="fas fa-chart-line text-cyan-400 mr-2"></i>Relatório de OS
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div class="md:col-span-2 space-y-2">
+                <label class="block text-sm font-medium text-slate-300">Cliente</label>
+                <select @bind="selectedClienteId" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                    <option value="0">Selecione...</option>
+                    @if (clientes != null)
+                    {
+                        @foreach (var cliente in clientes)
+                        {
+                            <option value="@cliente.IDCliente">@cliente.Nome</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-slate-300">Mês</label>
+                <select @bind="selectedMes" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                    @for (var m = 1; m <= 12; m++)
+                    {
+                        <option value="@m">@CultureInfo.GetCultureInfo("pt-BR").DateTimeFormat.GetMonthName(m)</option>
+                    }
+                </select>
+            </div>
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-slate-300">Ano</label>
+                <input type="number" @bind="selectedAno" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <button @onclick="GerarRelatorio" disabled="@gerando" class="bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 px-4 py-2 rounded-lg text-white transition-colors">
+                <i class="fas fa-magic mr-2"></i>@(gerando ? "Gerando..." : "Gerar Relatório")
+            </button>
+            @if (relatorioGerado)
+            {
+                <button @onclick="Imprimir" class="bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded-lg text-white transition-colors">
+                    <i class="fas fa-print mr-2"></i>Imprimir / Salvar PDF
+                </button>
+            }
+        </div>
+        @if (!string.IsNullOrEmpty(erro))
+        {
+            <p class="text-red-400 text-sm"><i class="fas fa-exclamation-circle mr-1"></i>@erro</p>
+        }
+    </div>
+
+    @if (relatorioGerado && clienteRelatorio != null)
+    {
+        <div class="relatorio-page">
+            <div class="page">
+
+                <header class="top">
+                    <div class="top-row">
+                        <div>
+                            <div class="brand-tag">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c4 5 7 8.5 7 12a7 7 0 1 1-14 0c0-3.5 3-7 7-12Z" /></svg>
+                                Manutenção de piscinas
+                            </div>
+                            <h1>@clienteRelatorio.Nome</h1>
+                            <p class="sub">Relatório técnico da qualidade da água — @NomesPiscinas()</p>
+                            <div class="meta-lines">
+                                Competência: @NomePeriodo()
+                                @if (!string.IsNullOrWhiteSpace(clienteRelatorio.CNPJ))
+                                {
+                                    <br />@:CNPJ @clienteRelatorio.CNPJ
+                                }
+                            </div>
+                        </div>
+                        <div class="contact-card">
+                            <div class="label">Responsável técnica</div>
+                            <div class="name">@QuimicaResponsavel</div>
+                            <div class="role">Química responsável<br>@CrqResponsavel</div>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="hero">
+                    <div class="hero-top">
+                        <div class="hero-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M8 12.5l2.5 2.5L16 9.5" /></svg>
+                        </div>
+                        <div>
+                            <h2>Síntese do período</h2>
+                            <p class="hero-body">@ResumoParametros()</p>
+                        </div>
+                    </div>
+                    <div class="chip-row">
+                        <span class="chip">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2" /><path d="M3.5 9.5h17" /><path d="M8 3v4M16 3v4" /></svg>
+                            @osRelatorio.Count visita(s) técnica(s) em @NomePeriodo()
+                        </span>
+                        <span class="chip">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c4 5 7 8.5 7 12a7 7 0 1 1-14 0c0-3.5 3-7 7-12Z" /></svg>
+                            @osRelatorio.Count(o => o.ChecklistConcluido)/@osRelatorio.Count com checklist concluído
+                        </span>
+                        <span class="chip">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6 7.5V19l-4 2v-8.5L4 5Z" /></svg>
+                            @piscinasRelatorio.Count piscina(s) monitorada(s)
+                        </span>
+                    </div>
+                </div>
+
+                @if (piscinasComLeitura.Any())
+                {
+                    <section>
+                        <div class="section-head">
+                            <h3>Parâmetros da água — última leitura (@UltimaData()?.ToString("dd 'de' MMMM", CultureInfo.GetCultureInfo("pt-BR")))</h3>
+                            <p>A faixa azul mostra o intervalo recomendado; o ponto mostra onde a última leitura de cada piscina caiu.</p>
+                        </div>
+                        <div class="gauge-grid">
+                            @foreach (var parametro in parametros)
+                            {
+                                <div class="gauge-card">
+                                    <div class="gauge-card-head">
+                                        <div class="ic"><i class="fas @parametro.Icone"></i></div>
+                                        <h4>@parametro.Nome</h4>
+                                    </div>
+                                    <div class="ideal">Ideal: @FormatarValor(parametro, parametro.IdealMin) – @FormatarValor(parametro, parametro.IdealMax)@parametro.Unidade</div>
+
+                                    @foreach (var piscina in piscinasComLeitura)
+                                    {
+                                        var ultima = UltimaLeitura(piscina.IDPiscina);
+                                        if (ultima == null)
+                                        {
+                                            continue;
+                                        }
+                                        var valor = parametro.Valor(ultima);
+                                        var dentroDoPadrao = valor >= parametro.IdealMin && valor <= parametro.IdealMax;
+                                        <div class="gauge-row">
+                                            <div class="gauge-row-top">
+                                                <span class="pool">@NomePiscina(piscina)</span>
+                                                <span class="val-status">
+                                                    <span class="val">@FormatarValor(parametro, valor)@parametro.Unidade</span>
+                                                    <span class="status-dot @(dentroDoPadrao ? "status-ok" : "status-warn")">@(dentroDoPadrao ? "No padrão" : "Fora do ideal")</span>
+                                                </span>
+                                            </div>
+                                            <div class="track">
+                                                <div class="band" style="left:@(BandaEsquerda(parametro))%; width:@(BandaLargura(parametro))%;"></div>
+                                                <div class="dot @(dentroDoPadrao ? "" : "warn")" style="left:@(PosicaoNaFaixa(parametro, valor))%;"></div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </section>
+
+                    <section>
+                        <div class="section-head">
+                            <h3>Evolução ao longo de @NomePeriodo()</h3>
+                            <p>A área sombreada é a faixa recomendada. Onde a linha sai da área, o valor está fora do ideal.</p>
+                        </div>
+                        <div class="trend-grid">
+                            @foreach (var parametro in parametros)
+                            {
+                                <div class="trend-card">
+                                    <h4>@parametro.Nome</h4>
+                                    <div class="rng">Faixa ideal @FormatarValor(parametro, parametro.IdealMin) – @FormatarValor(parametro, parametro.IdealMax)@parametro.Unidade</div>
+                                    <svg viewBox="0 0 420 150" width="100%">
+                                        <rect x="0" y="@YParaValor(parametro, parametro.IdealMax)" width="420" height="@(YParaValor(parametro, parametro.IdealMin) - YParaValor(parametro, parametro.IdealMax))" fill="#58B8C4" fill-opacity="0.18" />
+                                        <line x1="0" y1="20" x2="420" y2="20" stroke="#DCE9EA" stroke-width="1" />
+                                        <line x1="0" y1="120" x2="420" y2="120" stroke="#DCE9EA" stroke-width="1" />
+                                        @{ var idx = 0; }
+                                        @foreach (var piscina in piscinasComLeitura)
+                                        {
+                                            var pontos = PontosTendencia(piscina.IDPiscina, parametro);
+                                            var cor = CorPiscina(idx);
+                                            idx++;
+                                            if (pontos.Count >= 2)
+                                            {
+                                                <polyline points="@string.Join(" ", pontos.Select(p => $"{p.x:0.#},{p.y:0.#}"))" fill="none" stroke="@cor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+                                            }
+                                            @foreach (var p in pontos)
+                                            {
+                                                <circle cx="@p.x.ToString("0.#")" cy="@p.y.ToString("0.#")" r="3.5" fill="@cor" />
+                                            }
+                                        }
+                                        <g font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#5C7A80">
+                                            @EixoDatasMarkup()
+                                        </g>
+                                    </svg>
+                                    <div class="legend">
+                                        @{ var idxLegenda = 0; }
+                                        @foreach (var piscina in piscinasComLeitura)
+                                        {
+                                            <span><i style="background:@CorPiscina(idxLegenda);"></i>@NomePiscina(piscina)</span>
+                                            idxLegenda++;
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </section>
+
+                    <section>
+                        <div class="section-head">
+                            <h3>Histórico das visitas técnicas</h3>
+                            <p>Resumo de cada visita concluída no período, na ordem em que aconteceram.</p>
+                        </div>
+                        <div class="timeline">
+                            @foreach (var grupo in osRelatorio.GroupBy(o => o.DataExecucao.Date).OrderBy(g => g.Key))
+                            {
+                                <div class="tl-item">
+                                    <div class="tl-date">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2" /><path d="M3.5 9.5h17" /><path d="M8 3v4M16 3v4" /></svg>
+                                        @grupo.Key.ToString("dd/MM")
+                                    </div>
+                                    @foreach (var os in grupo.OrderBy(o => NomePiscina(PiscinaDe(o.IDPiscina))))
+                                    {
+                                        <div class="tl-hour">@os.HoraInicio.ToString("HH:mm") · @NomePiscina(PiscinaDe(os.IDPiscina))</div>
+                                        <span class="tl-badge">@(os.ChecklistConcluido ? "Checklist concluído" : "Checklist pendente")</span>
+                                        <div class="tl-rows">
+                                            @foreach (var parametro in parametros)
+                                            {
+                                                var valor = parametro.Valor(os);
+                                                var dentroDoPadrao = valor >= parametro.IdealMin && valor <= parametro.IdealMax;
+                                                <div><span>@parametro.Nome</span><span class="@(dentroDoPadrao ? "" : "flag")">@FormatarValor(parametro, valor)@parametro.Unidade</span></div>
+                                            }
+                                        </div>
+                                        @if (!string.IsNullOrWhiteSpace(os.Observacoes))
+                                        {
+                                            <p class="tl-note">@os.Observacoes</p>
+                                        }
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </section>
+
+                    <section>
+                        <div class="section-head">
+                            <h3>Registro completo do mês</h3>
+                            <p>Todos os valores medidos, para quem quiser conferir os números exatos.</p>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Data</th><th>Hora</th><th>Piscina</th><th>Checklist</th>
+                                        @foreach (var parametro in parametros)
+                                        {
+                                            <th>@parametro.Nome</th>
+                                        }
+                                        <th>Observações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var os in osRelatorio)
+                                    {
+                                        <tr>
+                                            <td>@os.DataExecucao.ToString("dd/MM")</td>
+                                            <td>@os.HoraInicio.ToString("HH:mm")</td>
+                                            <td>@NomePiscina(PiscinaDe(os.IDPiscina))</td>
+                                            <td>@(os.ChecklistConcluido ? "OK" : "Pendente")</td>
+                                            @foreach (var parametro in parametros)
+                                            {
+                                                var valor = parametro.Valor(os);
+                                                var dentroDoPadrao = valor >= parametro.IdealMin && valor <= parametro.IdealMax;
+                                                <td class="@(dentroDoPadrao ? "" : "flag")">@FormatarValor(parametro, valor)@parametro.Unidade</td>
+                                            }
+                                            <td>@os.Observacoes</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="table-note">Valores em vermelho ficaram fora da faixa recomendada.</p>
+                    </section>
+                }
+                else
+                {
+                    <section>
+                        <div class="section-head">
+                            <h3>Sem visitas finalizadas no período</h3>
+                            <p>Não há Ordens de Serviço com status "Finalizada" para este cliente em @NomePeriodo().</p>
+                        </div>
+                    </section>
+                }
+
+                <footer>
+                    <div>
+                        <h4>Responsável técnica</h4>
+                        <div class="sig">@QuimicaResponsavel</div>
+                        <div class="sig-line"></div>
+                        <div class="sig-name">@QuimicaResponsavel</div>
+                        <div class="sig-role">Química responsável<br>@CrqResponsavel</div>
+                        <p class="obs">A alcalinidade deve ser medida uma vez por semana e a dureza cálcica a cada 15 dias; os demais parâmetros são verificados em cada visita técnica.</p>
+                    </div>
+                    <div class="meta-block">
+                        <h4>Dados do condomínio</h4>
+                        <p>
+                            <b>@clienteRelatorio.Nome</b>
+                            @if (!string.IsNullOrWhiteSpace(clienteRelatorio.CNPJ))
+                            {
+                                <br />@:CNPJ @clienteRelatorio.CNPJ
+                            }
+                            @foreach (var piscina in piscinasRelatorio)
+                            {
+                                <br />@:Volume: @((piscina.VolumeLitros / 1000).ToString("0.##", CultureInfo.GetCultureInfo("pt-BR")))m³ (@NomePiscina(piscina))
+                            }
+                        </p>
+                        <div class="badge-row">
+                            @foreach (var selo in SelosEmpresa)
+                            {
+                                <span class="badge">@selo</span>
+                            }
+                        </div>
+                    </div>
+                </footer>
+
+            </div>
+        </div>
+    }
+</section>
+
+@code {
+    private const string QuimicaResponsavel = "Talina da Silva Ferreira dos Santos";
+    private const string CrqResponsavel = "CRQ/CE nº 101000447";
+    private static readonly string[] SelosEmpresa = { "Elias Mendes Consultoria", "Aqua Limpe", "CRQ", "ANAPP" };
+    private static readonly string[] PaletaCores = { "#167D8C", "#C9820F", "#7C5CBF", "#C4507A", "#3E8E5B" };
+
+    private record Parametro(string Nome, string Unidade, string Icone, decimal IdealMin, decimal IdealMax, decimal DispMin, decimal DispMax, string Formato, Func<OrdemDeServico, decimal> Valor);
+
+    private readonly List<Parametro> parametros = new()
+    {
+        new("pH", "", "fa-tint", 7.2m, 7.8m, 6.8m, 8.0m, "0.0", o => o.pH),
+        new("Cloro Livre", "ppm", "fa-flask", 0.8m, 3m, 0m, 4m, "0.0", o => o.CloroLivre),
+        new("Alcalinidade", "ppm", "fa-water", 80m, 120m, 60m, 140m, "0", o => o.Alcalinidade),
+        new("Dureza Cálcica", "ppm", "fa-gem", 200m, 400m, 150m, 420m, "0", o => o.DurezaCalcica),
+    };
+
+    private List<Cliente>? clientes;
+    private int selectedClienteId;
+    private int selectedMes = DateTime.Today.Month;
+    private int selectedAno = DateTime.Today.Year;
+    private bool gerando;
+    private bool relatorioGerado;
+    private string? erro;
+
+    private Cliente? clienteRelatorio;
+    private List<Piscina> piscinasRelatorio = new();
+    private List<OrdemDeServico> osRelatorio = new();
+    private DateTime periodoInicio;
+    private DateTime periodoFim;
+
+    private List<Piscina> piscinasComLeitura => piscinasRelatorio.Where(p => osRelatorio.Any(o => o.IDPiscina == p.IDPiscina)).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        clientes = await ApiService.GetClientesAsync();
+    }
+
+    private async Task GerarRelatorio()
+    {
+        if (selectedClienteId <= 0)
+        {
+            erro = "Selecione um cliente.";
+            return;
+        }
+
+        gerando = true;
+        erro = null;
+        relatorioGerado = false;
+        StateHasChanged();
+
+        try
+        {
+            clienteRelatorio = await ApiService.GetClienteAsync(selectedClienteId);
+            piscinasRelatorio = await ApiService.GetPiscinasByClienteAsync(selectedClienteId);
+            var todasOS = await ApiService.GetOrdensDeServicoAsync();
+
+            periodoInicio = new DateTime(selectedAno, selectedMes, 1);
+            periodoFim = periodoInicio.AddMonths(1).AddDays(-1);
+
+            var piscinaIds = piscinasRelatorio.Select(p => p.IDPiscina).ToHashSet();
+            osRelatorio = todasOS
+                .Where(o => piscinaIds.Contains(o.IDPiscina)
+                    && o.Status == "Finalizada"
+                    && o.DataExecucao.Date >= periodoInicio && o.DataExecucao.Date <= periodoFim)
+                .OrderBy(o => o.DataExecucao)
+                .ToList();
+
+            relatorioGerado = true;
+        }
+        catch (Exception ex)
+        {
+            erro = $"Erro ao gerar relatório: {ex.Message}";
+        }
+        finally
+        {
+            gerando = false;
+        }
+    }
+
+    private Task Imprimir() => JSRuntime.InvokeVoidAsync("print").AsTask();
+
+    private string NomePeriodo() => $"{CultureInfo.GetCultureInfo("pt-BR").DateTimeFormat.GetMonthName(selectedMes)} de {selectedAno}";
+
+    private string NomesPiscinas() => string.Join(", ", piscinasRelatorio.Select(NomePiscina).Distinct());
+
+    private string NomePiscina(Piscina? piscina) => piscina?.Tipo switch
+    {
+        "adulto" => "piscina adulta",
+        "infantil" => "piscina infantil",
+        "espelho" => "espelho d'água",
+        _ => piscina?.Tipo ?? ""
+    };
+
+    private Piscina? PiscinaDe(int idPiscina) => piscinasRelatorio.FirstOrDefault(p => p.IDPiscina == idPiscina);
+
+    private OrdemDeServico? UltimaLeitura(int idPiscina) => osRelatorio
+        .Where(o => o.IDPiscina == idPiscina)
+        .OrderByDescending(o => o.DataExecucao)
+        .FirstOrDefault();
+
+    private DateTime? UltimaData() => osRelatorio.Any() ? osRelatorio.Max(o => o.DataExecucao) : null;
+
+    private string FormatarValor(Parametro parametro, decimal valor) => valor.ToString(parametro.Formato, CultureInfo.GetCultureInfo("pt-BR"));
+
+    private double BandaEsquerda(Parametro p) => (double)((p.IdealMin - p.DispMin) / (p.DispMax - p.DispMin)) * 100;
+    private double BandaLargura(Parametro p) => (double)((p.IdealMax - p.IdealMin) / (p.DispMax - p.DispMin)) * 100;
+    private double PosicaoNaFaixa(Parametro p, decimal valor)
+    {
+        var pos = (double)((valor - p.DispMin) / (p.DispMax - p.DispMin)) * 100;
+        return Math.Clamp(pos, 0, 100);
+    }
+
+    private double YParaValor(Parametro p, decimal valor)
+    {
+        var pos = (double)((valor - p.DispMin) / (p.DispMax - p.DispMin));
+        return 120 - Math.Clamp(pos, 0, 1) * 100;
+    }
+
+    private double XParaData(DateTime data)
+    {
+        var totalDias = (periodoFim - periodoInicio).TotalDays;
+        if (totalDias <= 0) return 40;
+        var pos = (data - periodoInicio).TotalDays / totalDias;
+        return 40 + Math.Clamp(pos, 0, 1) * 340;
+    }
+
+    private List<DateTime> DatasDoEixo() => osRelatorio.Select(o => o.DataExecucao.Date).Distinct().OrderBy(d => d).ToList();
+
+    // Razor não permite atributos na tag <text> (RZ1023 - colide com o pseudo-elemento
+    // <text> reservado do compilador), então o eixo de datas do gráfico SVG é montado
+    // como markup cru em vez de marcação Razor comum.
+    private MarkupString EixoDatasMarkup()
+    {
+        var sb = new System.Text.StringBuilder();
+        foreach (var data in DatasDoEixo())
+        {
+            sb.Append($"<text x=\"{XParaData(data).ToString("0.#", CultureInfo.InvariantCulture)}\" y=\"138\" text-anchor=\"middle\">{data:dd/MM}</text>");
+        }
+        return new MarkupString(sb.ToString());
+    }
+
+    private List<(double x, double y)> PontosTendencia(int idPiscina, Parametro parametro) => osRelatorio
+        .Where(o => o.IDPiscina == idPiscina)
+        .OrderBy(o => o.DataExecucao)
+        .Select(o => (XParaData(o.DataExecucao), YParaValor(parametro, parametro.Valor(o))))
+        .ToList();
+
+    private string CorPiscina(int indice) => PaletaCores[indice % PaletaCores.Length];
+
+    private string ResumoParametros()
+    {
+        var foraDoPadrao = new List<string>();
+        foreach (var parametro in parametros)
+        {
+            var problemas = osRelatorio.Where(o =>
+            {
+                var v = parametro.Valor(o);
+                return v < parametro.IdealMin || v > parametro.IdealMax;
+            }).ToList();
+
+            if (problemas.Any())
+            {
+                var piscinasAfetadas = problemas.Select(o => NomePiscina(PiscinaDe(o.IDPiscina))).Distinct();
+                foraDoPadrao.Add($"{parametro.Nome} ({string.Join(", ", piscinasAfetadas)})");
+            }
+        }
+
+        if (!osRelatorio.Any())
+        {
+            return "Não houve visitas técnicas finalizadas registradas neste período.";
+        }
+
+        if (!foraDoPadrao.Any())
+        {
+            return "Todos os parâmetros analisados (pH, cloro livre, alcalinidade e dureza cálcica) ficaram dentro da faixa recomendada durante todo o período.";
+        }
+
+        return $"O ponto de atenção do período foi: {string.Join("; ", foraDoPadrao)}. Os demais parâmetros permaneceram dentro do padrão.";
+    }
+}

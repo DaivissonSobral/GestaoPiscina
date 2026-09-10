@@ -1,0 +1,19 @@
+/* Aplicado só na impressão (media="print" no index.html): esconde o chrome do
+   app (sidebar, topbar, controles marcados como .no-print) para que só o
+   conteúdo do relatório seja impresso/exportado em PDF. */
+@media print {
+    aside,
+    #app-topbar,
+    .no-print {
+        display: none !important;
+    }
+
+    body,
+    .bg-slate-900 {
+        background: #fff !important;
+    }
+
+    main {
+        width: 100% !important;
+    }
+}
