@@ -1744,8 +1744,10 @@
                 return;
             }
 
-            // Salvar tudo em uma transação
-            var clienteSalvo = await ApiService.CreateClienteCompletoAsync(clienteCompleto);
+            // Salvar tudo em uma transação (PUT se o cliente já existe, senão POST)
+            var clienteSalvo = clienteCompleto.IDCliente > 0
+                ? await ApiService.UpdateClienteCompletoAsync(clienteCompleto)
+                : await ApiService.CreateClienteCompletoAsync(clienteCompleto);
             
             ShowToast("Sucesso", "Cliente e todos os dados relacionados foram salvos com sucesso em uma única transação!", "success");
             

@@ -20,7 +20,7 @@
                 <h6 class="text-md font-semibold text-slate-200">
                     @(Equipamento.IDEquipamento > 0 ? "Editar Equipamento" : "Novo Equipamento")
                 </h6>
-                <button @onclick="OnClose" class="text-slate-400 hover:text-slate-300">
+                <button type="button" @onclick="OnClose" class="text-slate-400 hover:text-slate-300">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -78,10 +78,10 @@
                                 <span class="text-sm text-slate-400">Série: @equipamento.NumeroSerie</span>
                             </div>
                             <div class="flex space-x-3 ml-4">
-                                <button @onclick="() => OnEdit.InvokeAsync(equipamento)" class="text-cyan-400 hover:text-cyan-300 p-2 rounded transition-colors" title="Editar">
+                                <button type="button" @onclick="() => OnEdit.InvokeAsync(equipamento)" class="text-cyan-400 hover:text-cyan-300 p-2 rounded transition-colors" title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button @onclick="() => OnDelete.InvokeAsync(equipamento)" class="text-red-400 hover:text-red-300 p-2 rounded transition-colors" title="Excluir">
+                                <button type="button" @onclick="() => OnDelete.InvokeAsync(equipamento)" class="text-red-400 hover:text-red-300 p-2 rounded transition-colors" title="Excluir">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -110,7 +110,7 @@
                             <span class="text-xs text-cyan-400 bg-cyan-900 px-2 py-1 rounded">Temporário</span>
                         </div>
                         <div class="flex space-x-3 ml-4">
-                            <button @onclick="() => OnRemoveTemporario.InvokeAsync(equipamento)" class="text-red-400 hover:text-red-300 p-2 rounded transition-colors" title="Remover">
+                            <button type="button" @onclick="() => OnRemoveTemporario.InvokeAsync(equipamento)" class="text-red-400 hover:text-red-300 p-2 rounded transition-colors" title="Remover">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>

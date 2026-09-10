@@ -15,9 +15,8 @@
             <label class="block text-sm font-medium text-slate-300 mb-2">Tipo *</label>
             <InputSelect @bind-Value="Cliente.Tipo" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500">
                 <option value="">Selecione...</option>
-                <option value="residencial">Residencial</option>
-                <option value="comercial">Comercial</option>
-                <option value="condominio">Condomínio</option>
+                <option value="Residencial Privativa">Residencial Privativa</option>
+                <option value="Uso Coletivo">Uso Coletivo</option>
             </InputSelect>
             <ValidationMessage For="@(() => Cliente.Tipo)" class="text-red-500 text-sm" />
         </div>

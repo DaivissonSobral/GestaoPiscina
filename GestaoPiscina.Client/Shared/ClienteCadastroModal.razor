@@ -2,6 +2,7 @@
 @using GestaoPiscina.Client.Models
 @using GestaoPiscina.Client.Models.DTOs
 @using GestaoPiscina.Client.Shared
+@implements IDisposable
 @inject ApiService ApiService
 @inject ClienteStateService StateService
 @inject IJSRuntime JSRuntime
@@ -36,57 +37,50 @@
                 
                 @if (StateService.ActiveTab == "piscinas")
                 {
-                    <button @onclick="SetPiscinasTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600">
+                    <button @onclick="SetPiscinasTab" disabled="@(!ClienteSalvo)" title="@(ClienteSalvo ? "" : "Salve os dados do cliente primeiro")" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fas fa-swimming-pool mr-2"></i><span class="hidden md:inline">Piscinas</span>
                     </button>
                 }
                 else
                 {
-                    <button @onclick="SetPiscinasTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent">
+                    <button @onclick="SetPiscinasTab" disabled="@(!ClienteSalvo)" title="@(ClienteSalvo ? "" : "Salve os dados do cliente primeiro")" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fas fa-swimming-pool mr-2"></i><span class="hidden md:inline">Piscinas</span>
                     </button>
                 }
-                
+
                 @if (StateService.ActiveTab == "equipamentos")
                 {
-                    <button @onclick="SetEquipamentosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600">
+                    <button @onclick="SetEquipamentosTab" disabled="@(!ClienteSalvo)" title="@(ClienteSalvo ? "" : "Salve os dados do cliente primeiro")" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fas fa-robot mr-2"></i><span class="hidden md:inline">Equipamentos</span>
                     </button>
                 }
                 else
                 {
-                    <button @onclick="SetEquipamentosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent">
+                    <button @onclick="SetEquipamentosTab" disabled="@(!ClienteSalvo)" title="@(ClienteSalvo ? "" : "Salve os dados do cliente primeiro")" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fas fa-robot mr-2"></i><span class="hidden md:inline">Equipamentos</span>
                     </button>
                 }
-                
+
                 @if (StateService.ActiveTab == "produtos")
                 {
-                    <button @onclick="SetProdutosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600">
+                    <button @onclick="SetProdutosTab" disabled="@(!ClienteSalvo)" title="@(ClienteSalvo ? "" : "Salve os dados do cliente primeiro")" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600 rounded-tr-lg disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fas fa-box mr-2"></i><span class="hidden md:inline">Produtos</span>
                     </button>
                 }
                 else
                 {
-                    <button @onclick="SetProdutosTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent">
+                    <button @onclick="SetProdutosTab" disabled="@(!ClienteSalvo)" title="@(ClienteSalvo ? "" : "Salve os dados do cliente primeiro")" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent rounded-tr-lg disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fas fa-box mr-2"></i><span class="hidden md:inline">Produtos</span>
-                    </button>
-                }
-                
-                @if (StateService.ActiveTab == "salvar")
-                {
-                    <button @onclick="SetSalvarTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-cyan-600 text-white shadow border-b-2 border-cyan-600 rounded-tr-lg">
-                        <i class="fas fa-save mr-2"></i><span class="hidden md:inline">Salvar Tudo</span>
-                    </button>
-                }
-                else
-                {
-                    <button @onclick="SetSalvarTab" class="flex items-center px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-700 text-slate-300 hover:bg-slate-600 border-b-2 border-transparent rounded-tr-lg">
-                        <i class="fas fa-save mr-2"></i><span class="hidden md:inline">Salvar Tudo</span>
                     </button>
                 }
             </nav>
             <hr class="border-t-2 border-white mt-0" />
+            @if (!ClienteSalvo)
+            {
+                <p class="text-sm text-amber-400 mt-2">
+                    <i class="fas fa-info-circle mr-1"></i>Salve os dados do cliente para habilitar piscinas, equipamentos e produtos.
+                </p>
+            }
         </div>
 
         <EditForm Model="StateService.CurrentCliente" OnValidSubmit="@(async () => await HandleSaveCliente(StateService.CurrentCliente))" Context="clienteContext">
@@ -100,40 +94,35 @@
                 }
                 else if (StateService.ActiveTab == "piscinas")
                 {
-                    <PiscinaForm 
+                    <PiscinaForm
                         ClienteId="StateService.CurrentCliente.IDCliente"
                         Piscinas="StateService.Piscinas"
-                        PiscinasTemporarias="StateService.PiscinasTemporarias"
                         Piscina="StateService.CurrentPiscina"
                         ShowForm="StateService.ShowPiscinaForm"
                         OnCreate="ShowCreatePiscina"
                         OnClose="ClosePiscinaForm"
                         OnSave="HandleSavePiscina"
                         OnEdit="ShowEditPiscina"
-                        OnDelete="DeletePiscina"
-                        OnRemoveTemporario="RemovePiscinaTemporaria" />
+                        OnDelete="DeletePiscina" />
                 }
                 else if (StateService.ActiveTab == "equipamentos")
                 {
-                    <EquipamentoForm 
+                    <EquipamentoForm
                         ClienteId="StateService.CurrentCliente.IDCliente"
                         Equipamentos="StateService.Equipamentos"
-                        EquipamentosTemporarios="StateService.EquipamentosTemporarios"
                         Equipamento="StateService.CurrentEquipamento"
                         ShowForm="StateService.ShowEquipamentoForm"
                         OnCreate="ShowCreateEquipamento"
                         OnClose="CloseEquipamentoForm"
                         OnSave="HandleSaveEquipamento"
                         OnEdit="ShowEditEquipamento"
-                        OnDelete="DeleteEquipamento"
-                        OnRemoveTemporario="RemoveEquipamentoTemporario" />
+                        OnDelete="DeleteEquipamento" />
                 }
                 else if (StateService.ActiveTab == "produtos")
                 {
-                    <EstoqueForm 
+                    <EstoqueForm
                         ClienteId="StateService.CurrentCliente.IDCliente"
                         Estoques="StateService.Estoques"
-                        EstoquesTemporarios="StateService.EstoquesTemporarios"
                         Produtos="StateService.Produtos"
                         Estoque="StateService.CurrentEstoque"
                         SelectedProdutoId="StateService.SelectedProdutoId"
@@ -143,21 +132,7 @@
                         OnSave="HandleSaveEstoque"
                         OnEdit="ShowEditEstoque"
                         OnDelete="DeleteEstoque"
-                        OnRemoveTemporario="RemoveEstoqueTemporario"
                         OnProdutoSelected="OnProdutoSelected" />
-                }
-                else if (StateService.ActiveTab == "salvar")
-                {
-                    <ClienteResumo 
-                        Cliente="StateService.CurrentCliente"
-                        Piscinas="StateService.Piscinas"
-                        PiscinasTemporarias="StateService.PiscinasTemporarias"
-                        Equipamentos="StateService.Equipamentos"
-                        EquipamentosTemporarios="StateService.EquipamentosTemporarios"
-                        Estoques="StateService.Estoques"
-                        EstoquesTemporarios="StateService.EstoquesTemporarios"
-                        OnSaveCompleto="HandleSaveCompleto"
-                        OnCancel="Close" />
                 }
             </div>
             
@@ -168,16 +143,22 @@
                 <button type="button" @onclick="ClearForm" class="bg-slate-600 hover:bg-slate-500 px-6 py-3 rounded-lg text-white transition-colors">
                     <i class="fas fa-eraser mr-2"></i>Limpar
                 </button>
-                @if (StateService.CurrentCliente.IDCliente > 0)
+                @if (ClienteSalvo)
                 {
                     <button type="button" @onclick="Close" class="bg-gray-600 hover:bg-gray-500 px-6 py-3 rounded-lg text-white transition-colors">
-                        <i class="fas fa-times mr-2"></i>Cancelar
+                        <i class="fas fa-check mr-2"></i>Concluir
                     </button>
                 }
             </div>
         </EditForm>
     </div>
 </div>
+
+<ConfirmDialog @bind-IsVisible="showConfirmDialog"
+               Title="Confirmar Exclusão"
+               Message="Tem certeza que deseja excluir este item?"
+               ConfirmText="Excluir"
+               OnConfirm="ConfirmDeleteAsync" />
 
 @code {
     [Parameter] public bool IsVisible { get; set; }
@@ -187,6 +168,9 @@
     [CascadingParameter] public MainLayout? MainLayout { get; set; }
 
     private bool isLoading = false;
+    private bool showConfirmDialog = false;
+    private object? itemToDelete = null;
+    private bool ClienteSalvo => StateService.CurrentCliente.IDCliente > 0;
 
     protected override Task OnInitializedAsync()
     {
@@ -203,7 +187,18 @@
     {
         IsVisible = false;
         await IsVisibleChanged.InvokeAsync(false);
-        await OnClose.InvokeAsync();
+
+        // Se o cliente já foi salvo (tem ID real), não há nada para "descartar" - só
+        // atualizar a lista com o que já está persistido. Caso contrário, é um cadastro
+        // abandonado antes do primeiro salvamento, então só limpa o estado.
+        if (ClienteSalvo)
+        {
+            await OnSave.InvokeAsync();
+        }
+        else
+        {
+            await OnClose.InvokeAsync();
+        }
     }
 
     private void HandleBackdropClick()
@@ -235,11 +230,6 @@
     private Task SetProdutosTab()
     {
         return OnTabChanged("produtos");
-    }
-
-    private Task SetSalvarTab()
-    {
-        return OnTabChanged("salvar");
     }
 
     // Métodos de controle das abas
@@ -340,15 +330,12 @@
         StateService.CurrentPiscina = new Piscina();
     }
 
-    private void RemovePiscinaTemporaria(Piscina piscina) => StateService.RemovePiscinaTemporaria(piscina);
-
     private async Task HandleSavePiscina()
     {
         isLoading = true;
         try
         {
-            if (StateService.CurrentPiscina.IDCliente <= 0)
-                StateService.CurrentPiscina.IDCliente = StateService.CurrentCliente.IDCliente;
+            StateService.CurrentPiscina.IDCliente = StateService.CurrentCliente.IDCliente;
 
             if (string.IsNullOrWhiteSpace(StateService.CurrentPiscina.Tipo))
             {
@@ -362,57 +349,17 @@
                 return;
             }
 
-            // Se for um cliente novo (IDCliente <= 0) ou se já existem piscinas temporárias, sempre adicionar temporariamente
-            if (StateService.CurrentCliente.IDCliente <= 0 || StateService.PiscinasTemporarias.Any())
-            {
-                StateService.AddPiscinaTemporaria(new Piscina
-                {
-                    IDPiscina = -(StateService.PiscinasTemporarias.Count + 1),
-                    IDCliente = 0,
-                    Tipo = StateService.CurrentPiscina.Tipo,
-                    VolumeLitros = StateService.CurrentPiscina.VolumeLitros,
-                    Localizacao = StateService.CurrentPiscina.Localizacao,
-                    Coberta = StateService.CurrentPiscina.Coberta,
-                    Aquecida = StateService.CurrentPiscina.Aquecida
-                });
-                
-                ShowToast("Sucesso", "Piscina adicionada temporariamente. Use 'Salvar Tudo' para confirmar.", "success");
-                ClosePiscinaForm();
-                return;
-            }
-
-            // Se for edição de piscina existente (IDPiscina > 0), atualizar normalmente
             if (StateService.CurrentPiscina.IDPiscina > 0)
             {
                 await ApiService.UpdatePiscinaAsync(StateService.CurrentPiscina);
                 ShowToast("Sucesso", "Piscina atualizada com sucesso!", "success");
-                await LoadRelatedData();
-                ClosePiscinaForm();
-                return;
             }
-
-            // Se for cliente existente e nova piscina, adicionar temporariamente
-            if (StateService.CurrentCliente.IDCliente > 0)
+            else
             {
-                StateService.AddPiscinaTemporaria(new Piscina
-                {
-                    IDPiscina = -(StateService.PiscinasTemporarias.Count + 1),
-                    IDCliente = 0,
-                    Tipo = StateService.CurrentPiscina.Tipo,
-                    VolumeLitros = StateService.CurrentPiscina.VolumeLitros,
-                    Localizacao = StateService.CurrentPiscina.Localizacao,
-                    Coberta = StateService.CurrentPiscina.Coberta,
-                    Aquecida = StateService.CurrentPiscina.Aquecida
-                });
-                
-                ShowToast("Sucesso", "Piscina adicionada temporariamente. Use 'Salvar Tudo' para confirmar.", "success");
-                ClosePiscinaForm();
-                return;
+                await ApiService.CreatePiscinaAsync(StateService.CurrentPiscina);
+                ShowToast("Sucesso", "Piscina criada com sucesso!", "success");
             }
 
-            // Caso padrão: criar piscina normalmente (apenas para clientes novos sem piscinas temporárias)
-            await ApiService.CreatePiscinaAsync(StateService.CurrentPiscina);
-            ShowToast("Sucesso", "Piscina criada com sucesso!", "success");
             await LoadRelatedData();
             ClosePiscinaForm();
         }
@@ -428,22 +375,8 @@
 
     private void DeletePiscina(Piscina piscina)
     {
-        // Implementar confirmação de exclusão se necessário
-        _ = DeletePiscinaAsync(piscina);
-    }
-
-    private async Task DeletePiscinaAsync(Piscina piscina)
-    {
-        try
-        {
-            await ApiService.DeletePiscinaAsync(piscina.IDPiscina);
-            await LoadRelatedData();
-            ShowToast("Sucesso", "Piscina excluída com sucesso!", "success");
-        }
-        catch (Exception ex)
-        {
-            ShowToast("Erro", $"Erro ao excluir piscina: {ex.Message}", "error");
-        }
+        itemToDelete = piscina;
+        showConfirmDialog = true;
     }
 
     // Métodos para Equipamentos
@@ -473,65 +406,24 @@
         StateService.CurrentEquipamento = new Equipamento();
     }
 
-    private void RemoveEquipamentoTemporario(Equipamento equipamento) => StateService.RemoveEquipamentoTemporario(equipamento);
-
     private async Task HandleSaveEquipamento()
     {
         isLoading = true;
         try
         {
-            if (StateService.CurrentEquipamento.IDCliente <= 0)
-                StateService.CurrentEquipamento.IDCliente = StateService.CurrentCliente.IDCliente;
+            StateService.CurrentEquipamento.IDCliente = StateService.CurrentCliente.IDCliente;
 
-            // Se for um cliente novo (IDCliente <= 0) ou se já existem equipamentos temporários, sempre adicionar temporariamente
-            if (StateService.CurrentCliente.IDCliente <= 0 || StateService.EquipamentosTemporarios.Any())
-            {
-                StateService.AddEquipamentoTemporario(new Equipamento
-                {
-                    IDEquipamento = -(StateService.EquipamentosTemporarios.Count + 1),
-                    IDCliente = 0,
-                    Descricao = StateService.CurrentEquipamento.Descricao,
-                    NumeroSerie = StateService.CurrentEquipamento.NumeroSerie,
-                    UltimaCalibragem = StateService.CurrentEquipamento.UltimaCalibragem,
-                    Observacao = StateService.CurrentEquipamento.Observacao
-                });
-                
-                ShowToast("Sucesso", "Equipamento adicionado temporariamente. Use 'Salvar Tudo' para confirmar.", "success");
-                CloseEquipamentoForm();
-                return;
-            }
-
-            // Se for edição de equipamento existente (IDEquipamento > 0), atualizar normalmente
             if (StateService.CurrentEquipamento.IDEquipamento > 0)
             {
                 await ApiService.UpdateEquipamentoAsync(StateService.CurrentEquipamento);
                 ShowToast("Sucesso", "Equipamento atualizado com sucesso!", "success");
-                await LoadRelatedData();
-                CloseEquipamentoForm();
-                return;
             }
-
-            // Se for cliente existente e novo equipamento, adicionar temporariamente
-            if (StateService.CurrentCliente.IDCliente > 0)
+            else
             {
-                StateService.AddEquipamentoTemporario(new Equipamento
-                {
-                    IDEquipamento = -(StateService.EquipamentosTemporarios.Count + 1),
-                    IDCliente = 0,
-                    Descricao = StateService.CurrentEquipamento.Descricao,
-                    NumeroSerie = StateService.CurrentEquipamento.NumeroSerie,
-                    UltimaCalibragem = StateService.CurrentEquipamento.UltimaCalibragem,
-                    Observacao = StateService.CurrentEquipamento.Observacao
-                });
-                
-                ShowToast("Sucesso", "Equipamento adicionado temporariamente. Use 'Salvar Tudo' para confirmar.", "success");
-                CloseEquipamentoForm();
-                return;
+                await ApiService.CreateEquipamentoAsync(StateService.CurrentEquipamento);
+                ShowToast("Sucesso", "Equipamento criado com sucesso!", "success");
             }
 
-            // Caso padrão: criar equipamento normalmente (apenas para clientes novos sem equipamentos temporários)
-            await ApiService.CreateEquipamentoAsync(StateService.CurrentEquipamento);
-            ShowToast("Sucesso", "Equipamento criado com sucesso!", "success");
             await LoadRelatedData();
             CloseEquipamentoForm();
         }
@@ -547,21 +439,8 @@
 
     private void DeleteEquipamento(Equipamento equipamento)
     {
-        _ = DeleteEquipamentoAsync(equipamento);
-    }
-
-    private async Task DeleteEquipamentoAsync(Equipamento equipamento)
-    {
-        try
-        {
-            await ApiService.DeleteEquipamentoAsync(equipamento.IDEquipamento);
-            await LoadRelatedData();
-            ShowToast("Sucesso", "Equipamento excluído com sucesso!", "success");
-        }
-        catch (Exception ex)
-        {
-            ShowToast("Erro", $"Erro ao excluir equipamento: {ex.Message}", "error");
-        }
+        itemToDelete = equipamento;
+        showConfirmDialog = true;
     }
 
     // Métodos para Estoque
@@ -606,15 +485,12 @@
         StateService.SelectedProdutoId = 0;
     }
 
-    private void RemoveEstoqueTemporario(EstoqueCliente estoque) => StateService.RemoveEstoqueTemporario(estoque);
-
     private async Task HandleSaveEstoque()
     {
         isLoading = true;
         try
         {
-            if (StateService.CurrentEstoque.IDCliente <= 0)
-                StateService.CurrentEstoque.IDCliente = StateService.CurrentCliente.IDCliente;
+            StateService.CurrentEstoque.IDCliente = StateService.CurrentCliente.IDCliente;
 
             if (StateService.SelectedProdutoId <= 0)
             {
@@ -629,96 +505,25 @@
             }
 
             var produtoSelecionado = StateService.Produtos?.FirstOrDefault(p => p.IDProduto == StateService.SelectedProdutoId);
-            if (produtoSelecionado != null)
-            {
-                StateService.CurrentEstoque.Produto = new Produto
-                {
-                    IDProduto = produtoSelecionado.IDProduto,
-                    Nome = produtoSelecionado.Nome,
-                    Concentracao = produtoSelecionado.Concentracao,
-                    Unidade = produtoSelecionado.Unidade
-                };
-                StateService.CurrentEstoque.IDProduto = produtoSelecionado.IDProduto;
-            }
-            else
+            if (produtoSelecionado == null)
             {
                 ShowToast("Erro", "Produto selecionado não encontrado", "error");
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(StateService.CurrentEstoque.Produto?.Nome))
-            {
-                ShowToast("Erro", "Nome do produto é obrigatório", "error");
-                return;
-            }
+            StateService.CurrentEstoque.IDProduto = produtoSelecionado.IDProduto;
 
-            if (string.IsNullOrWhiteSpace(StateService.CurrentEstoque.Produto?.Unidade))
-            {
-                ShowToast("Erro", "Unidade do produto é obrigatória", "error");
-                return;
-            }
-
-            // Se for um cliente novo (IDCliente <= 0) ou se já existem estoques temporários, sempre adicionar temporariamente
-            if (StateService.CurrentCliente.IDCliente <= 0 || StateService.EstoquesTemporarios.Any())
-            {
-                StateService.AddEstoqueTemporario(new EstoqueCliente
-                {
-                    IDEstoque = -(StateService.EstoquesTemporarios.Count + 1),
-                    IDCliente = 0,
-                    IDProduto = StateService.CurrentEstoque.IDProduto,
-                    QuantidadeAtual = StateService.CurrentEstoque.QuantidadeAtual,
-                    QuantidadeMinima = StateService.CurrentEstoque.QuantidadeMinima,
-                    Produto = new Produto
-                    {
-                        IDProduto = StateService.CurrentEstoque.IDProduto,
-                        Nome = StateService.CurrentEstoque.Produto.Nome,
-                        Concentracao = StateService.CurrentEstoque.Produto.Concentracao,
-                        Unidade = StateService.CurrentEstoque.Produto.Unidade
-                    }
-                });
-                
-                ShowToast("Sucesso", "Item do estoque adicionado temporariamente. Use 'Salvar Tudo' para confirmar.", "success");
-                CloseEstoqueForm();
-                return;
-            }
-
-            // Se for edição de estoque existente (IDEstoque > 0), atualizar normalmente
             if (StateService.CurrentEstoque.IDEstoque > 0)
             {
                 await ApiService.UpdateEstoqueAsync(StateService.CurrentEstoque);
                 ShowToast("Sucesso", "Item do estoque atualizado com sucesso!", "success");
-                await LoadRelatedData();
-                CloseEstoqueForm();
-                return;
             }
-
-            // Se for cliente existente e novo estoque, adicionar temporariamente
-            if (StateService.CurrentCliente.IDCliente > 0)
+            else
             {
-                StateService.AddEstoqueTemporario(new EstoqueCliente
-                {
-                    IDEstoque = -(StateService.EstoquesTemporarios.Count + 1),
-                    IDCliente = 0,
-                    IDProduto = StateService.CurrentEstoque.IDProduto,
-                    QuantidadeAtual = StateService.CurrentEstoque.QuantidadeAtual,
-                    QuantidadeMinima = StateService.CurrentEstoque.QuantidadeMinima,
-                    Produto = new Produto
-                    {
-                        IDProduto = StateService.CurrentEstoque.IDProduto,
-                        Nome = StateService.CurrentEstoque.Produto.Nome,
-                        Concentracao = StateService.CurrentEstoque.Produto.Concentracao,
-                        Unidade = StateService.CurrentEstoque.Produto.Unidade
-                    }
-                });
-                
-                ShowToast("Sucesso", "Item do estoque adicionado temporariamente. Use 'Salvar Tudo' para confirmar.", "success");
-                CloseEstoqueForm();
-                return;
+                await ApiService.CreateEstoqueAsync(StateService.CurrentEstoque);
+                ShowToast("Sucesso", "Item do estoque criado com sucesso!", "success");
             }
 
-            // Caso padrão: criar estoque normalmente (apenas para clientes novos sem estoques temporários)
-            await ApiService.CreateEstoqueAsync(StateService.CurrentEstoque);
-            ShowToast("Sucesso", "Item do estoque criado com sucesso!", "success");
             await LoadRelatedData();
             CloseEstoqueForm();
         }
@@ -734,20 +539,47 @@
 
     private void DeleteEstoque(EstoqueCliente estoque)
     {
-        _ = DeleteEstoqueAsync(estoque);
+        itemToDelete = estoque;
+        showConfirmDialog = true;
     }
 
-    private async Task DeleteEstoqueAsync(EstoqueCliente estoque)
+    private async Task ConfirmDeleteAsync()
     {
+        if (itemToDelete == null)
+        {
+            return;
+        }
+
+        isLoading = true;
         try
         {
-            await ApiService.DeleteEstoqueAsync(estoque.IDEstoque);
-            await LoadRelatedData();
-            ShowToast("Sucesso", "Item do estoque excluído com sucesso!", "success");
+            switch (itemToDelete)
+            {
+                case Piscina piscina:
+                    await ApiService.DeletePiscinaAsync(piscina.IDPiscina);
+                    await LoadRelatedData();
+                    ShowToast("Sucesso", "Piscina excluída com sucesso!", "success");
+                    break;
+                case Equipamento equipamento:
+                    await ApiService.DeleteEquipamentoAsync(equipamento.IDEquipamento);
+                    await LoadRelatedData();
+                    ShowToast("Sucesso", "Equipamento excluído com sucesso!", "success");
+                    break;
+                case EstoqueCliente estoque:
+                    await ApiService.DeleteEstoqueAsync(estoque.IDEstoque);
+                    await LoadRelatedData();
+                    ShowToast("Sucesso", "Item do estoque excluído com sucesso!", "success");
+                    break;
+            }
         }
         catch (Exception ex)
         {
-            ShowToast("Erro", $"Erro ao excluir item do estoque: {ex.Message}", "error");
+            ShowToast("Erro", $"Erro ao excluir item: {ex.Message}", "error");
+        }
+        finally
+        {
+            isLoading = false;
+            itemToDelete = null;
         }
     }
 
@@ -783,90 +615,6 @@
             {
                 ShowToast("Erro", $"Ocorreu um erro ao salvar o cliente. Por favor, tente novamente ou contate o suporte. Detalhes: {ex.Message}", "error");
             }
-        }
-        finally
-        {
-            isLoading = false;
-        }
-    }
-
-    private async Task HandleSaveCompleto()
-    {
-        isLoading = true;
-        try
-        {
-            if (string.IsNullOrWhiteSpace(StateService.CurrentCliente.Nome))
-            {
-                ShowToast("Erro", "Nome do cliente é obrigatório", "error");
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(StateService.CurrentCliente.Tipo))
-            {
-                ShowToast("Erro", "Tipo do cliente é obrigatório", "error");
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(StateService.CurrentCliente.Endereco))
-            {
-                ShowToast("Erro", "Endereço do cliente é obrigatório", "error");
-                return;
-            }
-
-            var clienteCompleto = StateService.CreateClienteCompletoDTO();
-
-            if (string.IsNullOrWhiteSpace(clienteCompleto.Nome))
-            {
-                ShowToast("Erro", "Nome do cliente é obrigatório", "error");
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(clienteCompleto.Tipo))
-            {
-                ShowToast("Erro", "Tipo do cliente é obrigatório", "error");
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(clienteCompleto.Endereco))
-            {
-                ShowToast("Erro", "Endereço do cliente é obrigatório", "error");
-                return;
-            }
-
-            Cliente clienteSalvo;
-            
-            // Verificar se é criação ou edição
-            if (StateService.CurrentCliente.IDCliente > 0)
-            {
-                // É edição - usar PUT
-                clienteSalvo = await ApiService.UpdateClienteCompletoAsync(clienteCompleto);
-                ShowToast("Sucesso", "Cliente e todos os dados relacionados foram atualizados com sucesso em uma única transação!", "success");
-            }
-            else
-            {
-                // É criação - usar POST
-                clienteSalvo = await ApiService.CreateClienteCompletoAsync(clienteCompleto);
-                ShowToast("Sucesso", "Cliente e todos os dados relacionados foram salvos com sucesso em uma única transação!", "success");
-            }
-            
-            StateService.CurrentCliente = clienteSalvo;
-            
-            await LoadRelatedData();
-            
-            StateService.ClearTemporaryData();
-            
-            await OnSave.InvokeAsync();
-            await Close();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erro ao salvar dados completos: {ex.Message}");
-            if (ex.InnerException != null)
-            {
-                Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
-            }
-            
-            ShowToast("Erro", $"Erro ao salvar dados completos: {ex.Message}", "error");
         }
         finally
         {
