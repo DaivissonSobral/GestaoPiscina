@@ -1,29 +1,61 @@
-﻿@page "/"
+@page "/"
+@using GestaoPiscina.Client.Services
+@using GestaoPiscina.Client.Models
+@using System.Globalization
 @inject NavigationManager Navigation
+@inject ApiService ApiService
 
 <section class="p-4 space-y-6">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-slate-800 rounded-xl p-4">
-            <h3 class="text-slate-400 text-sm">OS do Dia</h3>
-            <p class="text-2xl font-bold mt-2">18</p>
-            <span class="text-green-500 text-sm">+3 novas</span>
+    @if (carregando)
+    {
+        <LoadingSpinner IsVisible="true" Message="Carregando painel..." />
+    }
+    else
+    {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-slate-800 rounded-xl p-4">
+                <h3 class="text-slate-400 text-sm">OS do Dia</h3>
+                <p class="text-2xl font-bold mt-2">@OsHoje.Count</p>
+                @if (OsAbertasHoje > 0)
+                {
+                    <span class="text-yellow-400 text-sm">@OsAbertasHoje em aberto</span>
+                }
+                else
+                {
+                    <span class="text-green-500 text-sm">Tudo em dia</span>
+                }
+            </div>
+            <div class="bg-slate-800 rounded-xl p-4">
+                <h3 class="text-slate-400 text-sm">Piscinas Atendidas</h3>
+                <p class="text-2xl font-bold mt-2">@PiscinasAtendidasHoje</p>
+                <span class="text-green-500 text-sm">Hoje</span>
+            </div>
+            <div class="bg-slate-800 rounded-xl p-4">
+                <h3 class="text-slate-400 text-sm">Produtos em Baixa</h3>
+                <p class="text-2xl font-bold mt-2">@ProdutosEmBaixa.Count</p>
+                @if (ProdutosEmBaixa.Any())
+                {
+                    <span class="text-red-500 text-sm">Repor urgente</span>
+                }
+                else
+                {
+                    <span class="text-green-500 text-sm">Estoque OK</span>
+                }
+            </div>
+            <div class="bg-slate-800 rounded-xl p-4">
+                <h3 class="text-slate-400 text-sm">Alertas Pendentes</h3>
+                <p class="text-2xl font-bold mt-2">@OsAtrasadas.Count</p>
+                @if (OsAtrasadas.Any())
+                {
+                    <span class="text-red-500 text-sm">OS atrasadas</span>
+                }
+                else
+                {
+                    <span class="text-green-500 text-sm">Nenhuma pendência</span>
+                }
+            </div>
         </div>
-        <div class="bg-slate-800 rounded-xl p-4">
-            <h3 class="text-slate-400 text-sm">Piscinas Atendidas</h3>
-            <p class="text-2xl font-bold mt-2">45</p>
-            <span class="text-green-500 text-sm">Hoje</span>
-        </div>
-        <div class="bg-slate-800 rounded-xl p-4">
-            <h3 class="text-slate-400 text-sm">Produtos em Baixa</h3>
-            <p class="text-2xl font-bold mt-2">12</p>
-            <span class="text-red-500 text-sm">Repor urgente</span>
-        </div>
-        <div class="bg-slate-800 rounded-xl p-4">
-            <h3 class="text-slate-400 text-sm">Alertas Pendentes</h3>
-            <p class="text-2xl font-bold mt-2">5</p>
-            <span class="text-yellow-400 text-sm">Manutenção Preventiva</span>
-        </div>
-    </div>
+    }
 
     <div>
         <h2 class="text-lg font-semibold mb-3">Atalhos Rápidos</h2>
@@ -49,51 +81,176 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div class="lg:col-span-2 bg-slate-800 rounded-xl p-4">
-            <h3 class="font-semibold mb-2">Resumo Diário de OS</h3>
-            <img src="https://placehold.co/800x250?text=Gráfico+OS+do+Dia" alt="Gráfico OS do dia" class="rounded-lg w-full">
-        </div>
-        <div class="bg-slate-800 rounded-xl p-4">
-            <h3 class="font-semibold mb-2">Alertas Recentes</h3>
-            <div class="space-y-3">
-                <div class="flex items-center space-x-2">
-                    <i class="fas fa-exclamation-triangle text-red-500"></i>
-                    <span>Produto X em nível crítico</span>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <i class="fas fa-tools text-yellow-400"></i>
-                    <span>Manutenção Preventiva: Bomba Y</span>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <i class="fas fa-calendar-times text-red-400"></i>
-                    <span>OS atrasada: Cliente João</span>
-                </div>
+    @if (!carregando)
+    {
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="lg:col-span-2 bg-slate-800 rounded-xl p-4">
+                <h3 class="font-semibold mb-4">Resumo Diário de OS</h3>
+                @if (OsHoje.Any())
+                {
+                    <div class="space-y-3">
+                        @foreach (var status in statusOrdem)
+                        {
+                            var contagem = ContagemPorStatus(status.Status);
+                            var largura = MaxContagemStatus > 0 ? contagem * 100.0 / MaxContagemStatus : 0;
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-300">@status.Status</span>
+                                    <span class="text-slate-400">@contagem</span>
+                                </div>
+                                <div class="w-full bg-slate-700 rounded-full h-2.5">
+                                    <div class="h-2.5 rounded-full" style="width:@(largura.ToString("0.##", CultureInfo.InvariantCulture))%; background-color:@status.Cor;"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-slate-400 text-sm">Nenhuma OS registrada hoje.</p>
+                }
+            </div>
+            <div class="bg-slate-800 rounded-xl p-4">
+                <h3 class="font-semibold mb-2">Alertas Recentes</h3>
+                @if (AlertasRecentes.Any())
+                {
+                    <div class="space-y-3">
+                        @foreach (var alerta in AlertasRecentes)
+                        {
+                            <div class="flex items-start space-x-2">
+                                <i class="fas @alerta.Icone @alerta.Cor mt-0.5"></i>
+                                <span class="text-sm">@alerta.Texto</span>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-slate-400 text-sm">Nenhum alerta no momento.</p>
+                }
             </div>
         </div>
-    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-slate-800 rounded-xl p-4">
-            <h3 class="text-sm text-slate-400">OS Abertas</h3>
-            <p class="text-lg font-semibold mt-1">8 pendentes</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-slate-800 rounded-xl p-4">
+                <h3 class="text-sm text-slate-400">OS Abertas</h3>
+                <p class="text-lg font-semibold mt-1">@OsAbertasTotal pendente(s)</p>
+            </div>
+            <div class="bg-slate-800 rounded-xl p-4">
+                <h3 class="text-sm text-slate-400">Checklists Concluídos</h3>
+                <p class="text-lg font-semibold mt-1">@ChecklistsHoje hoje</p>
+            </div>
+            <div class="bg-slate-800 rounded-xl p-4">
+                <h3 class="text-sm text-slate-400">OS Finalizadas (Mês)</h3>
+                <p class="text-lg font-semibold mt-1">@OsFinalizadasMes finalizada(s)</p>
+            </div>
+            <div class="bg-slate-800 rounded-xl p-4">
+                <h3 class="text-sm text-slate-400">Calibração de Equipamentos</h3>
+                <p class="text-lg font-semibold mt-1">@CalibracaoPendente.Count pendente(s)</p>
+            </div>
         </div>
-        <div class="bg-slate-800 rounded-xl p-4">
-            <h3 class="text-sm text-slate-400">Checklists Concluídos</h3>
-            <p class="text-lg font-semibold mt-1">32 hoje</p>
-        </div>
-        <div class="bg-slate-800 rounded-xl p-4">
-            <h3 class="text-sm text-slate-400">Próximas Rotas</h3>
-            <p class="text-lg font-semibold mt-1">5 programadas</p>
-        </div>
-        <div class="bg-slate-800 rounded-xl p-4">
-            <h3 class="text-sm text-slate-400">Equipamentos Automáticos</h3>
-            <p class="text-lg font-semibold mt-1">2 falhas detectadas</p>
-        </div>
-    </div>
+    }
 </section>
 
 @code {
+    private List<OrdemDeServico> ordens = new();
+    private List<Equipamento> equipamentos = new();
+    private List<EstoqueCliente> estoques = new();
+    private bool carregando = true;
+
+    private DateTime Hoje => DateTime.Today;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var ordensTask = ApiService.GetOrdensDeServicoAsync();
+            var equipamentosTask = ApiService.GetEquipamentosAsync();
+            var estoqueTask = ApiService.GetEstoqueAsync();
+
+            await Task.WhenAll(ordensTask, equipamentosTask, estoqueTask);
+
+            ordens = await ordensTask;
+            equipamentos = await equipamentosTask;
+            estoques = await estoqueTask;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar painel: {ex.Message}");
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    private List<OrdemDeServico> OsHoje => ordens.Where(o => o.DataExecucao.Date == Hoje).ToList();
+
+    private int OsAbertasHoje => OsHoje.Count(o => o.Status == "Em Aberto" || o.Status == "Em Andamento");
+
+    private int PiscinasAtendidasHoje => OsHoje.Where(o => o.Status == "Finalizada").Select(o => o.IDPiscina).Distinct().Count();
+
+    private List<EstoqueCliente> ProdutosEmBaixa => estoques
+        .Where(e => e.QuantidadeMinima.HasValue && e.QuantidadeAtual <= e.QuantidadeMinima.Value)
+        .ToList();
+
+    private List<OrdemDeServico> OsAtrasadas => ordens
+        .Where(o => o.Status == "Em Aberto" && o.DataExecucao.Date < Hoje)
+        .ToList();
+
+    private List<Equipamento> CalibracaoPendente => equipamentos
+        .Where(e => !e.UltimaCalibragem.HasValue || e.UltimaCalibragem.Value.Date < Hoje.AddYears(-1))
+        .ToList();
+
+    private int OsAbertasTotal => ordens.Count(o => o.Status == "Em Aberto");
+
+    private int ChecklistsHoje => OsHoje.Count(o => o.ChecklistConcluido);
+
+    private int OsFinalizadasMes => ordens.Count(o => o.Status == "Finalizada" && o.DataExecucao.Year == Hoje.Year && o.DataExecucao.Month == Hoje.Month);
+
+    private record StatusResumo(string Status, string Cor);
+
+    private readonly List<StatusResumo> statusOrdem = new()
+    {
+        new("Em Aberto", "#eab308"),
+        new("Em Andamento", "#3b82f6"),
+        new("Finalizada", "#22c55e"),
+        new("Ocorrência", "#a855f7"),
+        new("Reagendada", "#f97316"),
+        new("Cancelada", "#ef4444"),
+    };
+
+    private int ContagemPorStatus(string status) => OsHoje.Count(o => o.Status == status);
+
+    private int MaxContagemStatus => statusOrdem.Select(s => ContagemPorStatus(s.Status)).DefaultIfEmpty(0).Max();
+
+    private record Alerta(string Icone, string Cor, string Texto);
+
+    private List<Alerta> AlertasRecentes
+    {
+        get
+        {
+            var lista = new List<Alerta>();
+
+            foreach (var estoque in ProdutosEmBaixa.Take(3))
+            {
+                lista.Add(new Alerta("fa-exclamation-triangle", "text-red-500", $"{estoque.Produto?.Nome} em nível crítico ({estoque.Cliente?.Nome})"));
+            }
+
+            foreach (var os in OsAtrasadas.Take(3))
+            {
+                lista.Add(new Alerta("fa-calendar-times", "text-red-400", $"OS atrasada: {os.Piscina?.Cliente?.Nome} ({os.Piscina?.Tipo})"));
+            }
+
+            foreach (var equipamento in CalibracaoPendente.Take(2))
+            {
+                lista.Add(new Alerta("fa-tools", "text-yellow-400", $"Calibração pendente: {equipamento.Descricao} ({equipamento.Cliente?.Nome})"));
+            }
+
+            return lista.Take(6).ToList();
+        }
+    }
+
     private void NovaOS()
     {
         Navigation.NavigateTo("/ordens-servico");

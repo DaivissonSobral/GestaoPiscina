@@ -16,6 +16,29 @@ namespace GestaoPiscina.Server.Controllers
             _context = context;
         }
 
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<EstoqueCliente>>> GetEstoque()
+        {
+            var estoques = await _context.EstoqueClientes
+                .AsNoTracking()
+                .Include(e => e.Produto)
+                .Include(e => e.Cliente)
+                .ToListAsync();
+
+            // Como Produto é catálogo compartilhado entre clientes, o EF acaba
+            // preenchendo Cliente.Estoques/Produto.Estoques de volta para o
+            // próprio registro — cria um grafo circular que estoura o limite de
+            // profundidade do serializador JSON. Essas coleções reversas não são
+            // usadas por quem consome este endpoint, então zeram aqui.
+            foreach (var estoque in estoques)
+            {
+                estoque.Cliente.Estoques.Clear();
+                estoque.Produto.Estoques.Clear();
+            }
+
+            return estoques;
+        }
+
         [HttpGet("cliente/{clienteId}")]
         public async Task<ActionResult<IEnumerable<EstoqueCliente>>> GetEstoqueByCliente(int clienteId)
         {

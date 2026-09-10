@@ -419,6 +419,18 @@ namespace GestaoPiscina.Client.Services
         }
 
         // Estoque
+        public async Task<List<EstoqueCliente>> GetEstoqueAsync()
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<List<EstoqueCliente>>($"{_baseUrl}estoque") ?? new List<EstoqueCliente>();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao buscar estoque: {ex.Message}");
+            }
+        }
+
         public async Task<List<EstoqueCliente>> GetEstoqueByClienteAsync(int clienteId)
         {
             try
