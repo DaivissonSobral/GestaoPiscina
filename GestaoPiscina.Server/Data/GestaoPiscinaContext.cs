@@ -18,6 +18,8 @@ namespace GestaoPiscina.Server.Data
         public DbSet<Equipamento> Equipamentos { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Perfil> Perfis { get; set; }
+        public DbSet<Gestor> Gestores { get; set; }
+        public DbSet<GestorCliente> GestorClientes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -28,7 +30,7 @@ namespace GestaoPiscina.Server.Data
             {
                 entity.HasKey(e => e.IDCliente);
                 entity.Property(e => e.Nome).IsRequired().HasMaxLength(150);
-                entity.Property(e => e.Tipo).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Tipo).IsRequired().HasMaxLength(30);
                 entity.Property(e => e.Endereco).IsRequired().HasMaxLength(255);
                 entity.Property(e => e.DiasDeVisita).HasMaxLength(50);
                 entity.Property(e => e.Telefone).IsRequired().HasMaxLength(20);
@@ -41,6 +43,8 @@ namespace GestaoPiscina.Server.Data
                 entity.Property(e => e.Tipo).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.VolumeLitros).IsRequired().HasPrecision(10, 2);
                 entity.Property(e => e.Localizacao).HasMaxLength(255);
+                entity.Property(e => e.Coberta).IsRequired().HasMaxLength(10);
+                entity.Property(e => e.Aquecida).IsRequired();
                 entity.HasOne(e => e.Cliente)
                     .WithMany(c => c.Piscinas)
                     .HasForeignKey(e => e.IDCliente)
@@ -51,7 +55,7 @@ namespace GestaoPiscina.Server.Data
             {
                 entity.HasKey(e => e.IDProduto);
                 entity.Property(e => e.Nome).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Concentracao).HasMaxLength(50);
+                entity.Property(e => e.Concentracao).HasPrecision(10, 2);
                 entity.Property(e => e.Unidade).IsRequired().HasMaxLength(10);
             });
 
@@ -60,10 +64,22 @@ namespace GestaoPiscina.Server.Data
                 entity.HasKey(e => e.IDOS);
                 entity.Property(e => e.DataExecucao).IsRequired();
                 entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.pH).IsRequired().HasPrecision(10, 2);
+                entity.Property(e => e.Alcalinidade).IsRequired().HasPrecision(10, 3);
+                entity.Property(e => e.CloroLivre).IsRequired().HasPrecision(10, 3);
+                entity.Property(e => e.DurezaCalcica).IsRequired().HasPrecision(10, 3);
                 entity.HasOne(e => e.Piscina)
                     .WithMany(p => p.OrdensDeServico)
                     .HasForeignKey(e => e.IDPiscina)
                     .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Tecnico)
+                    .WithMany()
+                    .HasForeignKey(e => e.IDUsuario)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.AprovadorUsuario)
+                    .WithMany()
+                    .HasForeignKey(e => e.Aprovador)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<EstoqueCliente>(entity =>
@@ -85,7 +101,7 @@ namespace GestaoPiscina.Server.Data
             {
                 entity.HasKey(e => e.IDEquipamento);
                 entity.Property(e => e.NumeroSerie).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Tipo).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Descricao).IsRequired().HasMaxLength(50);
                 entity.HasOne(e => e.Cliente)
                     .WithMany(c => c.Equipamentos)
                     .HasForeignKey(e => e.IDCliente)
@@ -108,14 +124,39 @@ namespace GestaoPiscina.Server.Data
                 entity.Property(e => e.SenhaHash).IsRequired().HasMaxLength(255);
                 entity.Property(e => e.Ativo).IsRequired();
                 entity.Property(e => e.DataCriacao).IsRequired();
+                entity.Property(e => e.FotoUrl).HasMaxLength(500);
                 entity.HasIndex(e => e.Login).IsUnique();
                 entity.HasIndex(e => e.Email).IsUnique();
-                
+
                 // Relacionamento com Perfil
                 entity.HasOne(e => e.Perfil)
                     .WithMany()
                     .HasForeignKey(e => e.IDPerfil)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<Gestor>(entity =>
+            {
+                entity.HasKey(e => e.IDGestor);
+                entity.Property(e => e.Nome).IsRequired().HasMaxLength(150);
+                entity.Property(e => e.Telefone).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Ativo).IsRequired();
+                entity.Property(e => e.DataCadastro).IsRequired();
+                entity.HasIndex(e => e.Email).IsUnique();
+            });
+
+            modelBuilder.Entity<GestorCliente>(entity =>
+            {
+                entity.HasKey(e => new { e.IDGestor, e.IDCliente });
+                entity.HasOne(e => e.Gestor)
+                    .WithMany(g => g.GestorClientes)
+                    .HasForeignKey(e => e.IDGestor)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Cliente)
+                    .WithMany(c => c.GestorClientes)
+                    .HasForeignKey(e => e.IDCliente)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

@@ -12,7 +12,7 @@ namespace GestaoPiscina.Server.Models.DTOs
         public string Nome { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "O tipo é obrigatório.")]
-        [StringLength(20, ErrorMessage = "Tipo deve ter no máximo 20 caracteres")]
+        [StringLength(30, ErrorMessage = "Tipo deve ter no máximo 30 caracteres")]
         public string Tipo { get; set; } = string.Empty;
 
         [StringLength(20, ErrorMessage = "Telefone deve ter no máximo 20 caracteres")]
@@ -52,9 +52,16 @@ namespace GestaoPiscina.Server.Models.DTOs
         [Required(ErrorMessage = "Volume em litros é obrigatório")]
         [Range(0.01, double.MaxValue, ErrorMessage = "Volume deve ser maior que zero")]
         public decimal VolumeLitros { get; set; }
-        
+
         [StringLength(255, ErrorMessage = "Localização deve ter no máximo 255 caracteres")]
         public string? Localizacao { get; set; }
+
+        [Required(ErrorMessage = "Coberta é obrigatório")]
+        [StringLength(10, ErrorMessage = "Coberta deve ter no máximo 10 caracteres")]
+        public string Coberta { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Aquecida é obrigatório")]
+        public bool Aquecida { get; set; }
     }
 
     public class EquipamentoDTO
@@ -66,9 +73,9 @@ namespace GestaoPiscina.Server.Models.DTOs
         [StringLength(100, ErrorMessage = "Número de série deve ter no máximo 100 caracteres")]
         public string NumeroSerie { get; set; } = string.Empty;
         
-        [Required(ErrorMessage = "Tipo de equipamento é obrigatório")]
-        [StringLength(50, ErrorMessage = "Tipo deve ter no máximo 50 caracteres")]
-        public string Tipo { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Descrição do equipamento é obrigatória")]
+        [StringLength(50, ErrorMessage = "Descrição deve ter no máximo 50 caracteres")]
+        public string Descricao { get; set; } = string.Empty;
         
         public DateTime? UltimaCalibragem { get; set; }
         
@@ -94,8 +101,8 @@ namespace GestaoPiscina.Server.Models.DTOs
         [StringLength(100, ErrorMessage = "Nome do produto deve ter no máximo 100 caracteres")]
         public string NomeProduto { get; set; } = string.Empty;
         
-        [StringLength(50, ErrorMessage = "Concentração deve ter no máximo 50 caracteres")]
-        public string? ConcentracaoProduto { get; set; }
+        [Range(0, double.MaxValue, ErrorMessage = "Concentração deve ser maior ou igual a zero")]
+        public decimal? ConcentracaoProduto { get; set; }
         
         [Required(ErrorMessage = "Unidade do produto é obrigatória")]
         [StringLength(10, ErrorMessage = "Unidade deve ter no máximo 10 caracteres")]

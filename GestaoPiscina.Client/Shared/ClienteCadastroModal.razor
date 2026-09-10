@@ -327,7 +327,9 @@
             IDCliente = piscina.IDCliente,
             Tipo = piscina.Tipo,
             VolumeLitros = piscina.VolumeLitros,
-            Localizacao = piscina.Localizacao
+            Localizacao = piscina.Localizacao,
+            Coberta = piscina.Coberta,
+            Aquecida = piscina.Aquecida
         };
         StateService.ShowPiscinaForm = true;
     }
@@ -369,7 +371,9 @@
                     IDCliente = 0,
                     Tipo = StateService.CurrentPiscina.Tipo,
                     VolumeLitros = StateService.CurrentPiscina.VolumeLitros,
-                    Localizacao = StateService.CurrentPiscina.Localizacao
+                    Localizacao = StateService.CurrentPiscina.Localizacao,
+                    Coberta = StateService.CurrentPiscina.Coberta,
+                    Aquecida = StateService.CurrentPiscina.Aquecida
                 });
                 
                 ShowToast("Sucesso", "Piscina adicionada temporariamente. Use 'Salvar Tudo' para confirmar.", "success");
@@ -396,7 +400,9 @@
                     IDCliente = 0,
                     Tipo = StateService.CurrentPiscina.Tipo,
                     VolumeLitros = StateService.CurrentPiscina.VolumeLitros,
-                    Localizacao = StateService.CurrentPiscina.Localizacao
+                    Localizacao = StateService.CurrentPiscina.Localizacao,
+                    Coberta = StateService.CurrentPiscina.Coberta,
+                    Aquecida = StateService.CurrentPiscina.Aquecida
                 });
                 
                 ShowToast("Sucesso", "Piscina adicionada temporariamente. Use 'Salvar Tudo' para confirmar.", "success");
@@ -453,7 +459,7 @@
         {
             IDEquipamento = equipamento.IDEquipamento,
             IDCliente = equipamento.IDCliente,
-            Tipo = equipamento.Tipo,
+            Descricao = equipamento.Descricao,
             NumeroSerie = equipamento.NumeroSerie,
             UltimaCalibragem = equipamento.UltimaCalibragem,
             Observacao = equipamento.Observacao
@@ -484,7 +490,7 @@
                 {
                     IDEquipamento = -(StateService.EquipamentosTemporarios.Count + 1),
                     IDCliente = 0,
-                    Tipo = StateService.CurrentEquipamento.Tipo,
+                    Descricao = StateService.CurrentEquipamento.Descricao,
                     NumeroSerie = StateService.CurrentEquipamento.NumeroSerie,
                     UltimaCalibragem = StateService.CurrentEquipamento.UltimaCalibragem,
                     Observacao = StateService.CurrentEquipamento.Observacao
@@ -512,7 +518,7 @@
                 {
                     IDEquipamento = -(StateService.EquipamentosTemporarios.Count + 1),
                     IDCliente = 0,
-                    Tipo = StateService.CurrentEquipamento.Tipo,
+                    Descricao = StateService.CurrentEquipamento.Descricao,
                     NumeroSerie = StateService.CurrentEquipamento.NumeroSerie,
                     UltimaCalibragem = StateService.CurrentEquipamento.UltimaCalibragem,
                     Observacao = StateService.CurrentEquipamento.Observacao

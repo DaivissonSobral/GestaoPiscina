@@ -133,10 +133,10 @@ namespace GestaoPiscina.Server.Controllers
                 }
 
                 // Validações de negócio
-                if (string.IsNullOrWhiteSpace(equipamento.Tipo))
+                if (string.IsNullOrWhiteSpace(equipamento.Descricao))
                 {
-                    _logger.LogWarning("Tipo de equipamento não informado");
-                    return BadRequest(new { message = "Tipo de equipamento é obrigatório" });
+                    _logger.LogWarning("Descrição de equipamento não informada");
+                    return BadRequest(new { message = "Descrição de equipamento é obrigatória" });
                 }
 
                 if (string.IsNullOrWhiteSpace(equipamento.NumeroSerie))
@@ -223,10 +223,10 @@ namespace GestaoPiscina.Server.Controllers
                 }
 
                 // Validações de negócio
-                if (string.IsNullOrWhiteSpace(equipamento.Tipo))
+                if (string.IsNullOrWhiteSpace(equipamento.Descricao))
                 {
-                    _logger.LogWarning("Tipo de equipamento não informado");
-                    return BadRequest(new { message = "Tipo de equipamento é obrigatório" });
+                    _logger.LogWarning("Descrição de equipamento não informada");
+                    return BadRequest(new { message = "Descrição de equipamento é obrigatória" });
                 }
 
                 if (string.IsNullOrWhiteSpace(equipamento.NumeroSerie))
@@ -263,7 +263,7 @@ namespace GestaoPiscina.Server.Controllers
                 }
 
                 // Atualizar propriedades
-                equipamentoExistente.Tipo = equipamento.Tipo;
+                equipamentoExistente.Descricao = equipamento.Descricao;
                 equipamentoExistente.NumeroSerie = equipamento.NumeroSerie;
                 equipamentoExistente.UltimaCalibragem = equipamento.UltimaCalibragem;
                 equipamentoExistente.Observacao = equipamento.Observacao;

@@ -160,7 +160,9 @@ namespace GestaoPiscina.Client.Services
                         IDCliente = piscina.IDCliente,
                         Tipo = piscina.Tipo,
                         VolumeLitros = piscina.VolumeLitros,
-                        Localizacao = piscina.Localizacao
+                        Localizacao = piscina.Localizacao,
+                        Coberta = piscina.Coberta,
+                        Aquecida = piscina.Aquecida
                     });
                 }
             }
@@ -174,7 +176,9 @@ namespace GestaoPiscina.Client.Services
                     IDCliente = 0,
                     Tipo = piscina.Tipo,
                     VolumeLitros = piscina.VolumeLitros,
-                    Localizacao = piscina.Localizacao
+                    Localizacao = piscina.Localizacao,
+                    Coberta = piscina.Coberta,
+                    Aquecida = piscina.Aquecida
                 });
             }
 
@@ -187,7 +191,7 @@ namespace GestaoPiscina.Client.Services
                     {
                         IDEquipamento = equipamento.IDEquipamento,
                         IDCliente = equipamento.IDCliente,
-                        Tipo = equipamento.Tipo,
+                        Descricao = equipamento.Descricao,
                         NumeroSerie = equipamento.NumeroSerie,
                         UltimaCalibragem = equipamento.UltimaCalibragem,
                         Observacao = equipamento.Observacao
@@ -202,7 +206,7 @@ namespace GestaoPiscina.Client.Services
                 {
                     IDEquipamento = 0,
                     IDCliente = 0,
-                    Tipo = equipamento.Tipo,
+                    Descricao = equipamento.Descricao,
                     NumeroSerie = equipamento.NumeroSerie,
                     UltimaCalibragem = equipamento.UltimaCalibragem,
                     Observacao = equipamento.Observacao
@@ -239,9 +243,7 @@ namespace GestaoPiscina.Client.Services
                     QuantidadeAtual = estoque.QuantidadeAtual,
                     QuantidadeMinima = estoque.QuantidadeMinima,
                     NomeProduto = estoque.Produto.Nome.Trim(),
-                    ConcentracaoProduto = !string.IsNullOrWhiteSpace(estoque.Produto.Concentracao) 
-                        ? estoque.Produto.Concentracao.Trim() 
-                        : null,
+                    ConcentracaoProduto = estoque.Produto.Concentracao,
                     UnidadeProduto = estoque.Produto.Unidade.Trim()
                 });
             }

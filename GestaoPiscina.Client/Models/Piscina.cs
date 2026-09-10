@@ -19,7 +19,13 @@ namespace GestaoPiscina.Client.Models
         
         [StringLength(255, ErrorMessage = "Localização deve ter no máximo 255 caracteres")]
         public string? Localizacao { get; set; }
-        
+
+        [Required(ErrorMessage = "Coberta é obrigatório")]
+        public string Coberta { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Aquecida é obrigatório")]
+        public bool Aquecida { get; set; }
+
         public Cliente Cliente { get; set; } = null!;
         public List<OrdemDeServico> OrdensDeServico { get; set; } = new List<OrdemDeServico>();
     }

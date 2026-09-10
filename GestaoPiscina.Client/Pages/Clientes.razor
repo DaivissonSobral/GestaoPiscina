@@ -24,9 +24,8 @@
                     <input type="text" @bind="searchTerm" @bind:event="oninput" placeholder="Buscar clientes..." class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
                     <select @bind="selectedType" class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
                         <option value="">Todos os Tipos</option>
-                        <option value="residencial">Residencial</option>
-                        <option value="comercial">Comercial</option>
-                        <option value="condominio">Condomínio</option>
+                        <option value="Residencial Privativa">Residencial Privativa</option>
+                        <option value="Uso Coletivo">Uso Coletivo</option>
                     </select>
                 </div>
                 
@@ -81,8 +80,7 @@
                                         </td>
                                         <td class="px-3 md:px-4 py-3 md:py-4">
                                             <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
-                                                @(cliente.Tipo == "condominio" ? "bg-blue-100 text-blue-800" : 
-                                                cliente.Tipo == "comercial" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800")">
+                                                @(cliente.Tipo == "Uso Coletivo" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800")">
                                                 @cliente.Tipo
                                             </span>
                                         </td>
@@ -134,8 +132,7 @@
                                 
                                 <div class="space-y-2">
                                     <div class="flex items-center space-x-2">
-                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full @(cliente.Tipo == "condominio" ? "bg-blue-100 text-blue-800" : 
-                                        cliente.Tipo == "comercial" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800")">
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full @(cliente.Tipo == "Uso Coletivo" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800")">
                                             @cliente.Tipo
                                         </span>
                                         <span class="text-sm text-slate-300">@cliente.Piscinas.Count piscina(s)</span>
@@ -265,9 +262,8 @@
                                         <label class="block text-sm font-medium text-slate-300 mb-2">Tipo *</label>
                                         <InputSelect @bind-Value="currentCliente.Tipo" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500">
                                             <option value="">Selecione...</option>
-                                            <option value="residencial">Residencial</option>
-                                            <option value="comercial">Comercial</option>
-                                            <option value="condominio">Condomínio</option>
+                                            <option value="Residencial Privativa">Residencial Privativa</option>
+                                            <option value="Uso Coletivo">Uso Coletivo</option>
                                         </InputSelect>
                                         <ValidationMessage For="@(() => currentCliente.Tipo)" class="text-red-500 text-sm" />
                                     </div>
@@ -341,6 +337,24 @@
                                                     <ValidationMessage For="@(() => currentPiscina.VolumeLitros)" class="text-red-500 text-sm" />
                                                 </div>
                                                 
+                                                <div class="space-y-3">
+                                                    <label class="block text-sm font-medium text-slate-300 mb-2">Coberta *</label>
+                                                    <InputSelect @bind-Value="currentPiscina.Coberta" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" style="background-color: white !important; color: #111827 !important;">
+                                                        <option value="">Selecione...</option>
+                                                        <option value="Sim">Sim</option>
+                                                        <option value="Não">Não</option>
+                                                        <option value="Parcial">Parcial</option>
+                                                    </InputSelect>
+                                                    <ValidationMessage For="@(() => currentPiscina.Coberta)" class="text-red-500 text-sm" />
+                                                </div>
+
+                                                <div class="space-y-3 flex items-center">
+                                                    <label class="flex items-center space-x-2 text-sm font-medium text-slate-300 mt-6">
+                                                        <InputCheckbox @bind-Value="currentPiscina.Aquecida" class="rounded" />
+                                                        <span>Aquecida</span>
+                                                    </label>
+                                                </div>
+
                                                 <div class="md:col-span-2 space-y-3">
                                                     <label class="block text-sm font-medium text-slate-300 mb-2">Localização</label>
                                                     <InputText @bind-Value="currentPiscina.Localizacao" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="Ex: Fundos, Lateral..." style="background-color: white !important; color: #111827 !important;" />
@@ -474,9 +488,9 @@
                                             
                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div class="space-y-3">
-                                                    <label class="block text-sm font-medium text-slate-300 mb-2">Tipo *</label>
-                                                    <InputText @bind-Value="currentEquipamento.Tipo" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-800 !text-slate-800" placeholder="Ex: Bomba, Filtro..." style="color: #1e293b !important;" />
-                                                    <ValidationMessage For="@(() => currentEquipamento.Tipo)" class="text-red-500 text-sm" />
+                                                    <label class="block text-sm font-medium text-slate-300 mb-2">Descrição *</label>
+                                                    <InputText @bind-Value="currentEquipamento.Descricao" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-800 !text-slate-800" placeholder="Ex: Bomba, Filtro..." style="color: #1e293b !important;" />
+                                                    <ValidationMessage For="@(() => currentEquipamento.Descricao)" class="text-red-500 text-sm" />
                                                 </div>
                                                 
                                                 <div class="space-y-3">
@@ -518,7 +532,7 @@
                                                 <div class="bg-slate-800 rounded-xl p-4 space-y-3">
                                                     <div class="flex justify-between items-start">
                                                         <div class="flex-1">
-                                                            <h4 class="text-sm font-medium text-slate-100">@equipamento.Tipo</h4>
+                                                            <h4 class="text-sm font-medium text-slate-100">@equipamento.Descricao</h4>
                                                             <span class="text-sm text-slate-400">Série: @equipamento.NumeroSerie</span>
                                                         </div>
                                                         <div class="flex space-x-3 ml-4">
@@ -549,7 +563,7 @@
                                             <div class="bg-slate-700 rounded-xl p-4 space-y-3 border-2 border-dashed border-cyan-400">
                                                 <div class="flex justify-between items-start">
                                                     <div class="flex-1">
-                                                        <h4 class="text-sm font-medium text-slate-100">@equipamento.Tipo</h4>
+                                                        <h4 class="text-sm font-medium text-slate-100">@equipamento.Descricao</h4>
                                                         <span class="text-sm text-slate-400">Série: @equipamento.NumeroSerie</span>
                                                         <span class="text-xs text-cyan-400 bg-cyan-900 px-2 py-1 rounded">Temporário</span>
                                                     </div>
@@ -630,7 +644,7 @@
                                                         {
                                                             @foreach (var produto in produtos)
                                                             {
-                                                                <option value="@produto.IDProduto">@produto.Nome @(string.IsNullOrEmpty(produto.Concentracao) ? "" : $"({produto.Concentracao})") @(string.IsNullOrEmpty(produto.Unidade) ? "" : $"({produto.Unidade})")</option>
+                                                                <option value="@produto.IDProduto">@produto.Nome @(produto.Concentracao.HasValue ? $"({produto.Concentracao})" : "") @(string.IsNullOrEmpty(produto.Unidade) ? "" : $"({produto.Unidade})")</option>
                                                             }
                                                         }
                                                     </InputSelect>
@@ -655,7 +669,7 @@
                                                 
                                                 <div class="md:col-span-2 space-y-3">
                                                     <label class="block text-sm font-medium text-slate-300 mb-2">Concentração</label>
-                                                    <InputText @bind-Value="currentEstoque.Produto.Concentracao" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" readonly style="color: #f1f5f9 !important;" />
+                                                    <InputNumber @bind-Value="currentEstoque.Produto.Concentracao" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" readonly style="color: #f1f5f9 !important;" />
                                                 </div>
                                             </div>
                                             
@@ -695,7 +709,7 @@
                                                     </div>
                                                     
                                                     <div class="space-y-2">
-                                                        @if (!string.IsNullOrEmpty(estoque.Produto.Concentracao))
+                                                        @if (estoque.Produto.Concentracao.HasValue)
                                                         {
                                                             <div class="text-sm text-slate-400">
                                                                 <i class="fas fa-percentage text-slate-500 mr-2"></i>
@@ -731,7 +745,7 @@
                                                 </div>
                                                 
                                                 <div class="space-y-2">
-                                                    @if (!string.IsNullOrEmpty(estoque.Produto.Concentracao))
+                                                    @if (estoque.Produto.Concentracao.HasValue)
                                                     {
                                                         <div class="text-sm text-slate-400">
                                                             <i class="fas fa-percentage text-slate-500 mr-2"></i>
@@ -1039,7 +1053,9 @@
             IDCliente = piscina.IDCliente,
             Tipo = piscina.Tipo,
             VolumeLitros = piscina.VolumeLitros,
-            Localizacao = piscina.Localizacao
+            Localizacao = piscina.Localizacao,
+            Coberta = piscina.Coberta,
+            Aquecida = piscina.Aquecida
         };
         showPiscinaForm = true;
         StateHasChanged();
@@ -1088,7 +1104,9 @@
                     IDCliente = 0,
                     Tipo = currentPiscina.Tipo,
                     VolumeLitros = currentPiscina.VolumeLitros,
-                    Localizacao = currentPiscina.Localizacao
+                    Localizacao = currentPiscina.Localizacao,
+                    Coberta = currentPiscina.Coberta,
+                    Aquecida = currentPiscina.Aquecida
                 });
                 
                 ShowToast("Sucesso", "Piscina adicionada temporariamente. Use 'Salvar Tudo' para confirmar.", "success");
@@ -1143,7 +1161,7 @@
         {
             IDEquipamento = equipamento.IDEquipamento,
             IDCliente = equipamento.IDCliente,
-            Tipo = equipamento.Tipo,
+            Descricao = equipamento.Descricao,
             NumeroSerie = equipamento.NumeroSerie,
             UltimaCalibragem = equipamento.UltimaCalibragem,
             Observacao = equipamento.Observacao
@@ -1178,7 +1196,7 @@
                 {
                     IDEquipamento = -(equipamentosTemporarios.Count + 1), // ID negativo para identificar como temporário
                     IDCliente = 0,
-                    Tipo = currentEquipamento.Tipo,
+                    Descricao = currentEquipamento.Descricao,
                     NumeroSerie = currentEquipamento.NumeroSerie,
                     UltimaCalibragem = currentEquipamento.UltimaCalibragem,
                     Observacao = currentEquipamento.Observacao
@@ -1606,7 +1624,9 @@
                         IDCliente = piscina.IDCliente,
                         Tipo = piscina.Tipo,
                         VolumeLitros = piscina.VolumeLitros,
-                        Localizacao = piscina.Localizacao
+                        Localizacao = piscina.Localizacao,
+                        Coberta = piscina.Coberta,
+                        Aquecida = piscina.Aquecida
                     });
                 }
             }
@@ -1620,7 +1640,9 @@
                     IDCliente = 0, // Será definido pelo servidor
                     Tipo = piscina.Tipo,
                     VolumeLitros = piscina.VolumeLitros,
-                    Localizacao = piscina.Localizacao
+                    Localizacao = piscina.Localizacao,
+                    Coberta = piscina.Coberta,
+                    Aquecida = piscina.Aquecida
                 });
             }
 
@@ -1633,7 +1655,7 @@
                     {
                         IDEquipamento = equipamento.IDEquipamento,
                         IDCliente = equipamento.IDCliente,
-                        Tipo = equipamento.Tipo,
+                        Descricao = equipamento.Descricao,
                         NumeroSerie = equipamento.NumeroSerie,
                         UltimaCalibragem = equipamento.UltimaCalibragem,
                         Observacao = equipamento.Observacao
@@ -1648,7 +1670,7 @@
                 {
                     IDEquipamento = 0, // Novo equipamento
                     IDCliente = 0, // Será definido pelo servidor
-                    Tipo = equipamento.Tipo,
+                    Descricao = equipamento.Descricao,
                     NumeroSerie = equipamento.NumeroSerie,
                     UltimaCalibragem = equipamento.UltimaCalibragem,
                     Observacao = equipamento.Observacao
@@ -1698,9 +1720,7 @@
                     QuantidadeAtual = estoque.QuantidadeAtual,
                     QuantidadeMinima = estoque.QuantidadeMinima,
                     NomeProduto = estoque.Produto.Nome.Trim(),
-                    ConcentracaoProduto = !string.IsNullOrWhiteSpace(estoque.Produto.Concentracao) 
-                        ? estoque.Produto.Concentracao.Trim() 
-                        : null,
+                    ConcentracaoProduto = estoque.Produto.Concentracao,
                     UnidadeProduto = estoque.Produto.Unidade.Trim()
                 });
             }

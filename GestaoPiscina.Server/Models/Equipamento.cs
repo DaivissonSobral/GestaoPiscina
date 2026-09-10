@@ -14,7 +14,7 @@ namespace GestaoPiscina.Server.Models
         
         [Required]
         [StringLength(50)]
-        public string Tipo { get; set; } = string.Empty;
+        public string Descricao { get; set; } = string.Empty;
         
         public DateTime? UltimaCalibragem { get; set; }
         

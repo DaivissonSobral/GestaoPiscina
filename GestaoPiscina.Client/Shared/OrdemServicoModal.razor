@@ -43,10 +43,73 @@
                         <option value="Em Aberto">Em Aberto</option>
                         <option value="Em Andamento">Em Andamento</option>
                         <option value="Finalizada">Finalizada</option>
+                        <option value="Ocorrência">Ocorrência</option>
                         <option value="Reagendada">Reagendada</option>
                         <option value="Cancelada">Cancelada</option>
                     </InputSelect>
                     <ValidationMessage For="@(() => OrdemDeServico.Status)" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Técnico Responsável</label>
+                    <InputSelect @bind-Value="OrdemDeServico.IDUsuario" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                        <option value="0">Selecione...</option>
+                        @if (Tecnicos != null)
+                        {
+                            @foreach (var tecnico in Tecnicos)
+                            {
+                                <option value="@tecnico.IDUsuario">@tecnico.Nome</option>
+                            }
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => OrdemDeServico.IDUsuario)" />
+                </div>
+
+                @if (OrdemDeServico.Status == "Ocorrência")
+                {
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Aprovador (obrigatório para Ocorrência)</label>
+                        <InputSelect @bind-Value="OrdemDeServico.Aprovador" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                            <option value="">Selecione...</option>
+                            @if (Usuarios != null)
+                            {
+                                @foreach (var usuario in Usuarios)
+                                {
+                                    <option value="@usuario.IDUsuario">@usuario.Nome</option>
+                                }
+                            }
+                        </InputSelect>
+                    </div>
+                }
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Horário de Início</label>
+                    <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="OrdemDeServico.HoraInicio" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Horário de Término</label>
+                    <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="OrdemDeServico.HoraTermino" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">pH</label>
+                    <InputNumber @bind-Value="OrdemDeServico.pH" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" step="0.1" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Alcalinidade (ppm)</label>
+                    <InputNumber @bind-Value="OrdemDeServico.Alcalinidade" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" step="0.01" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Cloro Livre (ppm)</label>
+                    <InputNumber @bind-Value="OrdemDeServico.CloroLivre" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" step="0.01" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Dureza Cálcica (ppm)</label>
+                    <InputNumber @bind-Value="OrdemDeServico.DurezaCalcica" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" step="0.01" />
                 </div>
 
                 <div class="flex items-center space-x-4">
@@ -68,10 +131,22 @@
             </div>
 
             <div class="mt-4">
-                <label class="block text-sm font-medium text-slate-300 mb-2">Fotos Antes/Depois</label>
-                <InputText @bind-Value="OrdemDeServico.FotosAntesDepois" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="URLs das fotos separadas por vírgula" />
-                <ValidationMessage For="@(() => OrdemDeServico.FotosAntesDepois)" />
+                <label class="block text-sm font-medium text-slate-300 mb-2">Fotos Antes</label>
+                <InputText @bind-Value="OrdemDeServico.FotosAntes" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="URLs das fotos separadas por vírgula" />
             </div>
+
+            <div class="mt-4">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Fotos Depois</label>
+                <InputText @bind-Value="OrdemDeServico.FotosDepois" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="URLs das fotos separadas por vírgula" />
+            </div>
+
+            @if (OrdemDeServico.Status == "Ocorrência")
+            {
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Fotos da Ocorrência</label>
+                    <InputText @bind-Value="OrdemDeServico.FotosOcorrencias" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="URLs das fotos separadas por vírgula" />
+                </div>
+            }
 
             <div class="flex space-x-3 mt-6">
                 <button type="submit" class="flex-1 bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
@@ -89,6 +164,8 @@
     [Parameter] public bool IsVisible { get; set; }
     [Parameter] public OrdemDeServico OrdemDeServico { get; set; } = new OrdemDeServico();
     [Parameter] public List<Piscina>? Piscinas { get; set; }
+    [Parameter] public List<Usuario>? Tecnicos { get; set; }
+    [Parameter] public List<Usuario>? Usuarios { get; set; }
     [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
     [Parameter] public EventCallback<OrdemDeServico> OnSave { get; set; }
 

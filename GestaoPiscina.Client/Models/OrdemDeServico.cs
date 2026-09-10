@@ -20,12 +20,45 @@ namespace GestaoPiscina.Client.Models
         [Required(ErrorMessage = "Status é obrigatório")]
         [StringLength(20, ErrorMessage = "Status deve ter no máximo 20 caracteres")]
         public string Status { get; set; } = string.Empty;
-        
+
         [StringLength(500, ErrorMessage = "Fotos devem ter no máximo 500 caracteres")]
-        public string? FotosAntesDepois { get; set; }
-        
+        public string? FotosAntes { get; set; }
+
+        [StringLength(500, ErrorMessage = "Fotos devem ter no máximo 500 caracteres")]
+        public string? FotosDepois { get; set; }
+
+        [StringLength(500, ErrorMessage = "Fotos devem ter no máximo 500 caracteres")]
+        public string? FotosOcorrencias { get; set; }
+
         public bool RelatorioGerado { get; set; }
-        
+
+        public int? Aprovador { get; set; }
+
+        [Required(ErrorMessage = "Técnico responsável é obrigatório")]
+        public int IDUsuario { get; set; }
+
+        [Required(ErrorMessage = "pH é obrigatório")]
+        [Range(0, double.MaxValue, ErrorMessage = "pH deve ser maior ou igual a zero")]
+        public decimal pH { get; set; }
+
+        [Required(ErrorMessage = "Alcalinidade é obrigatória")]
+        [Range(0, double.MaxValue, ErrorMessage = "Alcalinidade deve ser maior ou igual a zero")]
+        public decimal Alcalinidade { get; set; }
+
+        [Required(ErrorMessage = "Cloro livre é obrigatório")]
+        [Range(0, double.MaxValue, ErrorMessage = "Cloro livre deve ser maior ou igual a zero")]
+        public decimal CloroLivre { get; set; }
+
+        [Required(ErrorMessage = "Dureza cálcica é obrigatória")]
+        [Range(0, double.MaxValue, ErrorMessage = "Dureza cálcica deve ser maior ou igual a zero")]
+        public decimal DurezaCalcica { get; set; }
+
+        [Required(ErrorMessage = "Horário de início é obrigatório")]
+        public DateTime HoraInicio { get; set; }
+
+        [Required(ErrorMessage = "Horário de término é obrigatório")]
+        public DateTime HoraTermino { get; set; }
+
         public Piscina Piscina { get; set; } = null!;
     }
 } 

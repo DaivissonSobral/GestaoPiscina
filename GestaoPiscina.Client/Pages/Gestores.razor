@@ -1,0 +1,292 @@
+@page "/gestores"
+@using GestaoPiscina.Client.Services
+@using GestaoPiscina.Client.Models
+@using GestaoPiscina.Client.Shared
+@inject ApiService ApiService
+
+<section class="p-4 space-y-6">
+    <div class="flex justify-between items-center">
+        <h3 class="text-xl font-bold">Gestão de Gestores</h3>
+        <button @onclick="AbrirModalNovo" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
+            <i class="fas fa-plus mr-2"></i>Novo Gestor
+        </button>
+    </div>
+
+    @if (carregando)
+    {
+        <LoadingSpinner IsVisible="true" Message="Carregando gestores..." />
+    }
+    else if (gestores != null && gestores.Any())
+    {
+        <div class="bg-slate-800 rounded-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-slate-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Nome</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Telefone</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Email</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Clientes Vinculados</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700">
+                        @foreach (var gestor in gestores)
+                        {
+                            <tr class="hover:bg-slate-700">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-100">@gestor.Nome</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@gestor.Telefone</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@gestor.Email</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="@(gestor.Ativo ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-800") inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                                        @(gestor.Ativo ? "Ativo" : "Inativo")
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                                    @(gestor.GestorClientes.Count) cliente(s)
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button @onclick="() => ToggleVinculos(gestor)" class="text-blue-400 hover:text-blue-300 mr-3" title="Gerenciar clientes vinculados">
+                                        <i class="fas fa-link"></i>
+                                    </button>
+                                    <button @onclick="() => AbrirModalEditar(gestor)" class="text-cyan-400 hover:text-cyan-300 mr-3" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button @onclick="() => ExcluirGestor(gestor)" class="text-red-400 hover:text-red-300" title="Excluir">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            @if (gestorExpandidoId == gestor.IDGestor)
+                            {
+                                <tr class="bg-slate-900">
+                                    <td colspan="6" class="px-6 py-4">
+                                        <div class="space-y-3">
+                                            <h5 class="text-sm font-semibold text-slate-200">Clientes vinculados a @gestor.Nome</h5>
+                                            @if (gestor.GestorClientes.Any())
+                                            {
+                                                <ul class="space-y-1">
+                                                    @foreach (var vinculo in gestor.GestorClientes)
+                                                    {
+                                                        <li class="flex justify-between items-center bg-slate-800 rounded-lg px-3 py-2">
+                                                            <span class="text-sm text-slate-200">@vinculo.Cliente?.Nome</span>
+                                                            <button @onclick="() => DesvincularCliente(gestor, vinculo)" class="text-red-400 hover:text-red-300 text-sm">
+                                                                <i class="fas fa-unlink mr-1"></i>Desvincular
+                                                            </button>
+                                                        </li>
+                                                    }
+                                                </ul>
+                                            }
+                                            else
+                                            {
+                                                <p class="text-sm text-slate-400">Nenhum cliente vinculado.</p>
+                                            }
+
+                                            <div class="flex space-x-2 pt-2">
+                                                <select @bind="clienteParaVincularId" class="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                                                    <option value="0">Selecione um cliente para vincular...</option>
+                                                    @if (clientes != null)
+                                                    {
+                                                        @foreach (var cliente in clientes.Where(c => gestor.GestorClientes.All(gc => gc.IDCliente != c.IDCliente)))
+                                                        {
+                                                            <option value="@cliente.IDCliente">@cliente.Nome</option>
+                                                        }
+                                                    }
+                                                </select>
+                                                <button @onclick="() => VincularCliente(gestor)" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
+                                                    Vincular
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="bg-slate-800 rounded-xl p-8 text-center">
+            <i class="fas fa-user-tie text-4xl text-slate-600 mb-4"></i>
+            <h4 class="text-lg font-medium text-slate-300 mb-2">Nenhum gestor cadastrado</h4>
+            <p class="text-slate-400">Clique em "Novo Gestor" para adicionar.</p>
+        </div>
+    }
+</section>
+
+<GestorModal @bind-IsVisible="modalVisible"
+             Gestor="gestorSelecionado"
+             OnSave="SalvarGestor" />
+
+<ConfirmDialog @bind-IsVisible="confirmacaoExclusaoVisible"
+               Title="Confirmar Exclusão"
+               Message="Tem certeza que deseja excluir este gestor?"
+               ConfirmText="Excluir"
+               OnConfirm="ConfirmarExclusao" />
+
+<Toast @bind-IsVisible="toastVisible"
+       Title="Notificação"
+       Message="@mensagemToast"
+       Type="@tipoToast" />
+
+@code {
+    private List<Gestor>? gestores;
+    private List<Cliente>? clientes;
+    private Gestor gestorSelecionado = new Gestor();
+    private Gestor? gestorParaExcluir;
+    private bool modalVisible = false;
+    private bool confirmacaoExclusaoVisible = false;
+    private bool carregando = true;
+    private int? gestorExpandidoId;
+    private int clienteParaVincularId;
+    private bool toastVisible = false;
+    private string mensagemToast = "";
+    private string tipoToast = "success";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarDados();
+    }
+
+    private async Task CarregarDados()
+    {
+        try
+        {
+            carregando = true;
+            gestores = await ApiService.GetGestoresAsync();
+            clientes = await ApiService.GetClientesAsync();
+        }
+        catch (Exception ex)
+        {
+            MostrarNotificacao("Erro", $"Erro ao carregar gestores: {ex.Message}", "error");
+            gestores = new List<Gestor>();
+            clientes = new List<Cliente>();
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    private void AbrirModalNovo()
+    {
+        gestorSelecionado = new Gestor();
+        modalVisible = true;
+    }
+
+    private void AbrirModalEditar(Gestor gestor)
+    {
+        gestorSelecionado = new Gestor
+        {
+            IDGestor = gestor.IDGestor,
+            Nome = gestor.Nome,
+            Telefone = gestor.Telefone,
+            Email = gestor.Email,
+            Ativo = gestor.Ativo,
+            DataCadastro = gestor.DataCadastro
+        };
+        modalVisible = true;
+    }
+
+    private async Task SalvarGestor(Gestor gestor)
+    {
+        try
+        {
+            if (gestor.IDGestor == 0)
+            {
+                await ApiService.CreateGestorAsync(gestor);
+                MostrarNotificacao("Sucesso", "Gestor criado com sucesso!", "success");
+            }
+            else
+            {
+                await ApiService.UpdateGestorAsync(gestor);
+                MostrarNotificacao("Sucesso", "Gestor atualizado com sucesso!", "success");
+            }
+
+            await CarregarDados();
+        }
+        catch (Exception ex)
+        {
+            MostrarNotificacao("Erro", $"Erro ao salvar gestor: {ex.Message}", "error");
+        }
+    }
+
+    private void ExcluirGestor(Gestor gestor)
+    {
+        gestorParaExcluir = gestor;
+        confirmacaoExclusaoVisible = true;
+    }
+
+    private async Task ConfirmarExclusao()
+    {
+        if (gestorParaExcluir != null)
+        {
+            try
+            {
+                await ApiService.DeleteGestorAsync(gestorParaExcluir.IDGestor);
+                MostrarNotificacao("Sucesso", "Gestor excluído com sucesso!", "success");
+                await CarregarDados();
+            }
+            catch (Exception ex)
+            {
+                MostrarNotificacao("Erro", $"Erro ao excluir gestor: {ex.Message}", "error");
+            }
+            finally
+            {
+                gestorParaExcluir = null;
+            }
+        }
+    }
+
+    private void ToggleVinculos(Gestor gestor)
+    {
+        gestorExpandidoId = gestorExpandidoId == gestor.IDGestor ? null : gestor.IDGestor;
+        clienteParaVincularId = 0;
+    }
+
+    private async Task VincularCliente(Gestor gestor)
+    {
+        if (clienteParaVincularId <= 0)
+        {
+            MostrarNotificacao("Erro", "Selecione um cliente para vincular.", "error");
+            return;
+        }
+
+        try
+        {
+            await ApiService.VincularGestorClienteAsync(gestor.IDGestor, clienteParaVincularId);
+            MostrarNotificacao("Sucesso", "Cliente vinculado com sucesso!", "success");
+            clienteParaVincularId = 0;
+            await CarregarDados();
+        }
+        catch (Exception ex)
+        {
+            MostrarNotificacao("Erro", $"Erro ao vincular cliente: {ex.Message}", "error");
+        }
+    }
+
+    private async Task DesvincularCliente(Gestor gestor, GestorCliente vinculo)
+    {
+        try
+        {
+            await ApiService.DesvincularGestorClienteAsync(gestor.IDGestor, vinculo.IDCliente);
+            MostrarNotificacao("Sucesso", "Cliente desvinculado com sucesso!", "success");
+            await CarregarDados();
+        }
+        catch (Exception ex)
+        {
+            MostrarNotificacao("Erro", $"Erro ao desvincular cliente: {ex.Message}", "error");
+        }
+    }
+
+    private void MostrarNotificacao(string titulo, string mensagem, string tipo)
+    {
+        mensagemToast = mensagem;
+        tipoToast = tipo;
+        toastVisible = true;
+    }
+}

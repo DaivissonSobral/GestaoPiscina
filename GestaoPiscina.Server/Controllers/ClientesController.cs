@@ -11,6 +11,7 @@ namespace GestaoPiscina.Server.Controllers
     public class ClientesController : ControllerBase
     {
         private readonly GestaoPiscinaContext _context;
+        private static readonly string[] TiposClienteValidos = { "Uso Coletivo", "Residencial Privativa" };
 
         public ClientesController(GestaoPiscinaContext context)
         {
@@ -127,6 +128,11 @@ namespace GestaoPiscina.Server.Controllers
                     return Conflict(new { message = "Já existe um cliente com este nome." });
                 }
 
+                if (!TiposClienteValidos.Contains(clienteDTO.Tipo))
+                {
+                    return BadRequest(new { message = "Tipo de cliente inválido. Valores aceitos: Uso Coletivo, Residencial Privativa." });
+                }
+
                 // 1. Criar/Atualizar o Cliente
                 Cliente cliente;
                 if (clienteDTO.IDCliente > 0)
@@ -186,6 +192,8 @@ namespace GestaoPiscina.Server.Controllers
                             piscina.Tipo = piscinaDTO.Tipo;
                             piscina.VolumeLitros = piscinaDTO.VolumeLitros;
                             piscina.Localizacao = piscinaDTO.Localizacao;
+                            piscina.Coberta = piscinaDTO.Coberta;
+                            piscina.Aquecida = piscinaDTO.Aquecida;
                             _context.Entry(piscina).State = EntityState.Modified;
                         }
                     }
@@ -197,7 +205,9 @@ namespace GestaoPiscina.Server.Controllers
                             IDCliente = cliente.IDCliente,
                             Tipo = piscinaDTO.Tipo,
                             VolumeLitros = piscinaDTO.VolumeLitros,
-                            Localizacao = piscinaDTO.Localizacao
+                            Localizacao = piscinaDTO.Localizacao,
+                            Coberta = piscinaDTO.Coberta,
+                            Aquecida = piscinaDTO.Aquecida
                         };
                         _context.Piscinas.Add(piscina);
                     }
@@ -212,7 +222,7 @@ namespace GestaoPiscina.Server.Controllers
                         var equipamento = await _context.Equipamentos.FindAsync(equipamentoDTO.IDEquipamento);
                         if (equipamento != null)
                         {
-                            equipamento.Tipo = equipamentoDTO.Tipo;
+                            equipamento.Descricao = equipamentoDTO.Descricao;
                             equipamento.NumeroSerie = equipamentoDTO.NumeroSerie;
                             equipamento.UltimaCalibragem = equipamentoDTO.UltimaCalibragem;
                             equipamento.Observacao = equipamentoDTO.Observacao;
@@ -225,7 +235,7 @@ namespace GestaoPiscina.Server.Controllers
                         var equipamento = new Equipamento
                         {
                             IDCliente = cliente.IDCliente,
-                            Tipo = equipamentoDTO.Tipo,
+                            Descricao = equipamentoDTO.Descricao,
                             NumeroSerie = equipamentoDTO.NumeroSerie,
                             UltimaCalibragem = equipamentoDTO.UltimaCalibragem,
                             Observacao = equipamentoDTO.Observacao
@@ -281,9 +291,7 @@ namespace GestaoPiscina.Server.Controllers
                             produto = new Produto
                             {
                                 Nome = estoqueDTO.NomeProduto.Trim(),
-                                Concentracao = !string.IsNullOrWhiteSpace(estoqueDTO.ConcentracaoProduto) 
-                                    ? estoqueDTO.ConcentracaoProduto.Trim() 
-                                    : null,
+                                Concentracao = estoqueDTO.ConcentracaoProduto,
                                 Unidade = estoqueDTO.UnidadeProduto.Trim()
                             };
                             _context.Produtos.Add(produto);
@@ -293,10 +301,9 @@ namespace GestaoPiscina.Server.Controllers
                         {
                             // Produto já existe, usar o existente
                             // Atualizar dados se necessário
-                            if (!string.IsNullOrWhiteSpace(estoqueDTO.ConcentracaoProduto) && 
-                                string.IsNullOrWhiteSpace(produto.Concentracao))
+                            if (estoqueDTO.ConcentracaoProduto.HasValue && !produto.Concentracao.HasValue)
                             {
-                                produto.Concentracao = estoqueDTO.ConcentracaoProduto.Trim();
+                                produto.Concentracao = estoqueDTO.ConcentracaoProduto;
                                 _context.Entry(produto).State = EntityState.Modified;
                             }
                         }
@@ -425,6 +432,11 @@ namespace GestaoPiscina.Server.Controllers
                     return Conflict(new { message = "Já existe um cliente com este nome." });
                 }
 
+                if (!TiposClienteValidos.Contains(clienteDTO.Tipo))
+                {
+                    return BadRequest(new { message = "Tipo de cliente inválido. Valores aceitos: Uso Coletivo, Residencial Privativa." });
+                }
+
                 // 1. Atualizar o Cliente
                 clienteExistente.Nome = clienteDTO.Nome;
                 clienteExistente.Tipo = clienteDTO.Tipo;
@@ -450,6 +462,8 @@ namespace GestaoPiscina.Server.Controllers
                             piscina.Tipo = piscinaDTO.Tipo;
                             piscina.VolumeLitros = piscinaDTO.VolumeLitros;
                             piscina.Localizacao = piscinaDTO.Localizacao;
+                            piscina.Coberta = piscinaDTO.Coberta;
+                            piscina.Aquecida = piscinaDTO.Aquecida;
                             _context.Entry(piscina).State = EntityState.Modified;
                         }
                     }
@@ -461,7 +475,9 @@ namespace GestaoPiscina.Server.Controllers
                             IDCliente = clienteExistente.IDCliente,
                             Tipo = piscinaDTO.Tipo,
                             VolumeLitros = piscinaDTO.VolumeLitros,
-                            Localizacao = piscinaDTO.Localizacao
+                            Localizacao = piscinaDTO.Localizacao,
+                            Coberta = piscinaDTO.Coberta,
+                            Aquecida = piscinaDTO.Aquecida
                         };
                         _context.Piscinas.Add(piscina);
                     }
@@ -476,7 +492,7 @@ namespace GestaoPiscina.Server.Controllers
                         var equipamento = await _context.Equipamentos.FindAsync(equipamentoDTO.IDEquipamento);
                         if (equipamento != null)
                         {
-                            equipamento.Tipo = equipamentoDTO.Tipo;
+                            equipamento.Descricao = equipamentoDTO.Descricao;
                             equipamento.NumeroSerie = equipamentoDTO.NumeroSerie;
                             equipamento.UltimaCalibragem = equipamentoDTO.UltimaCalibragem;
                             equipamento.Observacao = equipamentoDTO.Observacao;
@@ -489,7 +505,7 @@ namespace GestaoPiscina.Server.Controllers
                         var equipamento = new Equipamento
                         {
                             IDCliente = clienteExistente.IDCliente,
-                            Tipo = equipamentoDTO.Tipo,
+                            Descricao = equipamentoDTO.Descricao,
                             NumeroSerie = equipamentoDTO.NumeroSerie,
                             UltimaCalibragem = equipamentoDTO.UltimaCalibragem,
                             Observacao = equipamentoDTO.Observacao
@@ -545,9 +561,7 @@ namespace GestaoPiscina.Server.Controllers
                             produto = new Produto
                             {
                                 Nome = estoqueDTO.NomeProduto.Trim(),
-                                Concentracao = !string.IsNullOrWhiteSpace(estoqueDTO.ConcentracaoProduto) 
-                                    ? estoqueDTO.ConcentracaoProduto.Trim() 
-                                    : null,
+                                Concentracao = estoqueDTO.ConcentracaoProduto,
                                 Unidade = estoqueDTO.UnidadeProduto.Trim()
                             };
                             _context.Produtos.Add(produto);
@@ -557,10 +571,9 @@ namespace GestaoPiscina.Server.Controllers
                         {
                             // Produto já existe, usar o existente
                             // Atualizar dados se necessário
-                            if (!string.IsNullOrWhiteSpace(estoqueDTO.ConcentracaoProduto) && 
-                                string.IsNullOrWhiteSpace(produto.Concentracao))
+                            if (estoqueDTO.ConcentracaoProduto.HasValue && !produto.Concentracao.HasValue)
                             {
-                                produto.Concentracao = estoqueDTO.ConcentracaoProduto.Trim();
+                                produto.Concentracao = estoqueDTO.ConcentracaoProduto;
                                 _context.Entry(produto).State = EntityState.Modified;
                             }
                         }

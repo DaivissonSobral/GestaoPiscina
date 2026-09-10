@@ -11,8 +11,8 @@ namespace GestaoPiscina.Server.Models
         public string Nome { get; set; } = string.Empty;
         
         [Required]
-        [StringLength(20)]
-        public string Tipo { get; set; } = string.Empty; // condomínio ou residência
+        [StringLength(30)]
+        public string Tipo { get; set; } = string.Empty; // Uso Coletivo ou Residencial Privativa
         
         [Required]
         [StringLength(255)]
@@ -34,5 +34,6 @@ namespace GestaoPiscina.Server.Models
         public virtual ICollection<Piscina> Piscinas { get; set; } = new List<Piscina>();
         public virtual ICollection<EstoqueCliente> Estoques { get; set; } = new List<EstoqueCliente>();
         public virtual ICollection<Equipamento> Equipamentos { get; set; } = new List<Equipamento>();
+        public virtual ICollection<GestorCliente> GestorClientes { get; set; } = new List<GestorCliente>();
     }
 } 

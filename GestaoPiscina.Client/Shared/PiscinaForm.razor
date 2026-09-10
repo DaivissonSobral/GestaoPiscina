@@ -46,6 +46,24 @@
                         <ValidationMessage For="@(() => Piscina.VolumeLitros)" class="text-red-500 text-sm" />
                     </div>
                     
+                    <div class="space-y-3">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Coberta *</label>
+                        <InputSelect @bind-Value="Piscina.Coberta" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" style="background-color: white !important; color: #111827 !important;">
+                            <option value="">Selecione...</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                            <option value="Parcial">Parcial</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => Piscina.Coberta)" class="text-red-500 text-sm" />
+                    </div>
+
+                    <div class="space-y-3 flex items-center">
+                        <label class="flex items-center space-x-2 text-sm font-medium text-slate-300 mt-6">
+                            <InputCheckbox @bind-Value="Piscina.Aquecida" class="rounded" />
+                            <span>Aquecida</span>
+                        </label>
+                    </div>
+
                     <div class="md:col-span-2 space-y-3">
                         <label class="block text-sm font-medium text-slate-300 mb-2">Localização</label>
                         <InputText @bind-Value="Piscina.Localizacao" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="Ex: Fundos, Lateral..." style="background-color: white !important; color: #111827 !important;" />

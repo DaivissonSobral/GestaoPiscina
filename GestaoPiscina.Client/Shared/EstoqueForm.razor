@@ -37,7 +37,7 @@
                             {
                                 @foreach (var produto in Produtos)
                                 {
-                                    <option value="@produto.IDProduto">@produto.Nome @(string.IsNullOrEmpty(produto.Concentracao) ? "" : $"({produto.Concentracao})") @(string.IsNullOrEmpty(produto.Unidade) ? "" : $"({produto.Unidade})")</option>
+                                    <option value="@produto.IDProduto">@produto.Nome @(produto.Concentracao.HasValue ? $"({produto.Concentracao})" : "") @(string.IsNullOrEmpty(produto.Unidade) ? "" : $"({produto.Unidade})")</option>
                                 }
                             }
                         </InputSelect>
@@ -62,7 +62,7 @@
                     
                     <div class="md:col-span-2 space-y-3">
                         <label class="block text-sm font-medium text-slate-300 mb-2">Concentração</label>
-                        <InputText @bind-Value="Estoque.Produto.Concentracao" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" readonly style="color: #f1f5f9 !important;" />
+                        <InputNumber @bind-Value="Estoque.Produto.Concentracao" class="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-slate-100" readonly style="color: #f1f5f9 !important;" />
                     </div>
                 </div>
                 
@@ -102,7 +102,7 @@
                         </div>
                         
                         <div class="space-y-2">
-                            @if (!string.IsNullOrEmpty(estoque.Produto.Concentracao))
+                            @if (estoque.Produto.Concentracao.HasValue)
                             {
                                 <div class="text-sm text-slate-400">
                                     <i class="fas fa-percentage text-slate-500 mr-2"></i>
@@ -138,7 +138,7 @@
                     </div>
                     
                     <div class="space-y-2">
-                        @if (!string.IsNullOrEmpty(estoque.Produto.Concentracao))
+                        @if (estoque.Produto.Concentracao.HasValue)
                         {
                             <div class="text-sm text-slate-400">
                                 <i class="fas fa-percentage text-slate-500 mr-2"></i>

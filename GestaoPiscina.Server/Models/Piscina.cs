@@ -18,7 +18,14 @@ namespace GestaoPiscina.Server.Models
         
         [StringLength(255)]
         public string? Localizacao { get; set; }
-        
+
+        [Required]
+        [StringLength(10)]
+        public string Coberta { get; set; } = string.Empty; // Sim, Não ou Parcial
+
+        [Required]
+        public bool Aquecida { get; set; }
+
         // Navegação
         public virtual Cliente Cliente { get; set; } = null!;
         public virtual ICollection<OrdemDeServico> OrdensDeServico { get; set; } = new List<OrdemDeServico>();

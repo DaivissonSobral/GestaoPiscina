@@ -669,5 +669,151 @@ namespace GestaoPiscina.Client.Services
                 throw new Exception($"Erro ao gerar OS automáticas: {ex.Message}");
             }
         }
+
+        // Gestores
+        public async Task<List<Gestor>> GetGestoresAsync()
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<List<Gestor>>($"{_baseUrl}gestores") ?? new List<Gestor>();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao buscar gestores: {ex.Message}");
+            }
+        }
+
+        public async Task<Gestor?> GetGestorAsync(int id)
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<Gestor>($"{_baseUrl}gestores/{id}");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao buscar gestor: {ex.Message}");
+            }
+        }
+
+        public async Task<Gestor> CreateGestorAsync(Gestor gestor)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}gestores", gestor);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+
+                var createdGestor = await response.Content.ReadFromJsonAsync<Gestor>();
+                return createdGestor ?? gestor;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao criar gestor: {ex.Message}");
+            }
+        }
+
+        public async Task UpdateGestorAsync(Gestor gestor)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}gestores/{gestor.IDGestor}", gestor);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao atualizar gestor: {ex.Message}");
+            }
+        }
+
+        public async Task DeleteGestorAsync(int id)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{_baseUrl}gestores/{id}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao excluir gestor: {ex.Message}");
+            }
+        }
+
+        public async Task<List<Cliente>> GetClientesDoGestorAsync(int gestorId)
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<List<Cliente>>($"{_baseUrl}gestores/{gestorId}/clientes") ?? new List<Cliente>();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao buscar clientes do gestor: {ex.Message}");
+            }
+        }
+
+        public async Task VincularGestorClienteAsync(int gestorId, int clienteId)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync($"{_baseUrl}gestores/{gestorId}/clientes/{clienteId}", null);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao vincular cliente ao gestor: {ex.Message}");
+            }
+        }
+
+        public async Task DesvincularGestorClienteAsync(int gestorId, int clienteId)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{_baseUrl}gestores/{gestorId}/clientes/{clienteId}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao desvincular cliente do gestor: {ex.Message}");
+            }
+        }
+
+        // Usuários (somente leitura - usado para seletores de técnico/aprovador)
+        public async Task<List<Usuario>> GetUsuariosAsync(string? perfil = null)
+        {
+            try
+            {
+                var url = string.IsNullOrWhiteSpace(perfil)
+                    ? $"{_baseUrl}usuarios"
+                    : $"{_baseUrl}usuarios?perfil={Uri.EscapeDataString(perfil)}";
+                return await _httpClient.GetFromJsonAsync<List<Usuario>>(url) ?? new List<Usuario>();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao buscar usuários: {ex.Message}");
+            }
+        }
     }
 } 

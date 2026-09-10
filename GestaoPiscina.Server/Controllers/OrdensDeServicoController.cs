@@ -66,6 +66,12 @@ namespace GestaoPiscina.Server.Controllers
         [HttpPost]
         public async Task<ActionResult<OrdemDeServico>> PostOrdemDeServico(OrdemDeServico ordemDeServico)
         {
+            var erroValidacao = ValidarRegrasDeNegocio(ordemDeServico);
+            if (erroValidacao != null)
+            {
+                return BadRequest(new { message = erroValidacao });
+            }
+
             _context.OrdensDeServico.Add(ordemDeServico);
             await _context.SaveChangesAsync();
 
@@ -78,6 +84,12 @@ namespace GestaoPiscina.Server.Controllers
             if (id != ordemDeServico.IDOS)
             {
                 return BadRequest();
+            }
+
+            var erroValidacao = ValidarRegrasDeNegocio(ordemDeServico);
+            if (erroValidacao != null)
+            {
+                return BadRequest(new { message = erroValidacao });
             }
 
             _context.Entry(ordemDeServico).State = EntityState.Modified;
@@ -122,6 +134,14 @@ namespace GestaoPiscina.Server.Controllers
             try
             {
                 var hoje = DateTime.Today;
+
+                var tecnicoPadrao = await _context.Usuarios
+                    .FirstOrDefaultAsync(u => u.Perfil.Nome == "Técnico" && u.Ativo);
+                if (tecnicoPadrao == null)
+                {
+                    return BadRequest(new { message = "Nenhum técnico cadastrado para atribuir às OS automáticas." });
+                }
+
                 var piscinas = await _context.Piscinas
                     .Include(p => p.Cliente)
                     .ToListAsync();
@@ -135,13 +155,18 @@ namespace GestaoPiscina.Server.Controllers
 
                     if (osExistente == null)
                     {
+                        // Campos de medição/execução (pH, horários, etc.) ficam com valores neutros
+                        // e são preenchidos pelo técnico quando a OS é executada/finalizada.
                         var novaOS = new OrdemDeServico
                         {
                             IDPiscina = piscina.IDPiscina,
+                            IDUsuario = tecnicoPadrao.IDUsuario,
                             DataExecucao = hoje,
                             Status = "Em Aberto",
                             ChecklistConcluido = false,
-                            RelatorioGerado = false
+                            RelatorioGerado = false,
+                            HoraInicio = hoje,
+                            HoraTermino = hoje
                         };
 
                         _context.OrdensDeServico.Add(novaOS);
@@ -157,6 +182,23 @@ namespace GestaoPiscina.Server.Controllers
             {
                 return BadRequest($"Erro ao gerar OS automáticas: {ex.Message}");
             }
+        }
+
+        // Validações leves de negócio (RN01 e regra de aprovador para Ocorrência).
+        // Não substitui um motor de regras completo — cobre só o mínimo para não persistir dados inconsistentes.
+        private static string? ValidarRegrasDeNegocio(OrdemDeServico ordemDeServico)
+        {
+            if (ordemDeServico.Status == "Finalizada" && !ordemDeServico.ChecklistConcluido)
+            {
+                return "A OS só pode ser finalizada com o checklist obrigatório concluído.";
+            }
+
+            if (ordemDeServico.Status == "Ocorrência" && ordemDeServico.Aprovador == null)
+            {
+                return "É necessário informar o aprovador responsável para finalizar uma OS com ocorrência.";
+            }
+
+            return null;
         }
 
         private bool OrdemDeServicoExists(int id)

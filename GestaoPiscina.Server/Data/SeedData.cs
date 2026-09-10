@@ -139,7 +139,7 @@ namespace GestaoPiscina.Server.Data
                     new Cliente
                     {
                         Nome = "Cliente Teste 1",
-                        Tipo = "Residencial",
+                        Tipo = "Residencial Privativa",
                         Endereco = "Rua Teste 1, 123",
                         Telefone = "(11) 99999-9999",
                         Email = "cliente1@teste.com",
@@ -149,7 +149,7 @@ namespace GestaoPiscina.Server.Data
                     new Cliente
                     {
                         Nome = "Cliente Teste 2",
-                        Tipo = "Comercial",
+                        Tipo = "Uso Coletivo",
                         Endereco = "Rua Teste 2, 456",
                         Telefone = "(11) 88888-8888",
                         Email = "cliente2@teste.com",
@@ -170,25 +170,25 @@ namespace GestaoPiscina.Server.Data
                     new Produto
                     {
                         Nome = "Cloro",
-                        Concentracao = "65%",
+                        Concentracao = 65.0m,
                         Unidade = "kg"
                     },
                     new Produto
                     {
                         Nome = "Alcalinidade",
-                        Concentracao = "100%",
+                        Concentracao = 100.0m,
                         Unidade = "kg"
                     },
                     new Produto
                     {
                         Nome = "pH+",
-                        Concentracao = "100%",
+                        Concentracao = 100.0m,
                         Unidade = "kg"
                     },
                     new Produto
                     {
                         Nome = "pH-",
-                        Concentracao = "100%",
+                        Concentracao = 100.0m,
                         Unidade = "kg"
                     }
                 };

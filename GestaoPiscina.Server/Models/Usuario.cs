@@ -27,7 +27,10 @@ namespace GestaoPiscina.Server.Models
         public DateTime DataCriacao { get; set; } = DateTime.Now;
         
         public DateTime? UltimoAcesso { get; set; }
-        
+
+        [StringLength(500)]
+        public string? FotoUrl { get; set; }
+
         // Relacionamento com Perfil
         public int IDPerfil { get; set; }
         public Perfil Perfil { get; set; } = null!;

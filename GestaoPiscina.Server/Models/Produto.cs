@@ -10,8 +10,8 @@ namespace GestaoPiscina.Server.Models
         [StringLength(100)]
         public string Nome { get; set; } = string.Empty;
         
-        [StringLength(50)]
-        public string? Concentracao { get; set; }
+        [Range(0, double.MaxValue)]
+        public decimal? Concentracao { get; set; }
         
         [Required]
         [StringLength(10)]

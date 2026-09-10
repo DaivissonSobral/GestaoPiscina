@@ -13,9 +13,9 @@ namespace GestaoPiscina.Client.Models
         [StringLength(100, ErrorMessage = "Número de série deve ter no máximo 100 caracteres")]
         public string NumeroSerie { get; set; } = string.Empty;
         
-        [Required(ErrorMessage = "Tipo de equipamento é obrigatório")]
-        [StringLength(50, ErrorMessage = "Tipo deve ter no máximo 50 caracteres")]
-        public string Tipo { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Descrição do equipamento é obrigatória")]
+        [StringLength(50, ErrorMessage = "Descrição deve ter no máximo 50 caracteres")]
+        public string Descricao { get; set; } = string.Empty;
         
         public DateTime? UltimaCalibragem { get; set; }
         

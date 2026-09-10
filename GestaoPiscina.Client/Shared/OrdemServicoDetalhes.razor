@@ -40,6 +40,32 @@
                                 @(OrdemDeServico.RelatorioGerado ? "Gerado" : "Pendente")
                             </span>
                         </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Início / Término:</span>
+                            <span class="text-slate-100">@OrdemDeServico.HoraInicio.ToString("HH:mm") - @OrdemDeServico.HoraTermino.ToString("HH:mm")</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-700 rounded-lg p-4">
+                    <h4 class="text-md font-semibold text-slate-200 mb-3">Parâmetros da Água</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">pH:</span>
+                            <span class="text-slate-100">@OrdemDeServico.pH</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Alcalinidade:</span>
+                            <span class="text-slate-100">@OrdemDeServico.Alcalinidade ppm</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Cloro Livre:</span>
+                            <span class="text-slate-100">@OrdemDeServico.CloroLivre ppm</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Dureza Cálcica:</span>
+                            <span class="text-slate-100">@OrdemDeServico.DurezaCalcica ppm</span>
+                        </div>
                     </div>
                 </div>
 
@@ -81,23 +107,58 @@
                     </div>
                 }
 
-                @if (!string.IsNullOrEmpty(OrdemDeServico.FotosAntesDepois))
+                @if (!string.IsNullOrEmpty(OrdemDeServico.FotosAntes))
                 {
                     <div class="bg-slate-700 rounded-lg p-4">
-                        <h4 class="text-md font-semibold text-slate-200 mb-3">Fotos Antes/Depois</h4>
+                        <h4 class="text-md font-semibold text-slate-200 mb-3">Fotos Antes</h4>
                         <div class="grid grid-cols-2 gap-2">
-                            @{
-                                var fotos = OrdemDeServico.FotosAntesDepois.Split(',', StringSplitOptions.RemoveEmptyEntries);
-                                foreach (var foto in fotos.Take(4))
-                                {
-                                    <div class="aspect-square bg-slate-600 rounded-lg flex items-center justify-center">
-                                        <img src="@foto.Trim()" alt="Foto da OS" class="w-full h-full object-cover rounded-lg" 
-                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                        <div class="hidden w-full h-full items-center justify-center text-slate-400 text-xs">
-                                            <i class="fas fa-image mr-2"></i>Foto não disponível
-                                        </div>
+                            @foreach (var foto in OrdemDeServico.FotosAntes.Split(',', StringSplitOptions.RemoveEmptyEntries).Take(4))
+                            {
+                                <div class="aspect-square bg-slate-600 rounded-lg flex items-center justify-center">
+                                    <img src="@foto.Trim()" alt="Foto antes" class="w-full h-full object-cover rounded-lg"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="hidden w-full h-full items-center justify-center text-slate-400 text-xs">
+                                        <i class="fas fa-image mr-2"></i>Foto não disponível
                                     </div>
-                                }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(OrdemDeServico.FotosDepois))
+                {
+                    <div class="bg-slate-700 rounded-lg p-4">
+                        <h4 class="text-md font-semibold text-slate-200 mb-3">Fotos Depois</h4>
+                        <div class="grid grid-cols-2 gap-2">
+                            @foreach (var foto in OrdemDeServico.FotosDepois.Split(',', StringSplitOptions.RemoveEmptyEntries).Take(4))
+                            {
+                                <div class="aspect-square bg-slate-600 rounded-lg flex items-center justify-center">
+                                    <img src="@foto.Trim()" alt="Foto depois" class="w-full h-full object-cover rounded-lg"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="hidden w-full h-full items-center justify-center text-slate-400 text-xs">
+                                        <i class="fas fa-image mr-2"></i>Foto não disponível
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(OrdemDeServico.FotosOcorrencias))
+                {
+                    <div class="bg-slate-700 rounded-lg p-4">
+                        <h4 class="text-md font-semibold text-slate-200 mb-3">Fotos da Ocorrência</h4>
+                        <div class="grid grid-cols-2 gap-2">
+                            @foreach (var foto in OrdemDeServico.FotosOcorrencias.Split(',', StringSplitOptions.RemoveEmptyEntries).Take(4))
+                            {
+                                <div class="aspect-square bg-slate-600 rounded-lg flex items-center justify-center">
+                                    <img src="@foto.Trim()" alt="Foto da ocorrência" class="w-full h-full object-cover rounded-lg"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="hidden w-full h-full items-center justify-center text-slate-400 text-xs">
+                                        <i class="fas fa-image mr-2"></i>Foto não disponível
+                                    </div>
+                                </div>
                             }
                         </div>
                     </div>
@@ -135,6 +196,7 @@
             "Em Aberto" => "text-yellow-400",
             "Em Andamento" => "text-blue-400",
             "Finalizada" => "text-green-400",
+            "Ocorrência" => "text-purple-400",
             "Reagendada" => "text-orange-400",
             "Cancelada" => "text-red-400",
             _ => "text-slate-400"
