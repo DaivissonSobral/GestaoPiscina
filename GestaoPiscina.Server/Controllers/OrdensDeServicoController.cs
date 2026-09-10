@@ -144,12 +144,29 @@ namespace GestaoPiscina.Server.Controllers
 
                 var piscinas = await _context.Piscinas
                     .Include(p => p.Cliente)
+                    .Where(p => p.RecorrenciaFrequencia != "Nenhuma")
                     .ToListAsync();
 
                 var osCriadas = new List<OrdemDeServico>();
 
                 foreach (var piscina in piscinas)
                 {
+                    if (!DeveGerarOSHoje(piscina, hoje))
+                    {
+                        continue;
+                    }
+
+                    if (piscina.RecorrenciaTermino == "Ocorrencias" && piscina.RecorrenciaOcorrencias.HasValue)
+                    {
+                        var ocorrenciasGeradas = await _context.OrdensDeServico
+                            .CountAsync(o => o.IDPiscina == piscina.IDPiscina && o.DataExecucao.Date >= piscina.RecorrenciaDataInicio!.Value.Date);
+
+                        if (ocorrenciasGeradas >= piscina.RecorrenciaOcorrencias.Value)
+                        {
+                            continue;
+                        }
+                    }
+
                     var osExistente = await _context.OrdensDeServico
                         .FirstOrDefaultAsync(o => o.IDPiscina == piscina.IDPiscina && o.DataExecucao.Date == hoje);
 
@@ -183,6 +200,70 @@ namespace GestaoPiscina.Server.Controllers
                 return BadRequest($"Erro ao gerar OS automáticas: {ex.Message}");
             }
         }
+
+        // Verifica se, segundo a recorrência configurada na piscina, hoje é um dia de manutenção agendado.
+        // Não avalia a condição de término por número de ocorrências (feita à parte, pois depende do banco).
+        private static bool DeveGerarOSHoje(Piscina piscina, DateTime hoje)
+        {
+            var inicio = piscina.RecorrenciaDataInicio?.Date;
+            if (inicio == null || hoje < inicio)
+            {
+                return false;
+            }
+
+            if (piscina.RecorrenciaTermino == "Data" && piscina.RecorrenciaDataFim.HasValue && hoje > piscina.RecorrenciaDataFim.Value.Date)
+            {
+                return false;
+            }
+
+            var intervalo = Math.Max(1, piscina.RecorrenciaIntervalo);
+
+            switch (piscina.RecorrenciaFrequencia)
+            {
+                case "Diaria":
+                    var dias = (hoje - inicio.Value).Days;
+                    return dias % intervalo == 0;
+
+                case "Semanal":
+                    var diasSemana = (piscina.RecorrenciaDiasSemana ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries);
+                    if (!diasSemana.Contains(DiaSemanaAbreviado(hoje.DayOfWeek)))
+                    {
+                        return false;
+                    }
+
+                    var semanasDesdeInicio = (InicioDaSemana(hoje) - InicioDaSemana(inicio.Value)).Days / 7;
+                    return semanasDesdeInicio % intervalo == 0;
+
+                case "Mensal":
+                    if (hoje.Day != inicio.Value.Day)
+                    {
+                        return false;
+                    }
+
+                    var mesesDesdeInicio = (hoje.Year - inicio.Value.Year) * 12 + (hoje.Month - inicio.Value.Month);
+                    return mesesDesdeInicio % intervalo == 0;
+
+                default:
+                    return false;
+            }
+        }
+
+        private static DateTime InicioDaSemana(DateTime data)
+        {
+            return data.Date.AddDays(-(int)data.DayOfWeek);
+        }
+
+        private static string DiaSemanaAbreviado(DayOfWeek dia) => dia switch
+        {
+            DayOfWeek.Sunday => "Dom",
+            DayOfWeek.Monday => "Seg",
+            DayOfWeek.Tuesday => "Ter",
+            DayOfWeek.Wednesday => "Qua",
+            DayOfWeek.Thursday => "Qui",
+            DayOfWeek.Friday => "Sex",
+            DayOfWeek.Saturday => "Sab",
+            _ => string.Empty
+        };
 
         // Validações leves de negócio (RN01 e regra de aprovador para Ocorrência).
         // Não substitui um motor de regras completo — cobre só o mínimo para não persistir dados inconsistentes.
