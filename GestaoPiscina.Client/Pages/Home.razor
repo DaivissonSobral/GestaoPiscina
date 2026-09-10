@@ -37,7 +37,7 @@
             <button @onclick="Rotas" class="bg-teal-600 hover:bg-teal-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
                 <i class="fas fa-route text-2xl mb-2"></i> Rotas
             </button>
-            <button @onclick="ClientesRefatorado" class="bg-green-600 hover:bg-green-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
+            <button @onclick="Clientes" class="bg-green-600 hover:bg-green-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
                 <i class="fas fa-user-plus text-2xl mb-2"></i> Cliente
             </button>
             <button @onclick="Produtos" class="bg-yellow-600 hover:bg-yellow-500 p-4 rounded-lg flex flex-col items-center text-center transition-colors">
@@ -114,11 +114,6 @@
     private void Clientes()
     {
         Navigation.NavigateTo("/clientes");
-    }
-
-    private void ClientesRefatorado()
-    {
-        Navigation.NavigateTo("/clientes-refatorado");
     }
 
     private void Produtos()
