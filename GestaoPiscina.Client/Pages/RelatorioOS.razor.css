@@ -358,15 +358,23 @@
     margin-bottom: 10px;
 }
 
-/* O viewBox (420x150) só garante a proporção certa quando width/height
-   também são fixados via CSS — sem isso, o motor de impressão do navegador
-   recalcula um tamanho diferente do que aparece na tela, distorcendo o
-   gráfico. */
-.relatorio-page .trend-card svg {
-    display: block;
+/* Técnica clássica de caixa com proporção fixa (padding-top percentual +
+   filho absoluto). Não depende de aspect-ratio nem do algoritmo de sizing
+   intrínseco de <svg>, que o motor de impressão do Chrome resolve de forma
+   diferente da tela e distorcia o gráfico. */
+.relatorio-page .trend-card .chart-wrap {
+    position: relative;
     width: 100%;
-    height: auto;
-    aspect-ratio: 420 / 150;
+    padding-top: 35.7143%; /* 150 / 420 */
+}
+
+.relatorio-page .trend-card .chart-wrap svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
 }
 
 .relatorio-page .legend {

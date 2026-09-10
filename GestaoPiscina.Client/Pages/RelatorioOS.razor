@@ -172,29 +172,31 @@
                                 <div class="trend-card">
                                     <h4>@parametro.Nome</h4>
                                     <div class="rng">Faixa ideal @FormatarValor(parametro, parametro.IdealMin) – @FormatarValor(parametro, parametro.IdealMax)@parametro.Unidade</div>
-                                    <svg viewBox="0 0 420 150" width="100%">
-                                        <rect x="0" y="@YParaValor(parametro, parametro.IdealMax)" width="420" height="@(YParaValor(parametro, parametro.IdealMin) - YParaValor(parametro, parametro.IdealMax))" fill="#58B8C4" fill-opacity="0.18" />
-                                        <line x1="0" y1="20" x2="420" y2="20" stroke="#DCE9EA" stroke-width="1" />
-                                        <line x1="0" y1="120" x2="420" y2="120" stroke="#DCE9EA" stroke-width="1" />
-                                        @{ var idx = 0; }
-                                        @foreach (var piscina in piscinasComLeitura)
-                                        {
-                                            var pontos = PontosTendencia(piscina.IDPiscina, parametro);
-                                            var cor = CorPiscina(idx);
-                                            idx++;
-                                            if (pontos.Count >= 2)
+                                    <div class="chart-wrap">
+                                        <svg viewBox="0 0 420 150" preserveAspectRatio="none">
+                                            <rect x="0" y="@YParaValor(parametro, parametro.IdealMax)" width="420" height="@(YParaValor(parametro, parametro.IdealMin) - YParaValor(parametro, parametro.IdealMax))" fill="#58B8C4" fill-opacity="0.18" />
+                                            <line x1="0" y1="20" x2="420" y2="20" stroke="#DCE9EA" stroke-width="1" />
+                                            <line x1="0" y1="120" x2="420" y2="120" stroke="#DCE9EA" stroke-width="1" />
+                                            @{ var idx = 0; }
+                                            @foreach (var piscina in piscinasComLeitura)
                                             {
-                                                <polyline points="@string.Join(" ", pontos.Select(p => $"{p.x:0.#},{p.y:0.#}"))" fill="none" stroke="@cor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+                                                var pontos = PontosTendencia(piscina.IDPiscina, parametro);
+                                                var cor = CorPiscina(idx);
+                                                idx++;
+                                                if (pontos.Count >= 2)
+                                                {
+                                                    <polyline points="@string.Join(" ", pontos.Select(p => $"{p.x:0.#},{p.y:0.#}"))" fill="none" stroke="@cor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+                                                }
+                                                @foreach (var p in pontos)
+                                                {
+                                                    <circle cx="@p.x.ToString("0.#")" cy="@p.y.ToString("0.#")" r="3.5" fill="@cor" />
+                                                }
                                             }
-                                            @foreach (var p in pontos)
-                                            {
-                                                <circle cx="@p.x.ToString("0.#")" cy="@p.y.ToString("0.#")" r="3.5" fill="@cor" />
-                                            }
-                                        }
-                                        <g font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#5C7A80">
-                                            @EixoDatasMarkup()
-                                        </g>
-                                    </svg>
+                                            <g font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#5C7A80">
+                                                @EixoDatasMarkup()
+                                            </g>
+                                        </svg>
+                                    </div>
                                     <div class="legend">
                                         @{ var idxLegenda = 0; }
                                         @foreach (var piscina in piscinasComLeitura)
