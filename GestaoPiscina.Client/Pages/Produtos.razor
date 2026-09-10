@@ -1,101 +1,198 @@
 @page "/produtos"
 @using GestaoPiscina.Client.Services
 @using GestaoPiscina.Client.Models
+@using GestaoPiscina.Client.Shared
 @inject ApiService ApiService
 
 <section class="p-4 space-y-6">
-    <h3 class="text-xl font-bold mb-4">Gestão de Produtos</h3>
-
-    <div class="mb-4 flex justify-between items-center">
-        <button class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
+    <div class="flex justify-between items-center">
+        <h3 class="text-xl font-bold">Gestão de Produtos</h3>
+        <button @onclick="AbrirModalNovo" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
             <i class="fas fa-plus mr-2"></i>Novo Produto
         </button>
     </div>
 
-    <div class="flex space-x-2 mb-4">
-        <input type="text" placeholder="Buscar produtos..." class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-        <select class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-            <option value="">Todas as Categorias</option>
-            <option value="quimicos">Químicos</option>
-            <option value="equipamentos">Equipamentos</option>
-            <option value="acessorios">Acessórios</option>
-        </select>
+    <div class="flex space-x-2">
+        <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar produtos..." class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
     </div>
 
-    <div class="bg-slate-800 rounded-xl overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-slate-700">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Produto</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Categoria</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Estoque</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Preço</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Ações</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-700">
-                    <tr class="hover:bg-slate-700">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-slate-100">Cloro Granulado</div>
-                            <div class="text-sm text-slate-400">Químico</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                Químicos
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">150 unidades</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">R$ 45,90</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button class="text-cyan-400 hover:text-cyan-300 mr-3">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="text-red-400 hover:text-red-300">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    <tr class="hover:bg-slate-700">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-slate-100">Bomba de Filtro</div>
-                            <div class="text-sm text-slate-400">Equipamento</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                Equipamentos
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">8 unidades</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">R$ 1.250,00</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button class="text-cyan-400 hover:text-cyan-300 mr-3">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="text-red-400 hover:text-red-300">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+    @if (carregando)
+    {
+        <LoadingSpinner IsVisible="true" Message="Carregando produtos..." />
+    }
+    else if (produtosFiltrados.Any())
+    {
+        <div class="bg-slate-800 rounded-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-slate-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Produto</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Concentração</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Unidade</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700">
+                        @foreach (var produto in produtosFiltrados)
+                        {
+                            <tr class="hover:bg-slate-700">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-100">@produto.Nome</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                                    @(produto.Concentracao.HasValue ? $"{produto.Concentracao}%" : "-")
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@produto.Unidade</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button @onclick="() => AbrirModalEditar(produto)" class="text-cyan-400 hover:text-cyan-300 mr-3" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button @onclick="() => ExcluirProduto(produto)" class="text-red-400 hover:text-red-300" title="Excluir">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
+    }
+    else
+    {
+        <div class="bg-slate-800 rounded-xl p-8 text-center">
+            <i class="fas fa-flask text-4xl text-slate-600 mb-4"></i>
+            <h4 class="text-lg font-medium text-slate-300 mb-2">Nenhum produto cadastrado</h4>
+            <p class="text-slate-400">Clique em "Novo Produto" para adicionar.</p>
+        </div>
+    }
 </section>
+
+<ProdutoModal @bind-IsVisible="modalVisible"
+              Produto="produtoSelecionado"
+              OnSave="SalvarProduto" />
+
+<ConfirmDialog @bind-IsVisible="confirmacaoExclusaoVisible"
+               Title="Confirmar Exclusão"
+               Message="Tem certeza que deseja excluir este produto?"
+               ConfirmText="Excluir"
+               OnConfirm="ConfirmarExclusao" />
+
+<Toast @bind-IsVisible="toastVisible"
+       Title="Notificação"
+       Message="@mensagemToast"
+       Type="@tipoToast" />
 
 @code {
     private List<Produto>? produtos;
+    private Produto produtoSelecionado = new Produto();
+    private Produto? produtoParaExcluir;
+    private bool modalVisible = false;
+    private bool confirmacaoExclusaoVisible = false;
+    private bool carregando = true;
+    private string termoBusca = "";
+    private bool toastVisible = false;
+    private string mensagemToast = "";
+    private string tipoToast = "success";
+
+    private IEnumerable<Produto> produtosFiltrados => produtos?.Where(p =>
+        string.IsNullOrEmpty(termoBusca) || p.Nome.Contains(termoBusca, StringComparison.OrdinalIgnoreCase)
+    ) ?? Enumerable.Empty<Produto>();
 
     protected override async Task OnInitializedAsync()
     {
+        await CarregarDados();
+    }
+
+    private async Task CarregarDados()
+    {
         try
         {
+            carregando = true;
             produtos = await ApiService.GetProdutosAsync();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erro ao carregar produtos: {ex.Message}");
+            MostrarNotificacao("Erro", $"Erro ao carregar produtos: {ex.Message}", "error");
             produtos = new List<Produto>();
         }
+        finally
+        {
+            carregando = false;
+        }
     }
-} 
+
+    private void AbrirModalNovo()
+    {
+        produtoSelecionado = new Produto();
+        modalVisible = true;
+    }
+
+    private void AbrirModalEditar(Produto produto)
+    {
+        produtoSelecionado = new Produto
+        {
+            IDProduto = produto.IDProduto,
+            Nome = produto.Nome,
+            Concentracao = produto.Concentracao,
+            Unidade = produto.Unidade
+        };
+        modalVisible = true;
+    }
+
+    private async Task SalvarProduto(Produto produto)
+    {
+        try
+        {
+            if (produto.IDProduto == 0)
+            {
+                await ApiService.CreateProdutoAsync(produto);
+                MostrarNotificacao("Sucesso", "Produto criado com sucesso!", "success");
+            }
+            else
+            {
+                await ApiService.UpdateProdutoAsync(produto);
+                MostrarNotificacao("Sucesso", "Produto atualizado com sucesso!", "success");
+            }
+
+            await CarregarDados();
+        }
+        catch (Exception ex)
+        {
+            MostrarNotificacao("Erro", $"Erro ao salvar produto: {ex.Message}", "error");
+        }
+    }
+
+    private void ExcluirProduto(Produto produto)
+    {
+        produtoParaExcluir = produto;
+        confirmacaoExclusaoVisible = true;
+    }
+
+    private async Task ConfirmarExclusao()
+    {
+        if (produtoParaExcluir != null)
+        {
+            try
+            {
+                await ApiService.DeleteProdutoAsync(produtoParaExcluir.IDProduto);
+                MostrarNotificacao("Sucesso", "Produto excluído com sucesso!", "success");
+                await CarregarDados();
+            }
+            catch (Exception ex)
+            {
+                MostrarNotificacao("Erro", $"Erro ao excluir produto: {ex.Message}", "error");
+            }
+            finally
+            {
+                produtoParaExcluir = null;
+            }
+        }
+    }
+
+    private void MostrarNotificacao(string titulo, string mensagem, string tipo)
+    {
+        mensagemToast = mensagem;
+        tipoToast = tipo;
+        toastVisible = true;
+    }
+}

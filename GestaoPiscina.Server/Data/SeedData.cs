@@ -162,35 +162,25 @@ namespace GestaoPiscina.Server.Data
                 await context.SaveChangesAsync();
             }
 
-            // Adicionar produtos de teste
+            // Catálogo de produtos
             if (!context.Produtos.Any())
             {
                 var produtos = new List<Produto>
                 {
-                    new Produto
-                    {
-                        Nome = "Cloro",
-                        Concentracao = 65.0m,
-                        Unidade = "kg"
-                    },
-                    new Produto
-                    {
-                        Nome = "Alcalinidade",
-                        Concentracao = 100.0m,
-                        Unidade = "kg"
-                    },
-                    new Produto
-                    {
-                        Nome = "pH+",
-                        Concentracao = 100.0m,
-                        Unidade = "kg"
-                    },
-                    new Produto
-                    {
-                        Nome = "pH-",
-                        Concentracao = 100.0m,
-                        Unidade = "kg"
-                    }
+                    new Produto { Nome = "Hipoclorito de Sódio 10-12%", Concentracao = 10.0m, Unidade = "L" },
+                    new Produto { Nome = "Dicloro 56%", Concentracao = 56.0m, Unidade = "kg" },
+                    new Produto { Nome = "Hipoclorito de Cálcio 65%", Concentracao = 65.0m, Unidade = "kg" },
+                    new Produto { Nome = "Pastilhas de Tricloro", Unidade = "kg" },
+                    new Produto { Nome = "Bicarbonato de Sódio", Unidade = "kg" },
+                    new Produto { Nome = "Limpa Bordas", Unidade = "L" },
+                    new Produto { Nome = "Algicida Choque", Unidade = "L" },
+                    new Produto { Nome = "Clarificante", Unidade = "L" },
+                    new Produto { Nome = "Gel (Auxiliar de Filtração)", Unidade = "L" },
+                    new Produto { Nome = "Barrilha", Unidade = "kg" },
+                    new Produto { Nome = "Sulfato de Alumínio", Unidade = "kg" },
+                    new Produto { Nome = "Elevador de Dureza Cálcica", Unidade = "kg" },
+                    new Produto { Nome = "Ácido Muriático", Unidade = "L" },
+                    new Produto { Nome = "Eliminador de Oleosidade", Unidade = "L" }
                 };
 
                 context.Produtos.AddRange(produtos);
@@ -207,9 +197,9 @@ namespace GestaoPiscina.Server.Data
                 {
                     var cliente1 = clientes.FirstOrDefault(c => c.Nome == "Cliente Teste 1");
                     var cliente2 = clientes.FirstOrDefault(c => c.Nome == "Cliente Teste 2");
-                    var cloro = produtos.FirstOrDefault(p => p.Nome == "Cloro");
-                    var alcalinidade = produtos.FirstOrDefault(p => p.Nome == "Alcalinidade");
-                    var phMais = produtos.FirstOrDefault(p => p.Nome == "pH+");
+                    var cloro = produtos.FirstOrDefault(p => p.Nome == "Hipoclorito de Sódio 10-12%");
+                    var alcalinidade = produtos.FirstOrDefault(p => p.Nome == "Barrilha");
+                    var phMais = produtos.FirstOrDefault(p => p.Nome == "Ácido Muriático");
 
                     var estoques = new List<EstoqueCliente>();
 
