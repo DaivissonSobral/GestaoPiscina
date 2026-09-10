@@ -616,6 +616,15 @@
 }
 
 @media print {
+    /* Sem isso, a maioria dos navegadores descarta cores de fundo/gradientes
+       ao imprimir (mesmo com "Imprimir plano de fundo" ligado no diálogo em
+       alguns casos), deixando o relatório quase todo em branco/preto. */
+    .relatorio-page, .relatorio-page * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+
     .relatorio-page {
         background: #fff;
         padding: 0;
