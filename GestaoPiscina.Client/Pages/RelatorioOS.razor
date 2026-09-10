@@ -151,8 +151,8 @@
                                                 </span>
                                             </div>
                                             <div class="track">
-                                                <div class="band" style="left:@(BandaEsquerda(parametro))%; width:@(BandaLargura(parametro))%;"></div>
-                                                <div class="dot @(dentroDoPadrao ? "" : "warn")" style="left:@(PosicaoNaFaixa(parametro, valor))%;"></div>
+                                                <div class="band" style="left:@(Inv(BandaEsquerda(parametro)))%; width:@(Inv(BandaLargura(parametro)))%;"></div>
+                                                <div class="dot @(dentroDoPadrao ? "" : "warn")" style="left:@(Inv(PosicaoNaFaixa(parametro, valor)))%;"></div>
                                             </div>
                                         </div>
                                     }
@@ -174,7 +174,7 @@
                                     <div class="rng">Faixa ideal @FormatarValor(parametro, parametro.IdealMin) – @FormatarValor(parametro, parametro.IdealMax)@parametro.Unidade</div>
                                     <div class="chart-wrap">
                                         <svg viewBox="0 0 420 150" preserveAspectRatio="none">
-                                            <rect x="0" y="@YParaValor(parametro, parametro.IdealMax)" width="420" height="@(YParaValor(parametro, parametro.IdealMin) - YParaValor(parametro, parametro.IdealMax))" fill="#58B8C4" fill-opacity="0.18" />
+                                            <rect x="0" y="@Inv(YParaValor(parametro, parametro.IdealMax))" width="420" height="@Inv(YParaValor(parametro, parametro.IdealMin) - YParaValor(parametro, parametro.IdealMax))" fill="#58B8C4" fill-opacity="0.18" />
                                             <line x1="0" y1="20" x2="420" y2="20" stroke="#DCE9EA" stroke-width="1" />
                                             <line x1="0" y1="120" x2="420" y2="120" stroke="#DCE9EA" stroke-width="1" />
                                             @{ var idx = 0; }
@@ -185,11 +185,11 @@
                                                 idx++;
                                                 if (pontos.Count >= 2)
                                                 {
-                                                    <polyline points="@string.Join(" ", pontos.Select(p => $"{p.x:0.#},{p.y:0.#}"))" fill="none" stroke="@cor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+                                                    <polyline points="@string.Join(" ", pontos.Select(p => $"{Inv(p.x)},{Inv(p.y)}"))" fill="none" stroke="@cor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
                                                 }
                                                 @foreach (var p in pontos)
                                                 {
-                                                    <circle cx="@p.x.ToString("0.#")" cy="@p.y.ToString("0.#")" r="3.5" fill="@cor" />
+                                                    <circle cx="@Inv(p.x)" cy="@Inv(p.y)" r="3.5" fill="@cor" />
                                                 }
                                             }
                                             <g font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#5C7A80">
@@ -438,6 +438,12 @@
 
     private string FormatarValor(Parametro parametro, decimal valor) => valor.ToString(parametro.Formato, CultureInfo.GetCultureInfo("pt-BR"));
 
+    // Coordenadas/posições (CSS % e atributos de SVG) precisam de ponto decimal
+    // sempre, independente da cultura da página — usar a cultura atual (pt-BR)
+    // aqui quebra "left:33,3%" e "points="62,7,78,3 ..."" (vírgula colide com o
+    // separador de coordenadas do SVG), fazendo gauges/gráficos saírem errados.
+    private static string Inv(double valor) => valor.ToString("0.###", CultureInfo.InvariantCulture);
+
     private double BandaEsquerda(Parametro p) => (double)((p.IdealMin - p.DispMin) / (p.DispMax - p.DispMin)) * 100;
     private double BandaLargura(Parametro p) => (double)((p.IdealMax - p.IdealMin) / (p.DispMax - p.DispMin)) * 100;
     private double PosicaoNaFaixa(Parametro p, decimal valor)
@@ -470,7 +476,7 @@
         var sb = new System.Text.StringBuilder();
         foreach (var data in DatasDoEixo())
         {
-            sb.Append($"<text x=\"{XParaData(data).ToString("0.#", CultureInfo.InvariantCulture)}\" y=\"138\" text-anchor=\"middle\">{data:dd/MM}</text>");
+            sb.Append($"<text x=\"{Inv(XParaData(data))}\" y=\"138\" text-anchor=\"middle\">{data:dd/MM}</text>");
         }
         return new MarkupString(sb.ToString());
     }
