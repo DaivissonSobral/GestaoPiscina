@@ -32,11 +32,16 @@ namespace GestaoPiscina.Server.Controllers
             // profundidade do serializador JSON. Essas coleções reversas não são
             // usadas por quem consome este endpoint, então zeram aqui.
             var saldos = await EstoqueCalculo.SaldosAsync(_context);
+            var ultimasMovimentacoes = await EstoqueCalculo.UltimasMovimentacoesAsync(_context);
             foreach (var estoque in estoques)
             {
                 estoque.Cliente.Estoques.Clear();
                 estoque.Produto.Estoques.Clear();
                 estoque.QuantidadeAtual = saldos.GetValueOrDefault((estoque.IDCliente, estoque.IDProduto));
+                if (ultimasMovimentacoes.TryGetValue((estoque.IDCliente, estoque.IDProduto), out var ultima))
+                {
+                    estoque.UltimaMovimentacao = ultima;
+                }
             }
 
             return estoques;
@@ -51,9 +56,14 @@ namespace GestaoPiscina.Server.Controllers
                 .ToListAsync();
 
             var saldos = await EstoqueCalculo.SaldosAsync(_context);
+            var ultimasMovimentacoes = await EstoqueCalculo.UltimasMovimentacoesAsync(_context);
             foreach (var estoque in estoques)
             {
                 estoque.QuantidadeAtual = saldos.GetValueOrDefault((estoque.IDCliente, estoque.IDProduto));
+                if (ultimasMovimentacoes.TryGetValue((estoque.IDCliente, estoque.IDProduto), out var ultima))
+                {
+                    estoque.UltimaMovimentacao = ultima;
+                }
             }
 
             return estoques;

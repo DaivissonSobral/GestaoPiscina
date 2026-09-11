@@ -15,10 +15,13 @@ namespace GestaoPiscina.Server.Models
 
         public int IDProduto { get; set; }
 
-        // Não mapeado no banco: calculado e preenchido pelos controllers a partir
+        // Não mapeados no banco: calculados e preenchidos pelos controllers a partir
         // de MovimentacaoEstoque antes de serializar a resposta.
         [NotMapped]
         public decimal QuantidadeAtual { get; set; }
+
+        [NotMapped]
+        public DateTime? UltimaMovimentacao { get; set; }
 
         [Range(0, double.MaxValue)]
         public decimal? QuantidadeMinima { get; set; }

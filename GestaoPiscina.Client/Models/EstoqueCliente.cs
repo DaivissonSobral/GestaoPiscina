@@ -6,6 +6,7 @@ namespace GestaoPiscina.Client.Models
         public int IDCliente { get; set; }
         public int IDProduto { get; set; }
         public decimal QuantidadeAtual { get; set; }
+        public DateTime? UltimaMovimentacao { get; set; }
         public decimal? QuantidadeMinima { get; set; }
         
         public Cliente Cliente { get; set; } = null!;

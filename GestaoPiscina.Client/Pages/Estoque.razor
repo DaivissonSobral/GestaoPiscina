@@ -7,103 +7,128 @@
 <section class="p-4 space-y-6">
     <h3 class="text-xl font-bold">Gestão de Estoque</h3>
 
-    <div class="bg-slate-800 rounded-xl p-4 space-y-2">
-        <label class="block text-sm font-medium text-slate-300">Cliente</label>
-        <select @bind="clienteSelecionadoId" @bind:after="CarregarEstoque" class="w-full md:w-96 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-            <option value="0">Selecione um cliente...</option>
-            @if (clientes != null)
+    <div class="bg-slate-800 rounded-xl p-4 space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="space-y-1">
+                <label class="block text-sm font-medium text-slate-300">Cliente</label>
+                <select @bind="clienteSelecionadoId" @bind:after="CarregarEstoque" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                    <option value="0">Todos os clientes</option>
+                    @if (clientes != null)
+                    {
+                        @foreach (var cliente in clientes)
+                        {
+                            <option value="@cliente.IDCliente">@cliente.Nome</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="space-y-1">
+                <label class="block text-sm font-medium text-slate-300">Nível de estoque</label>
+                <select @bind="filtroNivel" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                    <option value="">Todos os níveis</option>
+                    <option value="baixo">Abaixo do mínimo</option>
+                    <option value="ok">Acima do mínimo</option>
+                </select>
+            </div>
+
+            <div class="space-y-1">
+                <label class="block text-sm font-medium text-slate-300">Última movimentação de</label>
+                <input type="date" @bind="filtroDataDe" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+            </div>
+
+            <div class="space-y-1">
+                <label class="block text-sm font-medium text-slate-300">até</label>
+                <input type="date" @bind="filtroDataAte" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center gap-4">
+            <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar produto ou cliente..." class="flex-1 max-w-sm bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+            @if (clienteSelecionadoId > 0)
             {
-                @foreach (var cliente in clientes)
-                {
-                    <option value="@cliente.IDCliente">@cliente.Nome</option>
-                }
+                <button @onclick="() => AbrirNovaMovimentacao(null)" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors whitespace-nowrap">
+                    <i class="fas fa-plus mr-2"></i>Nova Movimentação
+                </button>
             }
-        </select>
+        </div>
     </div>
 
-    @if (clienteSelecionadoId <= 0)
+    @if (carregando)
     {
-        <div class="bg-slate-800 rounded-xl p-8 text-center">
-            <i class="fas fa-warehouse text-4xl text-slate-600 mb-4"></i>
-            <h4 class="text-lg font-medium text-slate-300 mb-2">Selecione um cliente</h4>
-            <p class="text-slate-400">Escolha um cliente acima para ver e movimentar o estoque dele.</p>
+        <LoadingSpinner IsVisible="true" Message="Carregando estoque..." />
+    }
+    else if (estoqueFiltrado.Any())
+    {
+        <div class="bg-slate-800 rounded-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-slate-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Cliente</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Produto</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Saldo Atual</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Qtd. Mínima</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Diferença</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Última Movimentação</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700">
+                        @foreach (var item in estoqueFiltrado)
+                        {
+                            <tr class="hover:bg-slate-700">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-100">@NomeCliente(item)</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@item.Produto?.Nome</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@item.QuantidadeAtual.ToString("0.##") @item.Produto?.Unidade</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@(item.QuantidadeMinima?.ToString("0.##") ?? "-")</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium @ClasseDiferenca(item)">@TextoDiferenca(item)</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@(item.UltimaMovimentacao?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="@ClasseStatus(item) px-2 py-1 text-xs font-semibold rounded-full">
+                                        @(EstoqueBaixo(item) ? "Baixo" : "OK")
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button @onclick="() => AbrirNovaMovimentacao(item)" class="text-cyan-400 hover:text-cyan-300 mr-3" title="Nova Movimentação">
+                                        <i class="fas fa-exchange-alt"></i>
+                                    </button>
+                                    <button @onclick="() => AbrirHistorico(item)" class="text-blue-400 hover:text-blue-300 mr-3" title="Histórico">
+                                        <i class="fas fa-history"></i>
+                                    </button>
+                                    <button @onclick="() => AbrirLimite(item)" class="text-amber-400 hover:text-amber-300 mr-3" title="Quantidade Mínima">
+                                        <i class="fas fa-sliders-h"></i>
+                                    </button>
+                                    <button @onclick="() => ExcluirVinculo(item)" class="text-red-400 hover:text-red-300" title="Remover do estoque">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     }
     else
     {
-        <div class="flex justify-between items-center">
-            <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar produto..." class="flex-1 max-w-sm bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-            <button @onclick="() => AbrirNovaMovimentacao(null)" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
-                <i class="fas fa-plus mr-2"></i>Nova Movimentação
-            </button>
+        <div class="bg-slate-800 rounded-xl p-8 text-center">
+            <i class="fas fa-box text-4xl text-slate-600 mb-4"></i>
+            <h4 class="text-lg font-medium text-slate-300 mb-2">Nenhum produto encontrado</h4>
+            <p class="text-slate-400">
+                @(clienteSelecionadoId > 0
+                    ? "Clique em \"Nova Movimentação\" e registre uma Entrada para começar."
+                    : "Selecione um cliente e registre uma Entrada, ou ajuste os filtros acima.")
+            </p>
         </div>
-
-        @if (carregando)
-        {
-            <LoadingSpinner IsVisible="true" Message="Carregando estoque..." />
-        }
-        else if (estoqueFiltrado.Any())
-        {
-            <div class="bg-slate-800 rounded-xl overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-slate-700">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Produto</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Saldo Atual</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Qtd. Mínima</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-700">
-                            @foreach (var item in estoqueFiltrado)
-                            {
-                                <tr class="hover:bg-slate-700">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-100">@item.Produto?.Nome</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@item.QuantidadeAtual.ToString("0.##") @item.Produto?.Unidade</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@(item.QuantidadeMinima?.ToString("0.##") ?? "-")</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="@ClasseStatus(item) px-2 py-1 text-xs font-semibold rounded-full">
-                                            @(EstoqueBaixo(item) ? "Baixo" : "OK")
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button @onclick="() => AbrirNovaMovimentacao(item.IDProduto)" class="text-cyan-400 hover:text-cyan-300 mr-3" title="Nova Movimentação">
-                                            <i class="fas fa-exchange-alt"></i>
-                                        </button>
-                                        <button @onclick="() => AbrirHistorico(item)" class="text-blue-400 hover:text-blue-300 mr-3" title="Histórico">
-                                            <i class="fas fa-history"></i>
-                                        </button>
-                                        <button @onclick="() => AbrirLimite(item)" class="text-amber-400 hover:text-amber-300 mr-3" title="Quantidade Mínima">
-                                            <i class="fas fa-sliders-h"></i>
-                                        </button>
-                                        <button @onclick="() => ExcluirVinculo(item)" class="text-red-400 hover:text-red-300" title="Remover do estoque">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        }
-        else
-        {
-            <div class="bg-slate-800 rounded-xl p-8 text-center">
-                <i class="fas fa-box text-4xl text-slate-600 mb-4"></i>
-                <h4 class="text-lg font-medium text-slate-300 mb-2">Nenhum produto no estoque deste cliente</h4>
-                <p class="text-slate-400">Clique em "Nova Movimentação" e registre uma Entrada para começar.</p>
-            </div>
-        }
     }
 </section>
 
 <EstoqueMovimentacaoModal @bind-IsVisible="modalMovimentacaoVisible"
-                          ClienteId="clienteSelecionadoId"
+                          ClienteId="clienteIdAcao"
                           Produtos="produtosGlobais"
-                          EstoqueDoCliente="estoqueDoCliente"
+                          EstoqueDoCliente="EstoqueParaModal()"
                           ProdutoIdFixo="produtoIdFixoParaMovimentacao"
                           OnSave="RegistrarMovimentacao" />
 
@@ -112,7 +137,7 @@
                      OnSave="SalvarLimite" />
 
 <EstoqueHistoricoModal @bind-IsVisible="modalHistoricoVisible"
-                        ClienteId="clienteSelecionadoId"
+                        ClienteId="clienteIdAcao"
                         Produto="produtoParaHistorico"
                         OnChanged="CarregarEstoque" />
 
@@ -130,12 +155,16 @@
 @code {
     private List<Cliente>? clientes;
     private List<Produto>? produtosGlobais;
-    private List<EstoqueCliente>? estoqueDoCliente;
+    private List<EstoqueCliente>? estoqueLista;
     private int clienteSelecionadoId;
     private string termoBusca = "";
+    private string filtroNivel = "";
+    private DateTime? filtroDataDe;
+    private DateTime? filtroDataAte;
     private bool carregando = false;
 
     private bool modalMovimentacaoVisible = false;
+    private int clienteIdAcao;
     private int? produtoIdFixoParaMovimentacao;
 
     private bool modalLimiteVisible = false;
@@ -151,9 +180,19 @@
     private string mensagemToast = "";
     private string tipoToast = "success";
 
-    private IEnumerable<EstoqueCliente> estoqueFiltrado => estoqueDoCliente?.Where(e =>
-        string.IsNullOrEmpty(termoBusca) || e.Produto?.Nome?.Contains(termoBusca, StringComparison.OrdinalIgnoreCase) == true
-    ) ?? Enumerable.Empty<EstoqueCliente>();
+    private IEnumerable<EstoqueCliente> estoqueFiltrado => (estoqueLista ?? Enumerable.Empty<EstoqueCliente>())
+        .Where(e =>
+            string.IsNullOrEmpty(termoBusca) ||
+            e.Produto?.Nome?.Contains(termoBusca, StringComparison.OrdinalIgnoreCase) == true ||
+            NomeCliente(e).Contains(termoBusca, StringComparison.OrdinalIgnoreCase))
+        .Where(e => filtroNivel switch
+        {
+            "baixo" => EstoqueBaixo(e),
+            "ok" => !EstoqueBaixo(e),
+            _ => true
+        })
+        .Where(e => !filtroDataDe.HasValue || (e.UltimaMovimentacao.HasValue && e.UltimaMovimentacao.Value.Date >= filtroDataDe.Value.Date))
+        .Where(e => !filtroDataAte.HasValue || (e.UltimaMovimentacao.HasValue && e.UltimaMovimentacao.Value.Date <= filtroDataAte.Value.Date));
 
     protected override async Task OnInitializedAsync()
     {
@@ -168,25 +207,23 @@
             clientes = new List<Cliente>();
             produtosGlobais = new List<Produto>();
         }
+
+        await CarregarEstoque();
     }
 
     private async Task CarregarEstoque()
     {
-        if (clienteSelecionadoId <= 0)
-        {
-            estoqueDoCliente = null;
-            return;
-        }
-
         try
         {
             carregando = true;
-            estoqueDoCliente = await ApiService.GetEstoqueByClienteAsync(clienteSelecionadoId);
+            estoqueLista = clienteSelecionadoId > 0
+                ? await ApiService.GetEstoqueByClienteAsync(clienteSelecionadoId)
+                : await ApiService.GetEstoqueAsync();
         }
         catch (Exception ex)
         {
             MostrarNotificacao("Erro", $"Erro ao carregar estoque: {ex.Message}", "error");
-            estoqueDoCliente = new List<EstoqueCliente>();
+            estoqueLista = new List<EstoqueCliente>();
         }
         finally
         {
@@ -194,9 +231,16 @@
         }
     }
 
-    private void AbrirNovaMovimentacao(int? produtoId)
+    private string NomeCliente(EstoqueCliente item) =>
+        clientes?.FirstOrDefault(c => c.IDCliente == item.IDCliente)?.Nome ?? item.Cliente?.Nome ?? "";
+
+    private List<EstoqueCliente> EstoqueParaModal() =>
+        estoqueLista?.Where(e => e.IDCliente == clienteIdAcao).ToList() ?? new List<EstoqueCliente>();
+
+    private void AbrirNovaMovimentacao(EstoqueCliente? item)
     {
-        produtoIdFixoParaMovimentacao = produtoId;
+        clienteIdAcao = item?.IDCliente ?? clienteSelecionadoId;
+        produtoIdFixoParaMovimentacao = item?.IDProduto;
         modalMovimentacaoVisible = true;
     }
 
@@ -236,6 +280,7 @@
 
     private void AbrirHistorico(EstoqueCliente item)
     {
+        clienteIdAcao = item.IDCliente;
         produtoParaHistorico = item.Produto;
         modalHistoricoVisible = true;
     }
@@ -272,6 +317,28 @@
     private bool EstoqueBaixo(EstoqueCliente item) => item.QuantidadeMinima.HasValue && item.QuantidadeAtual <= item.QuantidadeMinima.Value;
 
     private string ClasseStatus(EstoqueCliente item) => EstoqueBaixo(item) ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800";
+
+    private string TextoDiferenca(EstoqueCliente item)
+    {
+        if (!item.QuantidadeMinima.HasValue)
+        {
+            return "-";
+        }
+
+        var diferenca = item.QuantidadeAtual - item.QuantidadeMinima.Value;
+        var sinal = diferenca > 0 ? "+" : "";
+        return $"{sinal}{diferenca.ToString("0.##")} {item.Produto?.Unidade}".Trim();
+    }
+
+    private string ClasseDiferenca(EstoqueCliente item)
+    {
+        if (!item.QuantidadeMinima.HasValue)
+        {
+            return "text-slate-400";
+        }
+
+        return item.QuantidadeAtual - item.QuantidadeMinima.Value < 0 ? "text-red-400" : "text-green-400";
+    }
 
     private void MostrarNotificacao(string titulo, string mensagem, string tipo)
     {

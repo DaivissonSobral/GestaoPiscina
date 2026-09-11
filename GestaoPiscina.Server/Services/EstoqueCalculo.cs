@@ -26,5 +26,17 @@ namespace GestaoPiscina.Server.Services
 
             return grupos.ToDictionary(g => (g.IDCliente, g.IDProduto), g => g.Saldo);
         }
+
+        // Data do lançamento mais recente de cada par (Cliente, Produto) — usada para
+        // o filtro "última movimentação" da tela de Estoque.
+        public static async Task<Dictionary<(int IDCliente, int IDProduto), DateTime>> UltimasMovimentacoesAsync(GestaoPiscinaContext context)
+        {
+            var grupos = await context.MovimentacoesEstoque
+                .GroupBy(m => new { m.IDCliente, m.IDProduto })
+                .Select(g => new { g.Key.IDCliente, g.Key.IDProduto, Data = g.Max(m => m.Data) })
+                .ToListAsync();
+
+            return grupos.ToDictionary(g => (g.IDCliente, g.IDProduto), g => g.Data);
+        }
     }
 }
