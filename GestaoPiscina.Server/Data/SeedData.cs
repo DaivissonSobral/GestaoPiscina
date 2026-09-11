@@ -182,7 +182,10 @@ namespace GestaoPiscina.Server.Data
                 await context.SaveChangesAsync();
             }
 
-            if (!context.Usuarios.Any(u => u.Login == "talina.santos"))
+            // Checa por Login OU Email: se o usuário fosse editado depois (ex.: login
+            // trocado na tela de Usuários, mantendo o mesmo e-mail), checar só o Login
+            // deixava passar e violava a constraint única de Email ao tentar recriar.
+            if (!context.Usuarios.Any(u => u.Login == "talina.santos" || u.Email == "talina.santos@gestaopiscina.com"))
             {
                 var quimicaPerfilExistente = context.Perfis.First(p => p.Nome == "Química");
                 context.Usuarios.Add(new Usuario

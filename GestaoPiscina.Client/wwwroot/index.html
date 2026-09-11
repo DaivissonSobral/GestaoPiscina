@@ -43,8 +43,16 @@
             </div>
         </div>
     </div>
-    <script src="clear-sw.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
+    <script>
+        // Registra o service worker: em desenvolvimento (dotnet run/watch) roda
+        // service-worker.js, que não armazena nada em cache; no build de publish,
+        // o SDK do Blazor troca automaticamente para service-worker.published.js
+        // (com cache de assets para funcionamento offline).
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js');
+        }
+    </script>
 </body>
 
 </html>
