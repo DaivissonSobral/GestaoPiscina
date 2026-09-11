@@ -79,6 +79,31 @@
     font-weight: 500;
 }
 
+/* Usado no relatório individual por OS: substitui o eyebrow "Manutenção
+   de piscinas" como texto de destaque logo abaixo do nome do cliente. */
+.relatorio-page header.top .sub-destaque {
+    font-size: 20px;
+    color: #fff;
+    margin-top: 8px;
+    font-weight: 700;
+}
+
+.relatorio-page header.top .piscinas-lines {
+    margin-top: 14px;
+    font-size: 14.5px;
+    color: #DCF3F4;
+    line-height: 1.7;
+}
+
+.relatorio-page header.top .piscinas-lines b {
+    color: #fff;
+    font-weight: 700;
+}
+
+.relatorio-page .contact-card + .contact-card {
+    margin-top: 12px;
+}
+
 .relatorio-page .meta-lines {
     margin-top: 18px;
     font-size: 13.5px;

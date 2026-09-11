@@ -40,12 +40,14 @@
                 <header class="top">
                     <div class="top-row">
                         <div>
-                            <div class="brand-tag">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c4 5 7 8.5 7 12a7 7 0 1 1-14 0c0-3.5 3-7 7-12Z" /></svg>
-                                Manutenção de piscinas
-                            </div>
                             <h1>@os.Piscina.Cliente.Nome</h1>
-                            <p class="sub">Relatório técnico de visita — @NomePiscina(os.Piscina)</p>
+                            <p class="sub-destaque">Relatório técnico de visita</p>
+                            <div class="piscinas-lines">
+                                @foreach (var piscina in PiscinasDoRelatorio)
+                                {
+                                    <div><b>@NomePiscinaCapitalizado(piscina)</b> — Volume: @VolumeFormatado(piscina)m³</div>
+                                }
+                            </div>
                             <div class="meta-lines">
                                 Data da visita: @os.DataExecucao.ToString("dd 'de' MMMM 'de' yyyy", CultureInfo.GetCultureInfo("pt-BR"))
                                 @if (!string.IsNullOrWhiteSpace(os.Piscina.Cliente.CNPJ))
@@ -55,10 +57,17 @@
                                 }
                             </div>
                         </div>
-                        <div class="contact-card">
-                            <div class="label">Responsável técnica</div>
-                            <div class="name">@QuimicaResponsavel</div>
-                            <div class="role">Química responsável<br>@CrqResponsavel</div>
+                        <div>
+                            <div class="contact-card">
+                                <div class="label">Responsável técnica</div>
+                                <div class="name">@QuimicaResponsavel</div>
+                                <div class="role">Química responsável<br>@CrqResponsavel</div>
+                            </div>
+                            <div class="contact-card">
+                                <div class="label">Técnico responsável pela visita</div>
+                                <div class="name">@NomeTecnico()</div>
+                                <div class="role">Limpeza e manutenção da piscina</div>
+                            </div>
                         </div>
                     </div>
                 </header>
@@ -236,8 +245,6 @@
                                 <br />
                                 @CnpjTexto
                             }
-                            <br />
-                            @VolumeTexto
                         </p>
                         <div class="badge-row">
                             @foreach (var selo in SelosEmpresa)
@@ -322,9 +329,20 @@
 
     private string CnpjTexto => os == null ? string.Empty : $"CNPJ {os.Piscina.Cliente.CNPJ}";
 
-    private string VolumeTexto => os == null
-        ? string.Empty
-        : $"Volume: {(os.Piscina.VolumeLitros / 1000).ToString("0.##", CultureInfo.GetCultureInfo("pt-BR"))}m³ ({NomePiscina(os.Piscina)})";
+    // Estruturado como lista (mesmo só existindo 1 piscina por OS hoje) para
+    // já deixar o layout pronto caso um relatório venha a cobrir mais de uma
+    // piscina do mesmo cliente numa única visita.
+    private List<Piscina> PiscinasDoRelatorio => os == null ? new List<Piscina>() : new List<Piscina> { os.Piscina };
+
+    private string NomePiscinaCapitalizado(Piscina piscina) => piscina.Tipo switch
+    {
+        "adulto" => "Piscina Adulta",
+        "infantil" => "Piscina Infantil",
+        "espelho" => "Espelho D'água",
+        _ => piscina.Tipo
+    };
+
+    private string VolumeFormatado(Piscina piscina) => (piscina.VolumeLitros / 1000).ToString("0.##", CultureInfo.GetCultureInfo("pt-BR"));
 
     private List<string> FotosAntes => SepararFotos(os?.FotosAntes);
     private List<string> FotosDepois => SepararFotos(os?.FotosDepois);
