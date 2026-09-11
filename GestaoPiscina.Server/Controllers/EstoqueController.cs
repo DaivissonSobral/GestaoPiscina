@@ -135,7 +135,12 @@ namespace GestaoPiscina.Server.Controllers
                 return Conflict(new { message = "Já existe estoque para este produto e cliente." });
             }
 
-            _context.Entry(estoque).State = EntityState.Modified;
+            // Atualiza a entidade já rastreada (estoqueExistente) em vez de anexar o objeto
+            // vindo do corpo da requisição: os dois têm a mesma chave primária, e o EF Core
+            // não permite rastrear duas instâncias diferentes com a mesma PK ao mesmo tempo.
+            estoqueExistente.IDProduto = estoque.IDProduto;
+            estoqueExistente.QuantidadeAtual = estoque.QuantidadeAtual;
+            estoqueExistente.QuantidadeMinima = estoque.QuantidadeMinima;
 
             try
             {
