@@ -278,44 +278,48 @@ namespace GestaoPiscina.Server.Data
                     var alcalinidade = produtos.FirstOrDefault(p => p.Nome == "Barrilha");
                     var phMais = produtos.FirstOrDefault(p => p.Nome == "Ácido Muriático");
 
-                    var estoques = new List<EstoqueCliente>();
+                    // (Cliente, Produto, quantidade inicial, quantidade mínima) — a
+                    // quantidade inicial vira uma Entrada no livro-razão, já que o saldo
+                    // não é mais um campo direto de EstoqueCliente.
+                    var itens = new List<(Cliente Cliente, Produto Produto, decimal QuantidadeInicial, decimal QuantidadeMinima)>();
 
                     if (cliente1 != null && cloro != null)
                     {
-                        estoques.Add(new EstoqueCliente
-                        {
-                            IDCliente = cliente1.IDCliente,
-                            IDProduto = cloro.IDProduto,
-                            QuantidadeAtual = 5.0m,
-                            QuantidadeMinima = 1.0m
-                        });
+                        itens.Add((cliente1, cloro, 5.0m, 1.0m));
                     }
 
                     if (cliente1 != null && alcalinidade != null)
                     {
-                        estoques.Add(new EstoqueCliente
-                        {
-                            IDCliente = cliente1.IDCliente,
-                            IDProduto = alcalinidade.IDProduto,
-                            QuantidadeAtual = 3.0m,
-                            QuantidadeMinima = 0.5m
-                        });
+                        itens.Add((cliente1, alcalinidade, 3.0m, 0.5m));
                     }
 
                     if (cliente2 != null && phMais != null)
                     {
-                        estoques.Add(new EstoqueCliente
-                        {
-                            IDCliente = cliente2.IDCliente,
-                            IDProduto = phMais.IDProduto,
-                            QuantidadeAtual = 2.0m,
-                            QuantidadeMinima = 1.0m
-                        });
+                        itens.Add((cliente2, phMais, 2.0m, 1.0m));
                     }
 
-                    if (estoques.Any())
+                    if (itens.Any())
                     {
-                        context.EstoqueClientes.AddRange(estoques);
+                        foreach (var item in itens)
+                        {
+                            var estoque = new EstoqueCliente
+                            {
+                                IDCliente = item.Cliente.IDCliente,
+                                IDProduto = item.Produto.IDProduto,
+                                QuantidadeMinima = item.QuantidadeMinima
+                            };
+                            context.EstoqueClientes.Add(estoque);
+                            context.MovimentacoesEstoque.Add(new MovimentacaoEstoque
+                            {
+                                IDCliente = item.Cliente.IDCliente,
+                                IDProduto = item.Produto.IDProduto,
+                                Tipo = "Entrada",
+                                Quantidade = item.QuantidadeInicial,
+                                Data = DateTime.Now,
+                                Observacao = "Estoque inicial (seed)"
+                            });
+                        }
+
                         await context.SaveChangesAsync();
                     }
                 }

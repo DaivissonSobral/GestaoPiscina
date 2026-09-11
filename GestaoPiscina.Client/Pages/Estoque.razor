@@ -1,98 +1,282 @@
 @page "/estoque"
 @using GestaoPiscina.Client.Services
 @using GestaoPiscina.Client.Models
+@using GestaoPiscina.Client.Shared
 @inject ApiService ApiService
 
 <section class="p-4 space-y-6">
-    <h3 class="text-xl font-bold mb-4">Gestão de Estoque</h3>
+    <h3 class="text-xl font-bold">Gestão de Estoque</h3>
 
-    <div class="mb-4 flex justify-between items-center">
-        <button class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
-            <i class="fas fa-plus mr-2"></i>Nova Entrada
-        </button>
-    </div>
-
-    <div class="flex space-x-2 mb-4">
-        <input type="text" placeholder="Buscar produtos..." class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-        <select class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-            <option value="">Todos os Clientes</option>
-            <option value="cliente1">João Silva</option>
-            <option value="cliente2">Maria Santos</option>
+    <div class="bg-slate-800 rounded-xl p-4 space-y-2">
+        <label class="block text-sm font-medium text-slate-300">Cliente</label>
+        <select @bind="clienteSelecionadoId" @bind:after="CarregarEstoque" class="w-full md:w-96 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+            <option value="0">Selecione um cliente...</option>
+            @if (clientes != null)
+            {
+                @foreach (var cliente in clientes)
+                {
+                    <option value="@cliente.IDCliente">@cliente.Nome</option>
+                }
+            }
         </select>
     </div>
 
-    <div class="bg-slate-800 rounded-xl overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-slate-700">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Cliente</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Produto</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Quantidade</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Última Atualização</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Ações</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-700">
-                    <tr class="hover:bg-slate-700">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-slate-100">João Silva</div>
-                            <div class="text-sm text-slate-400">Residencial</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-slate-100">Cloro Granulado</div>
-                            <div class="text-sm text-slate-400">Químico</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">25 unidades</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">15/01/2024</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                Normal
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button class="text-cyan-400 hover:text-cyan-300 mr-3">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="text-blue-400 hover:text-blue-300 mr-3">
-                                <i class="fas fa-history"></i>
-                            </button>
-                            <button class="text-red-400 hover:text-red-300">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    <tr class="hover:bg-slate-700">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-slate-100">Maria Santos</div>
-                            <div class="text-sm text-slate-400">Comercial</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-slate-100">Bomba de Filtro</div>
-                            <div class="text-sm text-slate-400">Equipamento</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">2 unidades</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">14/01/2024</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                Baixo
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button class="text-cyan-400 hover:text-cyan-300 mr-3">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="text-blue-400 hover:text-blue-300 mr-3">
-                                <i class="fas fa-history"></i>
-                            </button>
-                            <button class="text-red-400 hover:text-red-300">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+    @if (clienteSelecionadoId <= 0)
+    {
+        <div class="bg-slate-800 rounded-xl p-8 text-center">
+            <i class="fas fa-warehouse text-4xl text-slate-600 mb-4"></i>
+            <h4 class="text-lg font-medium text-slate-300 mb-2">Selecione um cliente</h4>
+            <p class="text-slate-400">Escolha um cliente acima para ver e movimentar o estoque dele.</p>
         </div>
-    </div>
-</section> 
+    }
+    else
+    {
+        <div class="flex justify-between items-center">
+            <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar produto..." class="flex-1 max-w-sm bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+            <button @onclick="() => AbrirNovaMovimentacao(null)" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
+                <i class="fas fa-plus mr-2"></i>Nova Movimentação
+            </button>
+        </div>
+
+        @if (carregando)
+        {
+            <LoadingSpinner IsVisible="true" Message="Carregando estoque..." />
+        }
+        else if (estoqueFiltrado.Any())
+        {
+            <div class="bg-slate-800 rounded-xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-slate-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Produto</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Saldo Atual</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Qtd. Mínima</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-700">
+                            @foreach (var item in estoqueFiltrado)
+                            {
+                                <tr class="hover:bg-slate-700">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-100">@item.Produto?.Nome</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@item.QuantidadeAtual.ToString("0.##") @item.Produto?.Unidade</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@(item.QuantidadeMinima?.ToString("0.##") ?? "-")</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="@ClasseStatus(item) px-2 py-1 text-xs font-semibold rounded-full">
+                                            @(EstoqueBaixo(item) ? "Baixo" : "OK")
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button @onclick="() => AbrirNovaMovimentacao(item.IDProduto)" class="text-cyan-400 hover:text-cyan-300 mr-3" title="Nova Movimentação">
+                                            <i class="fas fa-exchange-alt"></i>
+                                        </button>
+                                        <button @onclick="() => AbrirHistorico(item)" class="text-blue-400 hover:text-blue-300 mr-3" title="Histórico">
+                                            <i class="fas fa-history"></i>
+                                        </button>
+                                        <button @onclick="() => AbrirLimite(item)" class="text-amber-400 hover:text-amber-300 mr-3" title="Quantidade Mínima">
+                                            <i class="fas fa-sliders-h"></i>
+                                        </button>
+                                        <button @onclick="() => ExcluirVinculo(item)" class="text-red-400 hover:text-red-300" title="Remover do estoque">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="bg-slate-800 rounded-xl p-8 text-center">
+                <i class="fas fa-box text-4xl text-slate-600 mb-4"></i>
+                <h4 class="text-lg font-medium text-slate-300 mb-2">Nenhum produto no estoque deste cliente</h4>
+                <p class="text-slate-400">Clique em "Nova Movimentação" e registre uma Entrada para começar.</p>
+            </div>
+        }
+    }
+</section>
+
+<EstoqueMovimentacaoModal @bind-IsVisible="modalMovimentacaoVisible"
+                          ClienteId="clienteSelecionadoId"
+                          Produtos="produtosGlobais"
+                          EstoqueDoCliente="estoqueDoCliente"
+                          ProdutoIdFixo="produtoIdFixoParaMovimentacao"
+                          OnSave="RegistrarMovimentacao" />
+
+<EstoqueLimiteModal @bind-IsVisible="modalLimiteVisible"
+                     Estoque="estoqueParaLimite"
+                     OnSave="SalvarLimite" />
+
+<EstoqueHistoricoModal @bind-IsVisible="modalHistoricoVisible"
+                        ClienteId="clienteSelecionadoId"
+                        Produto="produtoParaHistorico"
+                        OnChanged="CarregarEstoque" />
+
+<ConfirmDialog @bind-IsVisible="confirmacaoExclusaoVisible"
+               Title="Remover do Estoque"
+               Message="Tem certeza que deseja parar de acompanhar este produto no estoque deste cliente?"
+               ConfirmText="Remover"
+               OnConfirm="ConfirmarExclusaoVinculo" />
+
+<Toast @bind-IsVisible="toastVisible"
+       Title="Notificação"
+       Message="@mensagemToast"
+       Type="@tipoToast" />
+
+@code {
+    private List<Cliente>? clientes;
+    private List<Produto>? produtosGlobais;
+    private List<EstoqueCliente>? estoqueDoCliente;
+    private int clienteSelecionadoId;
+    private string termoBusca = "";
+    private bool carregando = false;
+
+    private bool modalMovimentacaoVisible = false;
+    private int? produtoIdFixoParaMovimentacao;
+
+    private bool modalLimiteVisible = false;
+    private EstoqueCliente estoqueParaLimite = new EstoqueCliente();
+
+    private bool modalHistoricoVisible = false;
+    private Produto? produtoParaHistorico;
+
+    private bool confirmacaoExclusaoVisible = false;
+    private EstoqueCliente? estoqueParaExcluir;
+
+    private bool toastVisible = false;
+    private string mensagemToast = "";
+    private string tipoToast = "success";
+
+    private IEnumerable<EstoqueCliente> estoqueFiltrado => estoqueDoCliente?.Where(e =>
+        string.IsNullOrEmpty(termoBusca) || e.Produto?.Nome?.Contains(termoBusca, StringComparison.OrdinalIgnoreCase) == true
+    ) ?? Enumerable.Empty<EstoqueCliente>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            clientes = await ApiService.GetClientesAsync();
+            produtosGlobais = await ApiService.GetProdutosAsync();
+        }
+        catch (Exception ex)
+        {
+            MostrarNotificacao("Erro", $"Erro ao carregar dados: {ex.Message}", "error");
+            clientes = new List<Cliente>();
+            produtosGlobais = new List<Produto>();
+        }
+    }
+
+    private async Task CarregarEstoque()
+    {
+        if (clienteSelecionadoId <= 0)
+        {
+            estoqueDoCliente = null;
+            return;
+        }
+
+        try
+        {
+            carregando = true;
+            estoqueDoCliente = await ApiService.GetEstoqueByClienteAsync(clienteSelecionadoId);
+        }
+        catch (Exception ex)
+        {
+            MostrarNotificacao("Erro", $"Erro ao carregar estoque: {ex.Message}", "error");
+            estoqueDoCliente = new List<EstoqueCliente>();
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    private void AbrirNovaMovimentacao(int? produtoId)
+    {
+        produtoIdFixoParaMovimentacao = produtoId;
+        modalMovimentacaoVisible = true;
+    }
+
+    private async Task RegistrarMovimentacao(MovimentacaoEstoque movimentacao)
+    {
+        await ApiService.CreateMovimentacaoEstoqueAsync(movimentacao);
+        MostrarNotificacao("Sucesso", "Movimentação registrada com sucesso!", "success");
+        await CarregarEstoque();
+    }
+
+    private void AbrirLimite(EstoqueCliente item)
+    {
+        estoqueParaLimite = new EstoqueCliente
+        {
+            IDEstoque = item.IDEstoque,
+            IDCliente = item.IDCliente,
+            IDProduto = item.IDProduto,
+            QuantidadeMinima = item.QuantidadeMinima,
+            Produto = item.Produto
+        };
+        modalLimiteVisible = true;
+    }
+
+    private async Task SalvarLimite(EstoqueCliente item)
+    {
+        try
+        {
+            await ApiService.UpdateEstoqueAsync(item);
+            MostrarNotificacao("Sucesso", "Quantidade mínima atualizada!", "success");
+            await CarregarEstoque();
+        }
+        catch (Exception ex)
+        {
+            MostrarNotificacao("Erro", $"Erro ao salvar: {ex.Message}", "error");
+        }
+    }
+
+    private void AbrirHistorico(EstoqueCliente item)
+    {
+        produtoParaHistorico = item.Produto;
+        modalHistoricoVisible = true;
+    }
+
+    private void ExcluirVinculo(EstoqueCliente item)
+    {
+        estoqueParaExcluir = item;
+        confirmacaoExclusaoVisible = true;
+    }
+
+    private async Task ConfirmarExclusaoVinculo()
+    {
+        if (estoqueParaExcluir == null)
+        {
+            return;
+        }
+
+        try
+        {
+            await ApiService.DeleteEstoqueAsync(estoqueParaExcluir.IDEstoque);
+            MostrarNotificacao("Sucesso", "Produto removido do estoque do cliente!", "success");
+            await CarregarEstoque();
+        }
+        catch (Exception ex)
+        {
+            MostrarNotificacao("Erro", $"Erro ao remover: {ex.Message}", "error");
+        }
+        finally
+        {
+            estoqueParaExcluir = null;
+        }
+    }
+
+    private bool EstoqueBaixo(EstoqueCliente item) => item.QuantidadeMinima.HasValue && item.QuantidadeAtual <= item.QuantidadeMinima.Value;
+
+    private string ClasseStatus(EstoqueCliente item) => EstoqueBaixo(item) ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800";
+
+    private void MostrarNotificacao(string titulo, string mensagem, string tipo)
+    {
+        mensagemToast = mensagem;
+        tipoToast = tipo;
+        toastVisible = true;
+    }
+}

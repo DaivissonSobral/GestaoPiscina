@@ -1,0 +1,165 @@
+@using System.Globalization
+@using GestaoPiscina.Client.Models
+@using GestaoPiscina.Client.Services
+@inject ApiService ApiService
+
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 pt-8 @(IsVisible ? "" : "hidden")">
+    <div class="bg-slate-800 rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-slate-100">
+                Histórico — @Produto?.Nome
+            </h3>
+            <button type="button" @onclick="Close" class="text-slate-400 hover:text-slate-200">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        @if (carregando)
+        {
+            <p class="text-slate-400 text-sm">Carregando...</p>
+        }
+        else if (!movimentacoes.Any())
+        {
+            <p class="text-slate-400 text-sm">Nenhuma movimentação registrada ainda.</p>
+        }
+
+        @if (erro != null)
+        {
+            <p class="text-red-500 text-sm mb-2"><i class="fas fa-exclamation-circle mr-1"></i>@erro</p>
+        }
+        else
+        {
+            <div class="space-y-2">
+                @foreach (var mov in movimentacoes)
+                {
+                    <div class="bg-slate-700 rounded-lg p-3 flex items-center justify-between">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="@ClasseTipo(mov.Tipo) px-2 py-0.5 text-xs font-semibold rounded-full">@mov.Tipo</span>
+                                <span class="text-sm text-slate-300">@mov.Data.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)</span>
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(mov.Observacao))
+                            {
+                                <p class="text-xs text-slate-400 mt-1">@mov.Observacao</p>
+                            }
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-medium @(mov.Quantidade >= 0 ? "text-green-400" : "text-red-400")">
+                                @(mov.Quantidade >= 0 ? "+" : "")@mov.Quantidade.ToString("0.##")
+                            </span>
+                            @if (mov.Tipo != "Saida")
+                            {
+                                <button type="button" @onclick="() => Excluir(mov)" class="text-red-400 hover:text-red-300" title="Excluir">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <div class="mt-6">
+            <button type="button" @onclick="Close" class="w-full bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded-lg text-white transition-colors">
+                Fechar
+            </button>
+        </div>
+    </div>
+</div>
+
+<ConfirmDialog @bind-IsVisible="confirmacaoVisible"
+               Title="Confirmar Exclusão"
+               Message="Tem certeza que deseja excluir esta movimentação? O saldo será recalculado."
+               ConfirmText="Excluir"
+               OnConfirm="ConfirmarExclusao" />
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+    [Parameter] public int ClienteId { get; set; }
+    [Parameter] public Produto? Produto { get; set; }
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    private List<MovimentacaoEstoque> movimentacoes = new();
+    private bool carregando = true;
+    private bool confirmacaoVisible = false;
+    private MovimentacaoEstoque? movimentacaoParaExcluir;
+    private string? erro;
+    private bool wasVisible;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsVisible && !wasVisible && Produto != null)
+        {
+            await Carregar();
+        }
+        wasVisible = IsVisible;
+    }
+
+    private async Task Carregar()
+    {
+        if (Produto == null)
+        {
+            return;
+        }
+
+        carregando = true;
+        try
+        {
+            movimentacoes = await ApiService.GetMovimentacoesEstoqueAsync(ClienteId, Produto.IDProduto);
+        }
+        catch
+        {
+            movimentacoes = new List<MovimentacaoEstoque>();
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    private string ClasseTipo(string tipo) => tipo switch
+    {
+        "Entrada" => "bg-green-100 text-green-800",
+        "Saida" => "bg-red-100 text-red-800",
+        "Ajuste" => "bg-yellow-100 text-yellow-800",
+        "Inventario" => "bg-blue-100 text-blue-800",
+        _ => "bg-slate-100 text-slate-800"
+    };
+
+    private void Excluir(MovimentacaoEstoque mov)
+    {
+        movimentacaoParaExcluir = mov;
+        confirmacaoVisible = true;
+    }
+
+    private async Task ConfirmarExclusao()
+    {
+        if (movimentacaoParaExcluir == null)
+        {
+            return;
+        }
+
+        try
+        {
+            await ApiService.DeleteMovimentacaoEstoqueAsync(movimentacaoParaExcluir.IDMovimentacao);
+            erro = null;
+            await Carregar();
+            await OnChanged.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            erro = ex.Message;
+        }
+        finally
+        {
+            movimentacaoParaExcluir = null;
+        }
+    }
+
+    private async Task Close()
+    {
+        IsVisible = false;
+        await IsVisibleChanged.InvokeAsync(false);
+    }
+}

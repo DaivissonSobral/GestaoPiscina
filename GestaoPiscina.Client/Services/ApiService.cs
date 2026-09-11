@@ -539,6 +539,58 @@ namespace GestaoPiscina.Client.Services
             }
         }
 
+        // Movimentações de estoque (Entrada, Ajuste, Inventário — Saída é automática via dosagem na OS)
+        public async Task<List<MovimentacaoEstoque>> GetMovimentacoesEstoqueAsync(int clienteId, int produtoId)
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<List<MovimentacaoEstoque>>($"{_baseUrl}movimentacoesestoque/cliente/{clienteId}/produto/{produtoId}") ?? new List<MovimentacaoEstoque>();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao buscar histórico de movimentações: {ex.Message}");
+            }
+        }
+
+        public async Task<MovimentacaoEstoque> CreateMovimentacaoEstoqueAsync(MovimentacaoEstoque movimentacao)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}movimentacoesestoque", movimentacao);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+
+                var criada = await response.Content.ReadFromJsonAsync<MovimentacaoEstoque>();
+                return criada ?? movimentacao;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao registrar movimentação de estoque: {ex.Message}");
+            }
+        }
+
+        public async Task DeleteMovimentacaoEstoqueAsync(int id)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{_baseUrl}movimentacoesestoque/{id}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao excluir movimentação de estoque: {ex.Message}");
+            }
+        }
+
         // Dosagens de produtos (aplicadas numa OS)
         public async Task<List<DosagemProduto>> GetDosagensPorOSAsync(int osId)
         {

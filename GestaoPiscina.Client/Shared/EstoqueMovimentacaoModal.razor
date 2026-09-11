@@ -1,0 +1,272 @@
+@using GestaoPiscina.Client.Models
+
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 pt-8 @(IsVisible ? "" : "hidden")">
+    <div class="bg-slate-800 rounded-xl p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-slate-100">Nova Movimentação de Estoque</h3>
+            <button type="button" @onclick="Close" class="text-slate-400 hover:text-slate-200">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Tipo *</label>
+                <select @bind="tipo" @bind:after="OnTipoChanged" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                    <option value="Entrada">Entrada</option>
+                    <option value="Ajuste">Ajuste</option>
+                    <option value="Inventario">Inventário</option>
+                </select>
+                <p class="text-xs text-slate-400 mt-1">@DescricaoTipo()</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Produto *</label>
+                @if (ProdutoIdFixo.HasValue)
+                {
+                    <div class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-slate-300">
+                        @NomeProdutoFixo()
+                    </div>
+                }
+                else
+                {
+                    <select @bind="produtoIdSelecionado" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                        <option value="0">Selecione...</option>
+                        @foreach (var produto in OpcoesProduto())
+                        {
+                            <option value="@produto.IDProduto">@produto.Nome @(string.IsNullOrEmpty(produto.Unidade) ? "" : $"({produto.Unidade})")</option>
+                        }
+                    </select>
+                }
+                @if (ProdutoSelecionadoId() > 0)
+                {
+                    <p class="text-xs text-slate-400 mt-1">Saldo atual: @SaldoAtual().ToString("0.##") @UnidadeSelecionada()</p>
+                }
+            </div>
+
+            @if (tipo == "Entrada")
+            {
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Quantidade recebida *</label>
+                    <input type="number" step="0.01" min="0.01" @bind="quantidadeEntrada" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Ex: 20" />
+                </div>
+            }
+            else if (tipo == "Ajuste")
+            {
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Quantidade do ajuste *</label>
+                    <input type="number" step="0.01" @bind="quantidadeAjuste" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Ex: -2 (perda) ou 3 (sobra encontrada)" />
+                    <p class="text-xs text-slate-400 mt-1">Use negativo para perdas/quebras e positivo para sobras encontradas.</p>
+                </div>
+            }
+            else if (tipo == "Inventario")
+            {
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Quantidade contada *</label>
+                    <input type="number" step="0.01" min="0" @bind="quantidadeContada" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Ex: 15" />
+                </div>
+                @if (ProdutoSelecionadoId() > 0 && quantidadeContada.HasValue)
+                {
+                    <p class="text-xs text-slate-400">@PreviaInventario()</p>
+                }
+            }
+
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Data *</label>
+                <input type="date" @bind="data" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">
+                    @(tipo == "Ajuste" ? "Motivo do ajuste *" : "Observação")
+                </label>
+                <textarea @bind="observacao" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" rows="2" placeholder="@(tipo == "Ajuste" ? "Ex: quebra de embalagem, produto vencido..." : "Opcional")"></textarea>
+            </div>
+
+            @if (erro != null)
+            {
+                <p class="text-red-500 text-sm"><i class="fas fa-exclamation-circle mr-1"></i>@erro</p>
+            }
+        </div>
+
+        <div class="flex space-x-3 mt-6">
+            <button type="button" @onclick="Salvar" class="flex-1 bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
+                <i class="fas fa-save mr-2"></i>Salvar
+            </button>
+            <button type="button" @onclick="Close" class="flex-1 bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded-lg text-white transition-colors">
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+    [Parameter] public int ClienteId { get; set; }
+    [Parameter] public List<Produto>? Produtos { get; set; }
+    [Parameter] public List<EstoqueCliente>? EstoqueDoCliente { get; set; }
+    [Parameter] public int? ProdutoIdFixo { get; set; }
+    [Parameter] public EventCallback<MovimentacaoEstoque> OnSave { get; set; }
+
+    private string tipo = "Entrada";
+    private int produtoIdSelecionado;
+    private decimal? quantidadeEntrada;
+    private decimal? quantidadeAjuste;
+    private decimal? quantidadeContada;
+    private DateTime data = DateTime.Today;
+    private string? observacao;
+    private string? erro;
+    private bool wasVisible;
+
+    protected override void OnParametersSet()
+    {
+        if (IsVisible && !wasVisible)
+        {
+            tipo = "Entrada";
+            produtoIdSelecionado = ProdutoIdFixo ?? 0;
+            quantidadeEntrada = null;
+            quantidadeAjuste = null;
+            quantidadeContada = null;
+            data = DateTime.Today;
+            observacao = null;
+            erro = null;
+        }
+        wasVisible = IsVisible;
+    }
+
+    private int ProdutoSelecionadoId() => ProdutoIdFixo ?? produtoIdSelecionado;
+
+    private void OnTipoChanged()
+    {
+        // Ajuste/Inventário só valem para produtos já rastreados no estoque do
+        // cliente; ao trocar de Entrada para um desses tipos, se o produto
+        // selecionado não estiver rastreado, limpa a seleção.
+        if (tipo != "Entrada" && !ProdutoIdFixo.HasValue)
+        {
+            var aindaValido = EstoqueDoCliente?.Any(e => e.IDProduto == produtoIdSelecionado) == true;
+            if (!aindaValido)
+            {
+                produtoIdSelecionado = 0;
+            }
+        }
+        erro = null;
+    }
+
+    private IEnumerable<Produto> OpcoesProduto()
+    {
+        if (tipo == "Entrada")
+        {
+            return Produtos ?? Enumerable.Empty<Produto>();
+        }
+
+        return EstoqueDoCliente?.Select(e => e.Produto).Where(p => p != null).Distinct() ?? Enumerable.Empty<Produto>();
+    }
+
+    private string NomeProdutoFixo()
+    {
+        var produto = EstoqueDoCliente?.FirstOrDefault(e => e.IDProduto == ProdutoIdFixo)?.Produto
+            ?? Produtos?.FirstOrDefault(p => p.IDProduto == ProdutoIdFixo);
+        return produto == null ? "" : $"{produto.Nome}{(string.IsNullOrEmpty(produto.Unidade) ? "" : $" ({produto.Unidade})")}";
+    }
+
+    private decimal SaldoAtual() => EstoqueDoCliente?.FirstOrDefault(e => e.IDProduto == ProdutoSelecionadoId())?.QuantidadeAtual ?? 0m;
+
+    private string UnidadeSelecionada()
+    {
+        var produto = EstoqueDoCliente?.FirstOrDefault(e => e.IDProduto == ProdutoSelecionadoId())?.Produto
+            ?? Produtos?.FirstOrDefault(p => p.IDProduto == ProdutoSelecionadoId());
+        return produto?.Unidade ?? "";
+    }
+
+    private string DescricaoTipo() => tipo switch
+    {
+        "Entrada" => "Registra o recebimento de produto (compra, reposição).",
+        "Ajuste" => "Corrige o saldo manualmente — perdas, quebras ou sobras encontradas.",
+        "Inventario" => "Registra a contagem física do produto; o sistema calcula a diferença automaticamente.",
+        _ => ""
+    };
+
+    private string PreviaInventario()
+    {
+        var diferenca = (quantidadeContada ?? 0) - SaldoAtual();
+        if (diferenca == 0)
+        {
+            return "Sem diferença em relação ao saldo atual.";
+        }
+
+        var sinal = diferenca > 0 ? "+" : "";
+        return $"Isso vai gerar um ajuste de {sinal}{diferenca:0.##} {UnidadeSelecionada()}.";
+    }
+
+    private async Task Close()
+    {
+        IsVisible = false;
+        await IsVisibleChanged.InvokeAsync(false);
+    }
+
+    private async Task Salvar()
+    {
+        var idProduto = ProdutoSelecionadoId();
+        if (idProduto <= 0)
+        {
+            erro = "Selecione um produto.";
+            return;
+        }
+
+        var movimentacao = new MovimentacaoEstoque
+        {
+            IDCliente = ClienteId,
+            IDProduto = idProduto,
+            Tipo = tipo,
+            Data = data,
+            Observacao = observacao
+        };
+
+        switch (tipo)
+        {
+            case "Entrada":
+                if (!quantidadeEntrada.HasValue || quantidadeEntrada.Value <= 0)
+                {
+                    erro = "Informe uma quantidade recebida maior que zero.";
+                    return;
+                }
+                movimentacao.Quantidade = quantidadeEntrada.Value;
+                break;
+
+            case "Ajuste":
+                if (!quantidadeAjuste.HasValue || quantidadeAjuste.Value == 0)
+                {
+                    erro = "Informe uma quantidade de ajuste diferente de zero.";
+                    return;
+                }
+                if (string.IsNullOrWhiteSpace(observacao))
+                {
+                    erro = "Informe o motivo do ajuste.";
+                    return;
+                }
+                movimentacao.Quantidade = quantidadeAjuste.Value;
+                break;
+
+            case "Inventario":
+                if (!quantidadeContada.HasValue || quantidadeContada.Value < 0)
+                {
+                    erro = "Informe a quantidade contada.";
+                    return;
+                }
+                movimentacao.QuantidadeContada = quantidadeContada.Value;
+                break;
+        }
+
+        try
+        {
+            await OnSave.InvokeAsync(movimentacao);
+            erro = null;
+            await Close();
+        }
+        catch (Exception ex)
+        {
+            erro = ex.Message;
+        }
+    }
+}

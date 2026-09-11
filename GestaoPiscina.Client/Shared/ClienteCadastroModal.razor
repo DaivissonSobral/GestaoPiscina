@@ -206,19 +206,61 @@
                 }
                 else if (StateService.ActiveTab == "produtos")
                 {
-                    <EstoqueForm
-                        ClienteId="StateService.CurrentCliente.IDCliente"
-                        Estoques="StateService.Estoques"
-                        Produtos="StateService.Produtos"
-                        Estoque="StateService.CurrentEstoque"
-                        SelectedProdutoId="StateService.SelectedProdutoId"
-                        ShowForm="StateService.ShowEstoqueForm"
-                        OnCreate="ShowCreateEstoque"
-                        OnClose="CloseEstoqueForm"
-                        OnSave="HandleSaveEstoque"
-                        OnEdit="ShowEditEstoque"
-                        OnDelete="DeleteEstoque"
-                        OnProdutoSelected="OnProdutoSelected" />
+                    <div class="space-y-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h5 class="text-lg font-semibold text-slate-200 flex items-center">
+                                <i class="fas fa-box text-cyan-400 mr-2"></i>Estoque
+                            </h5>
+                            <button type="button" @onclick="() => AbrirNovaMovimentacao(null)" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-2 rounded-lg text-white text-sm transition-colors">
+                                <i class="fas fa-plus mr-1"></i>Nova Movimentação
+                            </button>
+                        </div>
+
+                        @if (StateService.Estoques != null && StateService.Estoques.Any())
+                        {
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                @foreach (var item in StateService.Estoques)
+                                {
+                                    <div class="bg-slate-800 rounded-xl p-4 space-y-3">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex-1">
+                                                <h4 class="text-sm font-medium text-slate-100">@item.Produto?.Nome</h4>
+                                                <span class="text-sm text-slate-400">Saldo: @item.QuantidadeAtual.ToString("0.##") @item.Produto?.Unidade</span>
+                                                @if (item.QuantidadeMinima.HasValue)
+                                                {
+                                                    <div class="text-xs @(EstoqueBaixo(item) ? "text-red-400" : "text-slate-500")">
+                                                        Mínimo: @item.QuantidadeMinima.Value.ToString("0.##")
+                                                    </div>
+                                                }
+                                            </div>
+                                            <div class="flex space-x-2 ml-2">
+                                                <button type="button" @onclick="() => AbrirNovaMovimentacao(item.IDProduto)" class="text-cyan-400 hover:text-cyan-300 p-1" title="Nova Movimentação">
+                                                    <i class="fas fa-exchange-alt"></i>
+                                                </button>
+                                                <button type="button" @onclick="() => AbrirHistoricoEstoque(item)" class="text-blue-400 hover:text-blue-300 p-1" title="Histórico">
+                                                    <i class="fas fa-history"></i>
+                                                </button>
+                                                <button type="button" @onclick="() => AbrirLimiteEstoque(item)" class="text-amber-400 hover:text-amber-300 p-1" title="Quantidade Mínima">
+                                                    <i class="fas fa-sliders-h"></i>
+                                                </button>
+                                                <button type="button" @onclick="() => DeleteEstoque(item)" class="text-red-400 hover:text-red-300 p-1" title="Remover">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-8 text-slate-400">
+                                <i class="fas fa-box text-4xl mb-4"></i>
+                                <p class="text-lg">Nenhum produto no estoque</p>
+                                <p class="text-sm mt-2">Clique em "Nova Movimentação" e registre uma Entrada para começar</p>
+                            </div>
+                        }
+                    </div>
                 }
             </div>
             
@@ -250,6 +292,22 @@
                   ClienteId="StateService.CurrentCliente.IDCliente"
                   OnSave="HandleSaveEquipamento" />
 
+<EstoqueMovimentacaoModal @bind-IsVisible="movimentacaoModalVisible"
+                          ClienteId="StateService.CurrentCliente.IDCliente"
+                          Produtos="StateService.Produtos"
+                          EstoqueDoCliente="StateService.Estoques"
+                          ProdutoIdFixo="produtoIdFixoParaMovimentacao"
+                          OnSave="RegistrarMovimentacaoEstoque" />
+
+<EstoqueLimiteModal @bind-IsVisible="limiteModalVisible"
+                     Estoque="estoqueParaLimite"
+                     OnSave="SalvarLimiteEstoque" />
+
+<EstoqueHistoricoModal @bind-IsVisible="historicoModalVisible"
+                        ClienteId="StateService.CurrentCliente.IDCliente"
+                        Produto="produtoParaHistorico"
+                        OnChanged="LoadRelatedData" />
+
 <ConfirmDialog @bind-IsVisible="showConfirmDialog"
                Title="Confirmar Exclusão"
                Message="Tem certeza que deseja excluir este item?"
@@ -267,6 +325,12 @@
     private bool showConfirmDialog = false;
     private bool piscinaModalVisible = false;
     private bool equipamentoModalVisible = false;
+    private bool movimentacaoModalVisible = false;
+    private int? produtoIdFixoParaMovimentacao;
+    private bool limiteModalVisible = false;
+    private EstoqueCliente estoqueParaLimite = new EstoqueCliente();
+    private bool historicoModalVisible = false;
+    private Produto? produtoParaHistorico;
     private object? itemToDelete = null;
     private bool ClienteSalvo => StateService.CurrentCliente.IDCliente > 0;
     private List<Gestor>? gestores;
@@ -627,97 +691,52 @@
     }
 
     // Métodos para Estoque
-    private void ShowCreateEstoque()
+    private bool EstoqueBaixo(EstoqueCliente item) => item.QuantidadeMinima.HasValue && item.QuantidadeAtual <= item.QuantidadeMinima.Value;
+
+    private void AbrirNovaMovimentacao(int? produtoId)
     {
-        StateService.CurrentEstoque = new EstoqueCliente 
-        { 
-            IDCliente = StateService.CurrentCliente.IDCliente,
-            Produto = new Produto(),
-            QuantidadeAtual = 0,
-            QuantidadeMinima = null
-        };
-        StateService.SelectedProdutoId = 0;
-        StateService.ShowEstoqueForm = true;
+        produtoIdFixoParaMovimentacao = produtoId;
+        movimentacaoModalVisible = true;
     }
 
-    private void ShowEditEstoque(EstoqueCliente estoque)
+    private async Task RegistrarMovimentacaoEstoque(MovimentacaoEstoque movimentacao)
     {
-        StateService.CurrentEstoque = new EstoqueCliente
+        await ApiService.CreateMovimentacaoEstoqueAsync(movimentacao);
+        ShowToast("Sucesso", "Movimentação registrada com sucesso!", "success");
+        await LoadRelatedData();
+    }
+
+    private void AbrirLimiteEstoque(EstoqueCliente item)
+    {
+        estoqueParaLimite = new EstoqueCliente
         {
-            IDEstoque = estoque.IDEstoque,
-            IDCliente = estoque.IDCliente,
-            IDProduto = estoque.IDProduto,
-            QuantidadeAtual = estoque.QuantidadeAtual,
-            QuantidadeMinima = estoque.QuantidadeMinima,
-            Produto = new Produto
-            {
-                IDProduto = estoque.Produto.IDProduto,
-                Nome = estoque.Produto.Nome,
-                Concentracao = estoque.Produto.Concentracao,
-                Unidade = estoque.Produto.Unidade
-            }
+            IDEstoque = item.IDEstoque,
+            IDCliente = item.IDCliente,
+            IDProduto = item.IDProduto,
+            QuantidadeMinima = item.QuantidadeMinima,
+            Produto = item.Produto
         };
-        StateService.SelectedProdutoId = estoque.IDProduto;
-        StateService.ShowEstoqueForm = true;
+        limiteModalVisible = true;
     }
 
-    private void CloseEstoqueForm()
+    private async Task SalvarLimiteEstoque(EstoqueCliente item)
     {
-        StateService.ShowEstoqueForm = false;
-        StateService.CurrentEstoque = new EstoqueCliente();
-        StateService.SelectedProdutoId = 0;
-    }
-
-    private async Task HandleSaveEstoque()
-    {
-        isLoading = true;
         try
         {
-            StateService.CurrentEstoque.IDCliente = StateService.CurrentCliente.IDCliente;
-
-            if (StateService.SelectedProdutoId <= 0)
-            {
-                ShowToast("Erro", "Selecione um produto", "error");
-                return;
-            }
-
-            if (StateService.CurrentEstoque.QuantidadeAtual < 0)
-            {
-                ShowToast("Erro", "Quantidade atual deve ser maior ou igual a zero", "error");
-                return;
-            }
-
-            var produtoSelecionado = StateService.Produtos?.FirstOrDefault(p => p.IDProduto == StateService.SelectedProdutoId);
-            if (produtoSelecionado == null)
-            {
-                ShowToast("Erro", "Produto selecionado não encontrado", "error");
-                return;
-            }
-
-            StateService.CurrentEstoque.IDProduto = produtoSelecionado.IDProduto;
-
-            if (StateService.CurrentEstoque.IDEstoque > 0)
-            {
-                await ApiService.UpdateEstoqueAsync(StateService.CurrentEstoque);
-                ShowToast("Sucesso", "Item do estoque atualizado com sucesso!", "success");
-            }
-            else
-            {
-                await ApiService.CreateEstoqueAsync(StateService.CurrentEstoque);
-                ShowToast("Sucesso", "Item do estoque criado com sucesso!", "success");
-            }
-
+            await ApiService.UpdateEstoqueAsync(item);
+            ShowToast("Sucesso", "Quantidade mínima atualizada!", "success");
             await LoadRelatedData();
-            CloseEstoqueForm();
         }
         catch (Exception ex)
         {
-            ShowToast("Erro", $"Erro ao salvar item do estoque: {ex.Message}", "error");
+            ShowToast("Erro", $"Erro ao salvar: {ex.Message}", "error");
         }
-        finally
-        {
-            isLoading = false;
-        }
+    }
+
+    private void AbrirHistoricoEstoque(EstoqueCliente item)
+    {
+        produtoParaHistorico = item.Produto;
+        historicoModalVisible = true;
     }
 
     private void DeleteEstoque(EstoqueCliente estoque)
@@ -805,31 +824,6 @@
         {
             isLoading = false;
         }
-    }
-
-    private void OnProdutoSelected(int produtoId)
-    {
-        StateService.SelectedProdutoId = produtoId;
-        var produtoSelecionado = produtoId > 0 ? StateService.Produtos?.FirstOrDefault(p => p.IDProduto == produtoId) : null;
-
-        if (produtoSelecionado != null)
-        {
-            StateService.CurrentEstoque.Produto = new Produto
-            {
-                IDProduto = produtoSelecionado.IDProduto,
-                Nome = produtoSelecionado.Nome,
-                Concentracao = produtoSelecionado.Concentracao,
-                Unidade = produtoSelecionado.Unidade
-            };
-            StateService.CurrentEstoque.IDProduto = produtoSelecionado.IDProduto;
-        }
-        else
-        {
-            StateService.CurrentEstoque.Produto = new Produto();
-            StateService.CurrentEstoque.IDProduto = 0;
-        }
-
-        StateService.NotifyStateChanged();
     }
 
     private void ShowToast(string title, string message, string type)

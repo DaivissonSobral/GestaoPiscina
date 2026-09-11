@@ -13,15 +13,10 @@ namespace GestaoPiscina.Client.Services
         public List<EstoqueCliente>? Estoques { get; set; }
         public List<Produto>? Produtos { get; set; }
 
-        // Estado dos formulários
-        public bool ShowEstoqueForm { get; set; }
-        
         // Objetos atuais dos formulários
         public Piscina CurrentPiscina { get; set; } = new();
         public Equipamento CurrentEquipamento { get; set; } = new();
-        public EstoqueCliente CurrentEstoque { get; set; } = new();
-        public int SelectedProdutoId { get; set; }
-        
+
         // Estado da visualização
         public string CurrentView { get; set; } = "lista";
         public string ViewMode { get; set; } = "lista";
@@ -60,11 +55,8 @@ namespace GestaoPiscina.Client.Services
             Equipamentos = null;
             Estoques = null;
             Produtos = null;
-            ShowEstoqueForm = false;
             CurrentPiscina = new Piscina();
             CurrentEquipamento = new Equipamento();
-            CurrentEstoque = new EstoqueCliente();
-            SelectedProdutoId = 0;
             CurrentView = "lista";
             ViewMode = "lista";
             ActiveTab = "dados";

@@ -21,6 +21,7 @@ namespace GestaoPiscina.Server.Data
         public DbSet<Gestor> Gestores { get; set; }
         public DbSet<GestorCliente> GestorClientes { get; set; }
         public DbSet<DosagemProduto> DosagensProdutos { get; set; }
+        public DbSet<MovimentacaoEstoque> MovimentacoesEstoque { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -104,7 +105,6 @@ namespace GestaoPiscina.Server.Data
             modelBuilder.Entity<EstoqueCliente>(entity =>
             {
                 entity.HasKey(e => e.IDEstoque);
-                entity.Property(e => e.QuantidadeAtual).IsRequired().HasPrecision(10, 2);
                 entity.Property(e => e.QuantidadeMinima).HasPrecision(10, 2);
                 entity.HasOne(e => e.Cliente)
                     .WithMany(c => c.Estoques)
@@ -114,6 +114,29 @@ namespace GestaoPiscina.Server.Data
                     .WithMany(p => p.Estoques)
                     .HasForeignKey(e => e.IDProduto)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<MovimentacaoEstoque>(entity =>
+            {
+                entity.HasKey(e => e.IDMovimentacao);
+                entity.Property(e => e.Tipo).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Quantidade).IsRequired().HasPrecision(10, 2);
+                entity.Property(e => e.QuantidadeContada).HasPrecision(10, 2);
+                entity.Property(e => e.Data).IsRequired();
+                entity.Property(e => e.Observacao).HasMaxLength(255);
+                entity.HasOne(e => e.Cliente)
+                    .WithMany()
+                    .HasForeignKey(e => e.IDCliente)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Produto)
+                    .WithMany()
+                    .HasForeignKey(e => e.IDProduto)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Dosagem)
+                    .WithMany()
+                    .HasForeignKey(e => e.IDDosagem)
+                    .OnDelete(DeleteBehavior.SetNull);
+                entity.HasIndex(e => new { e.IDCliente, e.IDProduto });
             });
 
             modelBuilder.Entity<Equipamento>(entity =>
