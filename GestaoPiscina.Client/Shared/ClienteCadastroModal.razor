@@ -93,16 +93,62 @@
                 }
                 else if (StateService.ActiveTab == "piscinas")
                 {
-                    <PiscinaForm
-                        ClienteId="StateService.CurrentCliente.IDCliente"
-                        Piscinas="StateService.Piscinas"
-                        Piscina="StateService.CurrentPiscina"
-                        ShowForm="StateService.ShowPiscinaForm"
-                        OnCreate="ShowCreatePiscina"
-                        OnClose="ClosePiscinaForm"
-                        OnSave="HandleSavePiscina"
-                        OnEdit="ShowEditPiscina"
-                        OnDelete="DeletePiscina" />
+                    <div class="space-y-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h5 class="text-lg font-semibold text-slate-200 flex items-center">
+                                <i class="fas fa-swimming-pool text-cyan-400 mr-2"></i>Piscinas
+                            </h5>
+                            <button type="button" @onclick="ShowCreatePiscina" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-2 rounded-lg text-white text-sm transition-colors">
+                                <i class="fas fa-plus mr-1"></i>Nova Piscina
+                            </button>
+                        </div>
+
+                        @if (StateService.Piscinas != null && StateService.Piscinas.Any())
+                        {
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                @foreach (var piscina in StateService.Piscinas)
+                                {
+                                    <div class="bg-slate-800 rounded-xl p-4 space-y-3">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex-1">
+                                                <h4 class="text-sm font-medium text-slate-100">@NomeTipoPiscina(piscina.Tipo)</h4>
+                                                <span class="text-sm text-slate-400">Volume: @piscina.VolumeLitros L</span>
+                                            </div>
+                                            <div class="flex space-x-3 ml-4">
+                                                <button type="button" @onclick="() => ShowEditPiscina(piscina)" class="text-cyan-400 hover:text-cyan-300 p-2 rounded transition-colors" title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button type="button" @onclick="() => DeletePiscina(piscina)" class="text-red-400 hover:text-red-300 p-2 rounded transition-colors" title="Excluir">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        @if (!string.IsNullOrEmpty(piscina.Localizacao))
+                                        {
+                                            <div class="text-sm text-slate-400">
+                                                <i class="fas fa-map-marker-alt text-slate-500 mr-2"></i>@piscina.Localizacao
+                                            </div>
+                                        }
+                                        @if (DescricaoRecorrenciaPiscina(piscina) is { } descricaoRecorrencia)
+                                        {
+                                            <div class="text-xs text-slate-500 border-t border-slate-700 pt-2 mt-2">
+                                                <i class="fas fa-redo mr-2"></i>@descricaoRecorrencia
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-8 text-slate-400">
+                                <i class="fas fa-swimming-pool text-4xl mb-4"></i>
+                                <p class="text-lg">Nenhuma piscina cadastrada</p>
+                                <p class="text-sm mt-2">Clique em "Nova Piscina" para adicionar</p>
+                            </div>
+                        }
+                    </div>
                 }
                 else if (StateService.ActiveTab == "equipamentos")
                 {
@@ -153,6 +199,11 @@
     </div>
 </div>
 
+<PiscinaModal @bind-IsVisible="piscinaModalVisible"
+              Piscina="StateService.CurrentPiscina"
+              ClienteId="StateService.CurrentCliente.IDCliente"
+              OnSave="HandleSavePiscina" />
+
 <ConfirmDialog @bind-IsVisible="showConfirmDialog"
                Title="Confirmar Exclusão"
                Message="Tem certeza que deseja excluir este item?"
@@ -168,6 +219,7 @@
 
     private bool isLoading = false;
     private bool showConfirmDialog = false;
+    private bool piscinaModalVisible = false;
     private object? itemToDelete = null;
     private bool ClienteSalvo => StateService.CurrentCliente.IDCliente > 0;
     private List<Gestor>? gestores;
@@ -367,7 +419,7 @@
     private void ShowCreatePiscina()
     {
         StateService.CurrentPiscina = new Piscina { IDCliente = StateService.CurrentCliente.IDCliente, IDPiscina = 0 };
-        StateService.ShowPiscinaForm = true;
+        piscinaModalVisible = true;
     }
 
     private void ShowEditPiscina(Piscina piscina)
@@ -389,74 +441,26 @@
             RecorrenciaDataFim = piscina.RecorrenciaDataFim,
             RecorrenciaOcorrencias = piscina.RecorrenciaOcorrencias
         };
-        StateService.ShowPiscinaForm = true;
+        piscinaModalVisible = true;
     }
 
-    private void ClosePiscinaForm()
-    {
-        StateService.ShowPiscinaForm = false;
-        StateService.CurrentPiscina = new Piscina();
-    }
-
-    private async Task HandleSavePiscina()
+    private async Task HandleSavePiscina(Piscina piscina)
     {
         isLoading = true;
         try
         {
-            StateService.CurrentPiscina.IDCliente = StateService.CurrentCliente.IDCliente;
-
-            if (string.IsNullOrWhiteSpace(StateService.CurrentPiscina.Tipo))
+            if (piscina.IDPiscina > 0)
             {
-                ShowToast("Erro", "Tipo de piscina é obrigatório", "error");
-                return;
-            }
-
-            if (StateService.CurrentPiscina.VolumeLitros <= 0)
-            {
-                ShowToast("Erro", "Volume deve ser maior que zero", "error");
-                return;
-            }
-
-            if (StateService.CurrentPiscina.RecorrenciaFrequencia != "Nenhuma")
-            {
-                if (StateService.CurrentPiscina.RecorrenciaDataInicio == null)
-                {
-                    ShowToast("Erro", "Informe a data de início da recorrência", "error");
-                    return;
-                }
-
-                if (StateService.CurrentPiscina.RecorrenciaFrequencia == "Semanal" && string.IsNullOrWhiteSpace(StateService.CurrentPiscina.RecorrenciaDiasSemana))
-                {
-                    ShowToast("Erro", "Selecione ao menos um dia da semana para a recorrência", "error");
-                    return;
-                }
-
-                if (StateService.CurrentPiscina.RecorrenciaTermino == "Data" && StateService.CurrentPiscina.RecorrenciaDataFim == null)
-                {
-                    ShowToast("Erro", "Informe a data de término da recorrência", "error");
-                    return;
-                }
-
-                if (StateService.CurrentPiscina.RecorrenciaTermino == "Ocorrencias" && (StateService.CurrentPiscina.RecorrenciaOcorrencias ?? 0) <= 0)
-                {
-                    ShowToast("Erro", "Informe um número de ocorrências maior que zero", "error");
-                    return;
-                }
-            }
-
-            if (StateService.CurrentPiscina.IDPiscina > 0)
-            {
-                await ApiService.UpdatePiscinaAsync(StateService.CurrentPiscina);
+                await ApiService.UpdatePiscinaAsync(piscina);
                 ShowToast("Sucesso", "Piscina atualizada com sucesso!", "success");
             }
             else
             {
-                await ApiService.CreatePiscinaAsync(StateService.CurrentPiscina);
+                await ApiService.CreatePiscinaAsync(piscina);
                 ShowToast("Sucesso", "Piscina criada com sucesso!", "success");
             }
 
             await LoadRelatedData();
-            ClosePiscinaForm();
         }
         catch (Exception ex)
         {
@@ -466,6 +470,52 @@
         {
             isLoading = false;
         }
+    }
+
+    private string NomeTipoPiscina(string tipo) => tipo switch
+    {
+        "adulto" => "Piscina Adulta",
+        "infantil" => "Piscina Infantil",
+        "espelho" => "Espelho D'água",
+        _ => tipo
+    };
+
+    private string? DescricaoRecorrenciaPiscina(Piscina piscina)
+    {
+        if (piscina.RecorrenciaFrequencia == "Nenhuma")
+        {
+            return null;
+        }
+
+        var intervalo = piscina.RecorrenciaIntervalo;
+        string baseTexto;
+
+        switch (piscina.RecorrenciaFrequencia)
+        {
+            case "Diaria":
+                baseTexto = intervalo <= 1 ? "Repete diariamente" : $"Repete a cada {intervalo} dias";
+                break;
+            case "Semanal":
+                var dias = string.IsNullOrWhiteSpace(piscina.RecorrenciaDiasSemana) ? "" : $" às {piscina.RecorrenciaDiasSemana.Replace(",", ", ")}";
+                baseTexto = (intervalo <= 1 ? "Repete semanalmente" : $"Repete a cada {intervalo} semanas") + dias;
+                break;
+            case "Mensal":
+                var dia = piscina.RecorrenciaDataInicio?.Day;
+                var noDia = dia.HasValue ? $" no dia {dia}" : "";
+                baseTexto = (intervalo <= 1 ? "Repete mensalmente" : $"Repete a cada {intervalo} meses") + noDia;
+                break;
+            default:
+                return null;
+        }
+
+        var termino = piscina.RecorrenciaTermino switch
+        {
+            "Data" when piscina.RecorrenciaDataFim.HasValue => $", até {piscina.RecorrenciaDataFim.Value:dd/MM/yyyy}",
+            "Ocorrencias" when piscina.RecorrenciaOcorrencias.HasValue => $", por {piscina.RecorrenciaOcorrencias} vez(es)",
+            _ => ""
+        };
+
+        return baseTexto + termino;
     }
 
     private void DeletePiscina(Piscina piscina)

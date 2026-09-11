@@ -15,27 +15,26 @@
             <DataAnnotationsValidator />
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="md:col-span-2 space-y-2">
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Cliente *</label>
-                    <InputSelect TValue="int" Value="Piscina.IDCliente" ValueChanged="OnClienteChanged" ValueExpression="() => Piscina.IDCliente" disabled="@(Piscina.IDPiscina > 0)" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 disabled:opacity-60 disabled:cursor-not-allowed">
-                        <option value="0">Selecione...</option>
-                        @if (Clientes != null)
-                        {
-                            @foreach (var cliente in Clientes)
+                @if (ClienteId <= 0)
+                {
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Cliente *</label>
+                        <InputSelect TValue="int" Value="Piscina.IDCliente" ValueChanged="OnClienteChanged" ValueExpression="() => Piscina.IDCliente" disabled="@(Piscina.IDPiscina > 0)" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 disabled:opacity-60 disabled:cursor-not-allowed">
+                            <option value="0">Selecione...</option>
+                            @if (Clientes != null)
                             {
-                                <option value="@cliente.IDCliente">@cliente.Nome</option>
+                                @foreach (var cliente in Clientes)
+                                {
+                                    <option value="@cliente.IDCliente">@cliente.Nome</option>
+                                }
                             }
+                        </InputSelect>
+                        @if (Piscina.IDPiscina > 0)
+                        {
+                            <p class="text-xs text-slate-400">O cliente não pode ser alterado após o cadastro.</p>
                         }
-                    </InputSelect>
-                    @if (Piscina.IDPiscina > 0)
-                    {
-                        <p class="text-xs text-slate-400">O cliente não pode ser alterado após o cadastro.</p>
-                    }
-                    @if (erroCliente != null)
-                    {
-                        <p class="text-red-500 text-sm">@erroCliente</p>
-                    }
-                </div>
+                    </div>
+                }
 
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-slate-300 mb-2">Tipo *</label>
@@ -149,6 +148,11 @@
                 </div>
             </div>
 
+            @if (erro != null)
+            {
+                <p class="text-red-500 text-sm mt-4"><i class="fas fa-exclamation-circle mr-1"></i>@erro</p>
+            }
+
             <div class="flex space-x-3 mt-6">
                 <button type="submit" class="flex-1 bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
                     <i class="fas fa-save mr-2"></i>Salvar
@@ -165,11 +169,15 @@
     [Parameter] public bool IsVisible { get; set; }
     [Parameter] public Piscina Piscina { get; set; } = new Piscina();
     [Parameter] public List<Cliente>? Clientes { get; set; }
+    // Quando > 0, o modal é usado num contexto de cliente já fixado (aba Piscinas do
+    // cadastro de cliente): o seletor de Cliente fica oculto e o ID é aplicado direto.
+    // Quando 0, é o uso "global" (lista de Piscinas), com o seletor de Cliente visível.
+    [Parameter] public int ClienteId { get; set; }
     [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
     [Parameter] public EventCallback<Piscina> OnSave { get; set; }
 
     private readonly string[] diasSemana = { "Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab" };
-    private string? erroCliente;
+    private string? erro;
 
     private List<string> DiasSemanaSelecionados =>
         (Piscina.RecorrenciaDiasSemana ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
@@ -209,20 +217,51 @@
 
     private async Task Close()
     {
-        erroCliente = null;
+        erro = null;
         IsVisible = false;
         await IsVisibleChanged.InvokeAsync(false);
     }
 
     private async Task HandleSubmit()
     {
-        if (Piscina.IDCliente <= 0)
+        if (ClienteId > 0)
         {
-            erroCliente = "Selecione um cliente.";
+            Piscina.IDCliente = ClienteId;
+        }
+        else if (Piscina.IDCliente <= 0)
+        {
+            erro = "Selecione um cliente.";
             return;
         }
 
-        erroCliente = null;
+        if (Piscina.RecorrenciaFrequencia != "Nenhuma")
+        {
+            if (Piscina.RecorrenciaDataInicio == null)
+            {
+                erro = "Informe a data de início da recorrência.";
+                return;
+            }
+
+            if (Piscina.RecorrenciaFrequencia == "Semanal" && string.IsNullOrWhiteSpace(Piscina.RecorrenciaDiasSemana))
+            {
+                erro = "Selecione ao menos um dia da semana para a recorrência.";
+                return;
+            }
+
+            if (Piscina.RecorrenciaTermino == "Data" && Piscina.RecorrenciaDataFim == null)
+            {
+                erro = "Informe a data de término da recorrência.";
+                return;
+            }
+
+            if (Piscina.RecorrenciaTermino == "Ocorrencias" && (Piscina.RecorrenciaOcorrencias ?? 0) <= 0)
+            {
+                erro = "Informe um número de ocorrências maior que zero.";
+                return;
+            }
+        }
+
+        erro = null;
         await OnSave.InvokeAsync(Piscina);
         await Close();
     }
