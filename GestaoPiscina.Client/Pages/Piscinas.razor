@@ -1,104 +1,135 @@
 @page "/piscinas"
 @using GestaoPiscina.Client.Services
 @using GestaoPiscina.Client.Models
+@using GestaoPiscina.Client.Shared
 @inject ApiService ApiService
 
 <section class="p-4 space-y-6">
-    <h3 class="text-xl font-bold mb-4">Gestão de Piscinas</h3>
-
-    <div class="mb-4 flex justify-between items-center">
-        <button class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
+    <div class="flex justify-between items-center">
+        <h3 class="text-xl font-bold">Gestão de Piscinas</h3>
+        <button @onclick="AbrirModalNovo" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
             <i class="fas fa-plus mr-2"></i>Nova Piscina
         </button>
     </div>
 
-    <div class="flex space-x-2 mb-4">
-        <input type="text" placeholder="Buscar piscinas..." class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-        <select class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+    <div class="flex space-x-2">
+        <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar piscinas..." class="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+        <select @bind="filtroTipo" class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
             <option value="">Todos os Tipos</option>
-            <option value="fibra">Fibra</option>
-            <option value="vinil">Vinil</option>
-            <option value="alvenaria">Alvenaria</option>
+            <option value="adulto">Adulto</option>
+            <option value="infantil">Infantil</option>
+            <option value="espelho">Espelho d'água</option>
         </select>
     </div>
 
-    <div class="bg-slate-800 rounded-xl overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-slate-700">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Cliente</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Tipo</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Volume</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Ações</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-700">
-                    <tr class="hover:bg-slate-700">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-slate-100">João Silva</div>
-                            <div class="text-sm text-slate-400">Residencial</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                Fibra
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">50.000L</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                Ativa
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button class="text-cyan-400 hover:text-cyan-300 mr-3">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="text-red-400 hover:text-red-300">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    <tr class="hover:bg-slate-700">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-slate-100">Maria Santos</div>
-                            <div class="text-sm text-slate-400">Comercial</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                Vinil
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">100.000L</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                Manutenção
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button class="text-cyan-400 hover:text-cyan-300 mr-3">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="text-red-400 hover:text-red-300">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+    @if (carregando)
+    {
+        <LoadingSpinner IsVisible="true" Message="Carregando piscinas..." />
+    }
+    else if (piscinasFiltradas.Any())
+    {
+        <div class="bg-slate-800 rounded-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-slate-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Cliente</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Tipo</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Volume</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Localização</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Periodicidade</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700">
+                        @foreach (var piscina in piscinasFiltradas)
+                        {
+                            <tr class="hover:bg-slate-700">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-slate-100">@piscina.Cliente?.Nome</div>
+                                    <div class="text-sm text-slate-400">@piscina.Cliente?.Tipo</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="@GetTipoClass(piscina.Tipo) px-2 py-1 text-xs font-semibold rounded-full">
+                                        @NomeTipo(piscina.Tipo)
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@piscina.VolumeLitros L</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@(string.IsNullOrEmpty(piscina.Localizacao) ? "-" : piscina.Localizacao)</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@(DescricaoRecorrencia(piscina) ?? "Não se repete")</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button @onclick="() => AbrirModalEditar(piscina)" class="text-cyan-400 hover:text-cyan-300 mr-3" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button @onclick="() => ExcluirPiscina(piscina)" class="text-red-400 hover:text-red-300" title="Excluir">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
+    }
+    else
+    {
+        <div class="bg-slate-800 rounded-xl p-8 text-center">
+            <i class="fas fa-swimming-pool text-4xl text-slate-600 mb-4"></i>
+            <h4 class="text-lg font-medium text-slate-300 mb-2">Nenhuma piscina encontrada</h4>
+            <p class="text-slate-400">Clique em "Nova Piscina" para adicionar.</p>
+        </div>
+    }
 </section>
+
+<PiscinaModal @bind-IsVisible="modalVisible"
+              Piscina="piscinaSelecionada"
+              Clientes="clientes"
+              OnSave="SalvarPiscina" />
+
+<ConfirmDialog @bind-IsVisible="confirmacaoExclusaoVisible"
+               Title="Confirmar Exclusão"
+               Message="Tem certeza que deseja excluir esta piscina?"
+               ConfirmText="Excluir"
+               OnConfirm="ConfirmarExclusao" />
+
+<Toast @bind-IsVisible="toastVisible"
+       Title="Notificação"
+       Message="@mensagemToast"
+       Type="@tipoToast" />
 
 @code {
     private List<Piscina>? piscinas;
     private List<Cliente>? clientes;
+    private Piscina piscinaSelecionada = new Piscina();
+    private Piscina? piscinaParaExcluir;
+    private bool modalVisible = false;
+    private bool confirmacaoExclusaoVisible = false;
+    private bool carregando = true;
+    private string termoBusca = "";
+    private string filtroTipo = "";
+    private bool toastVisible = false;
+    private string mensagemToast = "";
+    private string tipoToast = "success";
+
+    private IEnumerable<Piscina> piscinasFiltradas => piscinas?.Where(p =>
+        (string.IsNullOrEmpty(termoBusca) ||
+            p.Cliente?.Nome?.Contains(termoBusca, StringComparison.OrdinalIgnoreCase) == true ||
+            NomeTipo(p.Tipo).Contains(termoBusca, StringComparison.OrdinalIgnoreCase) ||
+            p.Localizacao?.Contains(termoBusca, StringComparison.OrdinalIgnoreCase) == true) &&
+        (string.IsNullOrEmpty(filtroTipo) || p.Tipo == filtroTipo)
+    ) ?? Enumerable.Empty<Piscina>();
 
     protected override async Task OnInitializedAsync()
     {
+        await CarregarDados();
+    }
+
+    private async Task CarregarDados()
+    {
         try
         {
+            carregando = true;
             var piscinasTask = ApiService.GetPiscinasAsync();
             var clientesTask = ApiService.GetClientesAsync();
 
@@ -108,9 +139,143 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erro ao carregar dados: {ex.Message}");
+            MostrarNotificacao("Erro", $"Erro ao carregar piscinas: {ex.Message}", "error");
             piscinas = new List<Piscina>();
             clientes = new List<Cliente>();
         }
+        finally
+        {
+            carregando = false;
+        }
     }
-} 
+
+    private void AbrirModalNovo()
+    {
+        piscinaSelecionada = new Piscina();
+        modalVisible = true;
+    }
+
+    private void AbrirModalEditar(Piscina piscina)
+    {
+        piscinaSelecionada = new Piscina
+        {
+            IDPiscina = piscina.IDPiscina,
+            IDCliente = piscina.IDCliente,
+            Tipo = piscina.Tipo,
+            VolumeLitros = piscina.VolumeLitros,
+            Localizacao = piscina.Localizacao,
+            Coberta = piscina.Coberta,
+            Aquecida = piscina.Aquecida,
+            RecorrenciaFrequencia = piscina.RecorrenciaFrequencia,
+            RecorrenciaIntervalo = piscina.RecorrenciaIntervalo,
+            RecorrenciaDiasSemana = piscina.RecorrenciaDiasSemana,
+            RecorrenciaDataInicio = piscina.RecorrenciaDataInicio,
+            RecorrenciaTermino = piscina.RecorrenciaTermino,
+            RecorrenciaDataFim = piscina.RecorrenciaDataFim,
+            RecorrenciaOcorrencias = piscina.RecorrenciaOcorrencias
+        };
+        modalVisible = true;
+    }
+
+    private async Task SalvarPiscina(Piscina piscina)
+    {
+        try
+        {
+            if (piscina.IDPiscina == 0)
+            {
+                await ApiService.CreatePiscinaAsync(piscina);
+                MostrarNotificacao("Sucesso", "Piscina criada com sucesso!", "success");
+            }
+            else
+            {
+                await ApiService.UpdatePiscinaAsync(piscina);
+                MostrarNotificacao("Sucesso", "Piscina atualizada com sucesso!", "success");
+            }
+
+            await CarregarDados();
+        }
+        catch (Exception ex)
+        {
+            MostrarNotificacao("Erro", $"Erro ao salvar piscina: {ex.Message}", "error");
+        }
+    }
+
+    private void ExcluirPiscina(Piscina piscina)
+    {
+        piscinaParaExcluir = piscina;
+        confirmacaoExclusaoVisible = true;
+    }
+
+    private async Task ConfirmarExclusao()
+    {
+        if (piscinaParaExcluir != null)
+        {
+            try
+            {
+                await ApiService.DeletePiscinaAsync(piscinaParaExcluir.IDPiscina);
+                MostrarNotificacao("Sucesso", "Piscina excluída com sucesso!", "success");
+                await CarregarDados();
+            }
+            catch (Exception ex)
+            {
+                MostrarNotificacao("Erro", $"Erro ao excluir piscina: {ex.Message}", "error");
+            }
+            finally
+            {
+                piscinaParaExcluir = null;
+            }
+        }
+    }
+
+    private void MostrarNotificacao(string titulo, string mensagem, string tipo)
+    {
+        mensagemToast = mensagem;
+        tipoToast = tipo;
+        toastVisible = true;
+    }
+
+    private string NomeTipo(string tipo) => tipo switch
+    {
+        "adulto" => "Adulto",
+        "infantil" => "Infantil",
+        "espelho" => "Espelho d'água",
+        _ => tipo
+    };
+
+    private string GetTipoClass(string tipo) => tipo switch
+    {
+        "adulto" => "bg-blue-100 text-blue-800",
+        "infantil" => "bg-green-100 text-green-800",
+        "espelho" => "bg-purple-100 text-purple-800",
+        _ => "bg-slate-100 text-slate-800"
+    };
+
+    private string? DescricaoRecorrencia(Piscina piscina)
+    {
+        if (piscina.RecorrenciaFrequencia == "Nenhuma")
+        {
+            return null;
+        }
+
+        var intervalo = piscina.RecorrenciaIntervalo;
+        string baseTexto;
+
+        switch (piscina.RecorrenciaFrequencia)
+        {
+            case "Diaria":
+                baseTexto = intervalo <= 1 ? "Diariamente" : $"A cada {intervalo} dias";
+                break;
+            case "Semanal":
+                var dias = string.IsNullOrWhiteSpace(piscina.RecorrenciaDiasSemana) ? "" : $" ({piscina.RecorrenciaDiasSemana.Replace(",", ", ")})";
+                baseTexto = (intervalo <= 1 ? "Semanalmente" : $"A cada {intervalo} semanas") + dias;
+                break;
+            case "Mensal":
+                baseTexto = intervalo <= 1 ? "Mensalmente" : $"A cada {intervalo} meses";
+                break;
+            default:
+                return null;
+        }
+
+        return baseTexto;
+    }
+}

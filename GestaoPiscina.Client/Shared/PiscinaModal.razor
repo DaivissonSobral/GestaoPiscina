@@ -1,0 +1,229 @@
+@using GestaoPiscina.Client.Models
+
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 pt-8 @(IsVisible ? "" : "hidden")">
+    <div class="bg-slate-800 rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-slate-100">
+                @(Piscina.IDPiscina > 0 ? "Editar Piscina" : "Nova Piscina")
+            </h3>
+            <button @onclick="Close" class="text-slate-400 hover:text-slate-200">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <EditForm Model="Piscina" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2 space-y-2">
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Cliente *</label>
+                    <InputSelect TValue="int" Value="Piscina.IDCliente" ValueChanged="OnClienteChanged" ValueExpression="() => Piscina.IDCliente" disabled="@(Piscina.IDPiscina > 0)" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 disabled:opacity-60 disabled:cursor-not-allowed">
+                        <option value="0">Selecione...</option>
+                        @if (Clientes != null)
+                        {
+                            @foreach (var cliente in Clientes)
+                            {
+                                <option value="@cliente.IDCliente">@cliente.Nome</option>
+                            }
+                        }
+                    </InputSelect>
+                    @if (Piscina.IDPiscina > 0)
+                    {
+                        <p class="text-xs text-slate-400">O cliente não pode ser alterado após o cadastro.</p>
+                    }
+                    @if (erroCliente != null)
+                    {
+                        <p class="text-red-500 text-sm">@erroCliente</p>
+                    }
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Tipo *</label>
+                    <InputSelect @bind-Value="Piscina.Tipo" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                        <option value="">Selecione...</option>
+                        <option value="adulto">Adulto</option>
+                        <option value="infantil">Infantil</option>
+                        <option value="espelho">Espelho d'água</option>
+                    </InputSelect>
+                    <ValidationMessage For="@(() => Piscina.Tipo)" class="text-red-500 text-sm" />
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Volume (Litros) *</label>
+                    <InputNumber @bind-Value="Piscina.VolumeLitros" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Ex: 50000" />
+                    <ValidationMessage For="@(() => Piscina.VolumeLitros)" class="text-red-500 text-sm" />
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Coberta *</label>
+                    <InputSelect @bind-Value="Piscina.Coberta" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                        <option value="">Selecione...</option>
+                        <option value="Sim">Sim</option>
+                        <option value="Não">Não</option>
+                        <option value="Parcial">Parcial</option>
+                    </InputSelect>
+                    <ValidationMessage For="@(() => Piscina.Coberta)" class="text-red-500 text-sm" />
+                </div>
+
+                <div class="space-y-2 flex items-center">
+                    <label class="flex items-center space-x-2 text-sm font-medium text-slate-300 mt-6">
+                        <InputCheckbox @bind-Value="Piscina.Aquecida" class="rounded" />
+                        <span>Aquecida</span>
+                    </label>
+                </div>
+
+                <div class="md:col-span-2 space-y-2">
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Localização</label>
+                    <InputText @bind-Value="Piscina.Localizacao" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Ex: Fundos, Lateral..." />
+                </div>
+
+                <div class="md:col-span-2 space-y-3 bg-slate-900 rounded-lg p-4 border border-slate-600">
+                    <label class="block text-sm font-medium text-slate-300">
+                        <i class="fas fa-redo text-cyan-400 mr-2"></i>Periodicidade de Limpeza
+                    </label>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="block text-xs text-slate-400">Repetir</label>
+                            <InputSelect TValue="string" Value="Piscina.RecorrenciaFrequencia" ValueChanged="OnFrequenciaChanged" ValueExpression="() => Piscina.RecorrenciaFrequencia" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                                <option value="Nenhuma">Não se repete</option>
+                                <option value="Diaria">Diariamente</option>
+                                <option value="Semanal">Semanalmente</option>
+                                <option value="Mensal">Mensalmente</option>
+                            </InputSelect>
+                        </div>
+
+                        @if (Piscina.RecorrenciaFrequencia != "Nenhuma")
+                        {
+                            <div class="space-y-2">
+                                <label class="block text-xs text-slate-400">Data de início</label>
+                                <InputDate @bind-Value="Piscina.RecorrenciaDataInicio" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-xs text-slate-400">Repetir a cada</label>
+                                <div class="flex items-center space-x-2">
+                                    <InputNumber @bind-Value="Piscina.RecorrenciaIntervalo" class="w-20 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" min="1" />
+                                    <span class="text-sm text-slate-300">@UnidadeIntervalo</span>
+                                </div>
+                            </div>
+
+                            @if (Piscina.RecorrenciaFrequencia == "Semanal")
+                            {
+                                <div class="md:col-span-2 space-y-2">
+                                    <label class="block text-xs text-slate-400">Repetir nos dias</label>
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach (var dia in diasSemana)
+                                        {
+                                            <button type="button" @onclick="() => ToggleDiaSemana(dia)"
+                                                    class="@(DiasSemanaSelecionados.Contains(dia) ? "bg-cyan-600 text-white" : "bg-slate-700 text-slate-300 hover:bg-slate-600") w-10 h-10 rounded-full text-xs font-semibold transition-colors">
+                                                @dia.Substring(0, 1)
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="md:col-span-2 space-y-2">
+                                <label class="block text-xs text-slate-400">Termina</label>
+                                <InputRadioGroup @bind-Value="Piscina.RecorrenciaTermino" class="space-y-2 block">
+                                    <div class="flex items-center space-x-2">
+                                        <InputRadio Value="@("Nunca")" />
+                                        <span class="text-sm text-slate-300">Nunca</span>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <InputRadio Value="@("Data")" />
+                                        <span class="text-sm text-slate-300">Em</span>
+                                        <InputDate @bind-Value="Piscina.RecorrenciaDataFim" disabled="@(Piscina.RecorrenciaTermino != "Data")" class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 disabled:opacity-50" />
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <InputRadio Value="@("Ocorrencias")" />
+                                        <span class="text-sm text-slate-300">Após</span>
+                                        <InputNumber @bind-Value="Piscina.RecorrenciaOcorrencias" disabled="@(Piscina.RecorrenciaTermino != "Ocorrencias")" class="w-20 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 disabled:opacity-50" min="1" />
+                                        <span class="text-sm text-slate-300">ocorrência(s)</span>
+                                    </div>
+                                </InputRadioGroup>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex space-x-3 mt-6">
+                <button type="submit" class="flex-1 bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
+                    <i class="fas fa-save mr-2"></i>Salvar
+                </button>
+                <button type="button" @onclick="Close" class="flex-1 bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded-lg text-white transition-colors">
+                    Cancelar
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public Piscina Piscina { get; set; } = new Piscina();
+    [Parameter] public List<Cliente>? Clientes { get; set; }
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+    [Parameter] public EventCallback<Piscina> OnSave { get; set; }
+
+    private readonly string[] diasSemana = { "Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab" };
+    private string? erroCliente;
+
+    private List<string> DiasSemanaSelecionados =>
+        (Piscina.RecorrenciaDiasSemana ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+
+    private string UnidadeIntervalo => Piscina.RecorrenciaFrequencia switch
+    {
+        "Diaria" => Piscina.RecorrenciaIntervalo == 1 ? "dia" : "dias",
+        "Semanal" => Piscina.RecorrenciaIntervalo == 1 ? "semana" : "semanas",
+        "Mensal" => Piscina.RecorrenciaIntervalo == 1 ? "mês" : "meses",
+        _ => ""
+    };
+
+    private void OnClienteChanged(int clienteId)
+    {
+        Piscina.IDCliente = clienteId;
+    }
+
+    private void OnFrequenciaChanged(string frequencia)
+    {
+        Piscina.RecorrenciaFrequencia = frequencia;
+        if (frequencia != "Nenhuma" && Piscina.RecorrenciaDataInicio == null)
+        {
+            Piscina.RecorrenciaDataInicio = DateTime.Today;
+        }
+    }
+
+    private void ToggleDiaSemana(string dia)
+    {
+        var dias = DiasSemanaSelecionados;
+        if (!dias.Remove(dia))
+        {
+            dias.Add(dia);
+        }
+
+        Piscina.RecorrenciaDiasSemana = string.Join(",", diasSemana.Where(d => dias.Contains(d)));
+    }
+
+    private async Task Close()
+    {
+        erroCliente = null;
+        IsVisible = false;
+        await IsVisibleChanged.InvokeAsync(false);
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (Piscina.IDCliente <= 0)
+        {
+            erroCliente = "Selecione um cliente.";
+            return;
+        }
+
+        erroCliente = null;
+        await OnSave.InvokeAsync(Piscina);
+        await Close();
+    }
+}
