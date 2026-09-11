@@ -715,12 +715,12 @@ namespace GestaoPiscina.Client.Services
             }
         }
 
-        public async Task<List<OrdemDeServico>> GerarOSAutomaticasAsync()
+        public async Task<List<OrdemDeServico>> GerarOSAutomaticasAsync(DateTime dataInicio, DateTime dataFim)
         {
             try
             {
-                var response = await _httpClient.PostAsync($"{_baseUrl}ordensdeservico/gerar-automaticas", null);
-                
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}ordensdeservico/gerar-automaticas", new { DataInicio = dataInicio, DataFim = dataFim });
+
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorMessage = await GetErrorMessageAsync(response);

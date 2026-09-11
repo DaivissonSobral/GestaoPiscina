@@ -129,11 +129,22 @@ namespace GestaoPiscina.Server.Controllers
         }
 
         [HttpPost("gerar-automaticas")]
-        public async Task<ActionResult<IEnumerable<OrdemDeServico>>> GerarOSAutomaticas()
+        public async Task<ActionResult<IEnumerable<OrdemDeServico>>> GerarOSAutomaticas([FromBody] GerarOSAutomaticasRequest? request)
         {
             try
             {
-                var hoje = DateTime.Today;
+                var dataInicio = (request?.DataInicio ?? DateTime.Today).Date;
+                var dataFim = (request?.DataFim ?? DateTime.Today).Date;
+
+                if (dataFim < dataInicio)
+                {
+                    return BadRequest(new { message = "A data final deve ser maior ou igual à data inicial." });
+                }
+
+                if ((dataFim - dataInicio).TotalDays > 366)
+                {
+                    return BadRequest(new { message = "O período não pode ultrapassar 1 ano." });
+                }
 
                 var tecnicoPadrao = await _context.Usuarios
                     .FirstOrDefaultAsync(u => u.Perfil.Nome == "Técnico" && u.Ativo);
@@ -147,47 +158,70 @@ namespace GestaoPiscina.Server.Controllers
                     .Where(p => p.RecorrenciaFrequencia != "Nenhuma")
                     .ToListAsync();
 
+                // Datas já cobertas por OS existente, por piscina (evita duplicar).
+                var existentes = await _context.OrdensDeServico
+                    .Where(o => o.DataExecucao.Date >= dataInicio && o.DataExecucao.Date <= dataFim)
+                    .Select(o => new { o.IDPiscina, Data = o.DataExecucao.Date })
+                    .ToListAsync();
+                var datasExistentes = existentes.Select(x => (x.IDPiscina, x.Data)).ToHashSet();
+
+                // Quantas ocorrências cada piscina já teve ANTES do período pedido — para
+                // respeitar corretamente o limite de "Termina após N ocorrências" mesmo
+                // gerando várias datas de uma vez (o contador é incrementado em memória
+                // conforme cada OS é adicionada abaixo, sem re-consultar o banco a cada dia).
+                var ocorrenciasGeradas = new Dictionary<int, int>();
+                foreach (var piscina in piscinas.Where(p => p.RecorrenciaTermino == "Ocorrencias" && p.RecorrenciaOcorrencias.HasValue))
+                {
+                    ocorrenciasGeradas[piscina.IDPiscina] = await _context.OrdensDeServico
+                        .CountAsync(o => o.IDPiscina == piscina.IDPiscina
+                            && o.DataExecucao.Date >= piscina.RecorrenciaDataInicio!.Value.Date
+                            && o.DataExecucao.Date < dataInicio);
+                }
+
                 var osCriadas = new List<OrdemDeServico>();
 
-                foreach (var piscina in piscinas)
+                for (var data = dataInicio; data <= dataFim; data = data.AddDays(1))
                 {
-                    if (!DeveGerarOSHoje(piscina, hoje))
+                    foreach (var piscina in piscinas)
                     {
-                        continue;
-                    }
-
-                    if (piscina.RecorrenciaTermino == "Ocorrencias" && piscina.RecorrenciaOcorrencias.HasValue)
-                    {
-                        var ocorrenciasGeradas = await _context.OrdensDeServico
-                            .CountAsync(o => o.IDPiscina == piscina.IDPiscina && o.DataExecucao.Date >= piscina.RecorrenciaDataInicio!.Value.Date);
-
-                        if (ocorrenciasGeradas >= piscina.RecorrenciaOcorrencias.Value)
+                        if (!DeveGerarOSHoje(piscina, data))
                         {
                             continue;
                         }
-                    }
 
-                    var osExistente = await _context.OrdensDeServico
-                        .FirstOrDefaultAsync(o => o.IDPiscina == piscina.IDPiscina && o.DataExecucao.Date == hoje);
+                        if (piscina.RecorrenciaTermino == "Ocorrencias" && piscina.RecorrenciaOcorrencias.HasValue
+                            && ocorrenciasGeradas.GetValueOrDefault(piscina.IDPiscina) >= piscina.RecorrenciaOcorrencias.Value)
+                        {
+                            continue;
+                        }
 
-                    if (osExistente == null)
-                    {
+                        if (datasExistentes.Contains((piscina.IDPiscina, data)))
+                        {
+                            continue;
+                        }
+
                         // Campos de medição/execução (pH, horários, etc.) ficam com valores neutros
                         // e são preenchidos pelo técnico quando a OS é executada/finalizada.
                         var novaOS = new OrdemDeServico
                         {
                             IDPiscina = piscina.IDPiscina,
                             IDUsuario = tecnicoPadrao.IDUsuario,
-                            DataExecucao = hoje,
+                            DataExecucao = data,
                             Status = "Em Aberto",
                             ChecklistConcluido = false,
                             RelatorioGerado = false,
-                            HoraInicio = hoje,
-                            HoraTermino = hoje
+                            HoraInicio = data,
+                            HoraTermino = data
                         };
 
                         _context.OrdensDeServico.Add(novaOS);
                         osCriadas.Add(novaOS);
+                        datasExistentes.Add((piscina.IDPiscina, data));
+
+                        if (piscina.RecorrenciaTermino == "Ocorrencias" && piscina.RecorrenciaOcorrencias.HasValue)
+                        {
+                            ocorrenciasGeradas[piscina.IDPiscina] = ocorrenciasGeradas.GetValueOrDefault(piscina.IDPiscina) + 1;
+                        }
                     }
                 }
 
@@ -286,5 +320,11 @@ namespace GestaoPiscina.Server.Controllers
         {
             return _context.OrdensDeServico.Any(e => e.IDOS == id);
         }
+    }
+
+    public class GerarOSAutomaticasRequest
+    {
+        public DateTime? DataInicio { get; set; }
+        public DateTime? DataFim { get; set; }
     }
 } 

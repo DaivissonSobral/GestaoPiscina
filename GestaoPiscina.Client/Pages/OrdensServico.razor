@@ -8,7 +8,7 @@
 <section class="p-4 space-y-6">
     <div class="flex justify-between items-center">
         <div class="flex space-x-2">
-            <button @onclick="GerarOSAutomaticas" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg text-white transition-colors">
+            <button @onclick="AbrirModalGerarOS" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg text-white transition-colors">
                 <i class="fas fa-magic mr-2"></i>Gerar OS Automáticas
             </button>
             <button @onclick="AbrirModalNovaOS" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
@@ -36,6 +36,9 @@
                 <option value="semana">Esta Semana</option>
                 <option value="mes">Este Mês</option>
             </select>
+            <button type="button" @onclick="FiltrarOS" class="bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 transition-colors" title="Buscar">
+                <i class="fas fa-search"></i>
+            </button>
         </div>
 
         <div class="flex space-x-2">
@@ -205,6 +208,9 @@
                       OrdemDeServico="osSelecionada"
                       OnEdit="EditarOS" />
 
+<GerarOSModal @bind-IsVisible="modalGerarOSVisible"
+              OnConfirm="ConfirmarGerarOS" />
+
 <ConfirmDialog @bind-IsVisible="confirmacaoExclusaoVisible"
                Title="Confirmar Exclusão"
                Message="Tem certeza que deseja excluir esta ordem de serviço?"
@@ -226,13 +232,27 @@
     private bool modalOSVisible = false;
     private bool modalDetalhesVisible = false;
     private bool confirmacaoExclusaoVisible = false;
+    private bool modalGerarOSVisible = false;
     private bool carregando = true;
-    private string termoBusca = "";
+    private string _termoBusca = "";
     private string _filtroStatus = "";
     private string _filtroData = "";
     private string viewMode = "lista"; // "lista" ou "cards"
 
     // Propriedades para detectar mudanças nos filtros
+    public string termoBusca
+    {
+        get => _termoBusca;
+        set
+        {
+            if (_termoBusca != value)
+            {
+                _termoBusca = value;
+                FiltrarOS();
+            }
+        }
+    }
+
     public string filtroStatus
     {
         get => _filtroStatus;
@@ -305,7 +325,10 @@
             piscinas = ((Task<List<Piscina>>)tasks[1]).Result;
             tecnicos = ((Task<List<Usuario>>)tasks[2]).Result;
             usuarios = ((Task<List<Usuario>>)tasks[3]).Result;
-            ordensFiltradas = ordensDeServico;
+            // Reaplica os filtros ativos em vez de simplesmente mostrar a lista inteira —
+            // sem isso, qualquer recarga (salvar/excluir uma OS, por exemplo) descartava
+            // silenciosamente os filtros que o usuário tinha escolhido.
+            FiltrarOS();
         }
         catch (Exception ex)
         {
@@ -347,10 +370,15 @@
         if (!string.IsNullOrEmpty(filtroData))
         {
             var hoje = DateTime.Today;
+            // Semana civil (segunda a domingo) que contém "hoje" — não os próximos 7 dias.
+            var diasDesdeSegunda = ((int)hoje.DayOfWeek + 6) % 7;
+            var inicioSemana = hoje.AddDays(-diasDesdeSegunda);
+            var fimSemana = inicioSemana.AddDays(6);
+
             ordensFiltradas = filtroData switch
             {
                 "hoje" => ordensFiltradas.Where(os => os.DataExecucao.Date == hoje).ToList(),
-                "semana" => ordensFiltradas.Where(os => os.DataExecucao.Date >= hoje && os.DataExecucao.Date <= hoje.AddDays(7)).ToList(),
+                "semana" => ordensFiltradas.Where(os => os.DataExecucao.Date >= inicioSemana && os.DataExecucao.Date <= fimSemana).ToList(),
                 "mes" => ordensFiltradas.Where(os => os.DataExecucao.Month == hoje.Month && os.DataExecucao.Year == hoje.Year).ToList(),
                 _ => ordensFiltradas
             };
@@ -492,19 +520,18 @@
         }
     }
 
-    private async Task GerarOSAutomaticas()
+    private void AbrirModalGerarOS()
+    {
+        modalGerarOSVisible = true;
+    }
+
+    private async Task ConfirmarGerarOS((DateTime DataInicio, DateTime DataFim) periodo)
     {
         try
         {
-            var confirmacao = await JSRuntime.InvokeAsync<bool>("confirm", 
-                "Deseja gerar ordens de serviço automáticas para todas as piscinas cadastradas?");
-            
-            if (confirmacao)
-            {
-                var osCriadas = await ApiService.GerarOSAutomaticasAsync();
-                MostrarNotificacao("Sucesso", $"Foram criadas {osCriadas.Count} ordens de serviço automáticas!", "success");
-                await CarregarDados();
-            }
+            var osCriadas = await ApiService.GerarOSAutomaticasAsync(periodo.DataInicio, periodo.DataFim);
+            MostrarNotificacao("Sucesso", $"Foram criadas {osCriadas.Count} ordens de serviço automáticas!", "success");
+            await CarregarDados();
         }
         catch (Exception ex)
         {

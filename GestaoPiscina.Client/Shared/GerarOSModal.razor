@@ -1,0 +1,88 @@
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 @(IsVisible ? "" : "hidden")">
+    <div class="bg-slate-800 rounded-xl p-6 w-full max-w-sm mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-slate-100">Gerar OS Automáticas</h3>
+            <button type="button" @onclick="Close" class="text-slate-400 hover:text-slate-200">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <p class="text-sm text-slate-400 mb-4">Gera as ordens de serviço previstas pela periodicidade de cada piscina, para o período escolhido.</p>
+
+        <div class="flex flex-wrap gap-2 mb-4">
+            <button type="button" @onclick="() => AplicarPeriodo(0, 0)" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg text-xs text-slate-200 transition-colors">Hoje</button>
+            <button type="button" @onclick="() => AplicarPeriodo(0, 6)" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg text-xs text-slate-200 transition-colors">Próximos 7 dias</button>
+            <button type="button" @onclick="AplicarEsteMes" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg text-xs text-slate-200 transition-colors">Este mês</button>
+            <button type="button" @onclick="() => AplicarPeriodo(0, 29)" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg text-xs text-slate-200 transition-colors">Próximos 30 dias</button>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Data Início</label>
+                <input type="date" @bind="dataInicio" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Data Fim</label>
+                <input type="date" @bind="dataFim" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+            </div>
+            @if (!string.IsNullOrEmpty(erro))
+            {
+                <p class="text-red-500 text-sm"><i class="fas fa-exclamation-circle mr-1"></i>@erro</p>
+            }
+        </div>
+
+        <div class="flex space-x-3 mt-6">
+            <button type="button" @onclick="Confirmar" class="flex-1 bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg text-white transition-colors">
+                <i class="fas fa-magic mr-2"></i>Gerar
+            </button>
+            <button type="button" @onclick="Close" class="flex-1 bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded-lg text-white transition-colors">
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+    [Parameter] public EventCallback<(DateTime DataInicio, DateTime DataFim)> OnConfirm { get; set; }
+
+    private DateTime dataInicio = DateTime.Today;
+    private DateTime dataFim = DateTime.Today;
+    private string? erro;
+
+    private void AplicarPeriodo(int diasInicio, int diasFim)
+    {
+        dataInicio = DateTime.Today.AddDays(diasInicio);
+        dataFim = DateTime.Today.AddDays(diasFim);
+        erro = null;
+    }
+
+    private void AplicarEsteMes()
+    {
+        var hoje = DateTime.Today;
+        dataInicio = new DateTime(hoje.Year, hoje.Month, 1);
+        dataFim = dataInicio.AddMonths(1).AddDays(-1);
+        erro = null;
+    }
+
+    private async Task Close()
+    {
+        erro = null;
+        IsVisible = false;
+        await IsVisibleChanged.InvokeAsync(false);
+    }
+
+    private async Task Confirmar()
+    {
+        if (dataFim < dataInicio)
+        {
+            erro = "A data final deve ser maior ou igual à data inicial.";
+            return;
+        }
+
+        erro = null;
+        await OnConfirm.InvokeAsync((dataInicio, dataFim));
+        await Close();
+    }
+}
