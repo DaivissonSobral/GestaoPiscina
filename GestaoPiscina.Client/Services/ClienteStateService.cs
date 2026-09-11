@@ -19,7 +19,7 @@ namespace GestaoPiscina.Client.Services
 
         // Estado da visualização
         public string CurrentView { get; set; } = "lista";
-        public string ViewMode { get; set; } = "lista";
+        public string ViewMode { get; set; } = "cards";
         
         private string _activeTab = "dados";
         public string ActiveTab 
@@ -58,7 +58,7 @@ namespace GestaoPiscina.Client.Services
             CurrentPiscina = new Piscina();
             CurrentEquipamento = new Equipamento();
             CurrentView = "lista";
-            ViewMode = "lista";
+            ViewMode = "cards";
             ActiveTab = "dados";
             SearchTerm = "";
             SelectedType = "";
