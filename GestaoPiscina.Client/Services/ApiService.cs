@@ -881,5 +881,87 @@ namespace GestaoPiscina.Client.Services
                 throw new Exception($"Erro ao buscar usuários: {ex.Message}");
             }
         }
+
+        // Administração de usuários
+        public async Task<List<UsuarioAdmin>> GetUsuariosAdminAsync()
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<List<UsuarioAdmin>>($"{_baseUrl}usuarios/admin") ?? new List<UsuarioAdmin>();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao buscar usuários: {ex.Message}");
+            }
+        }
+
+        public async Task<UsuarioAdmin> CreateUsuarioAsync(UsuarioAdmin usuario)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}usuarios", usuario);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+
+                var criado = await response.Content.ReadFromJsonAsync<UsuarioAdmin>();
+                return criado ?? usuario;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao criar usuário: {ex.Message}");
+            }
+        }
+
+        public async Task UpdateUsuarioAsync(UsuarioAdmin usuario)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}usuarios/{usuario.IDUsuario}", usuario);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao atualizar usuário: {ex.Message}");
+            }
+        }
+
+        public async Task ResetarSenhaUsuarioAsync(int idUsuario, string novaSenha)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}usuarios/{idUsuario}/resetar-senha", new { NovaSenha = novaSenha });
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao resetar senha: {ex.Message}");
+            }
+        }
+
+        public async Task<List<Perfil>> GetPerfisAsync()
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<List<Perfil>>($"{_baseUrl}perfis") ?? new List<Perfil>();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao buscar perfis: {ex.Message}");
+            }
+        }
     }
 } 

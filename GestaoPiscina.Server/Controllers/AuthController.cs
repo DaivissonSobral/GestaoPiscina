@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 using GestaoPiscina.Server.Data;
 using GestaoPiscina.Server.Models;
 using GestaoPiscina.Server.Models.DTOs;
@@ -53,7 +51,7 @@ namespace GestaoPiscina.Server.Controllers
                 }
 
                 // Verificar senha
-                if (!VerifyPassword(request.Senha, usuario.SenhaHash))
+                if (!PasswordHasher.Verify(request.Senha, usuario.SenhaHash))
                 {
                     return Unauthorized(new LoginResponse
                     {
@@ -170,13 +168,13 @@ namespace GestaoPiscina.Server.Controllers
                 }
 
                 // Verificar senha atual
-                if (!VerifyPassword(request.SenhaAtual, usuario.SenhaHash))
+                if (!PasswordHasher.Verify(request.SenhaAtual, usuario.SenhaHash))
                 {
                     return BadRequest(new { message = "Senha atual incorreta" });
                 }
 
                 // Hash da nova senha
-                usuario.SenhaHash = HashPassword(request.NovaSenha);
+                usuario.SenhaHash = PasswordHasher.Hash(request.NovaSenha);
                 await _context.SaveChangesAsync();
 
                 return Ok(new { message = "Senha alterada com sucesso" });
@@ -185,19 +183,6 @@ namespace GestaoPiscina.Server.Controllers
             {
                 return StatusCode(500, new { message = "Erro interno do servidor" });
             }
-        }
-
-        private string HashPassword(string password)
-        {
-            using var sha256 = SHA256.Create();
-            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToBase64String(hashedBytes);
-        }
-
-        private bool VerifyPassword(string password, string hash)
-        {
-            var hashedPassword = HashPassword(password);
-            return hashedPassword == hash;
         }
     }
 } 

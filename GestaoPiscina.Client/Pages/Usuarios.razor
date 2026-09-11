@@ -1,0 +1,273 @@
+@page "/usuarios"
+@using GestaoPiscina.Client.Services
+@using GestaoPiscina.Client.Models
+@using GestaoPiscina.Client.Shared
+@inject ApiService ApiService
+
+<AuthorizeView Permission="PodeGerenciarUsuarios" NotAuthorized="Você não tem permissão para gerenciar usuários.">
+    <section class="p-4 space-y-6">
+        <div class="flex justify-between items-center">
+            <h3 class="text-xl font-bold">Gestão de Usuários</h3>
+            <button @onclick="AbrirModalNovo" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
+                <i class="fas fa-user-plus mr-2"></i>Novo Usuário
+            </button>
+        </div>
+
+        <div class="flex space-x-2">
+            <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar por nome, login ou e-mail..." class="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+        </div>
+
+        @if (carregando)
+        {
+            <LoadingSpinner IsVisible="true" Message="Carregando usuários..." />
+        }
+        else if (usuariosFiltrados.Any())
+        {
+            <div class="bg-slate-800 rounded-xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-slate-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Nome</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Login / E-mail</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Perfil</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-700">
+                            @foreach (var usuario in usuariosFiltrados)
+                            {
+                                <tr class="hover:bg-slate-700">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-100">@usuario.Nome</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-slate-300">@usuario.Login</div>
+                                        <div class="text-sm text-slate-400">@usuario.Email</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@usuario.Perfil</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="@(usuario.Ativo ? "bg-green-100 text-green-800" : "bg-slate-600 text-slate-300") px-2 py-1 text-xs font-semibold rounded-full">
+                                            @(usuario.Ativo ? "Ativo" : "Inativo")
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button @onclick="() => AbrirModalEditar(usuario)" class="text-cyan-400 hover:text-cyan-300 mr-3" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button @onclick="() => AbrirModalSenha(usuario)" class="text-yellow-400 hover:text-yellow-300 mr-3" title="Resetar Senha">
+                                            <i class="fas fa-key"></i>
+                                        </button>
+                                        @if (usuario.Ativo)
+                                        {
+                                            <button @onclick="() => PedirDesativacao(usuario)" class="text-red-400 hover:text-red-300" title="Desativar">
+                                                <i class="fas fa-user-slash"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button @onclick="() => Reativar(usuario)" class="text-green-400 hover:text-green-300" title="Reativar">
+                                                <i class="fas fa-user-check"></i>
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="bg-slate-800 rounded-xl p-8 text-center">
+                <i class="fas fa-users text-4xl text-slate-600 mb-4"></i>
+                <h4 class="text-lg font-medium text-slate-300 mb-2">Nenhum usuário encontrado</h4>
+                <p class="text-slate-400">Clique em "Novo Usuário" para adicionar.</p>
+            </div>
+        }
+    </section>
+
+    <UsuarioModal @bind-IsVisible="modalVisible"
+                  Usuario="usuarioSelecionado"
+                  Perfis="perfis"
+                  OnSave="SalvarUsuario" />
+
+    <ResetarSenhaModal @bind-IsVisible="modalSenhaVisible"
+                        Usuario="usuarioSelecionado"
+                        OnSave="SalvarNovaSenha" />
+
+    <ConfirmDialog @bind-IsVisible="confirmacaoDesativarVisible"
+                   Title="Desativar Usuário"
+                   Message="Tem certeza que deseja desativar este usuário? Ele perde o acesso ao sistema, mas o histórico dele é mantido."
+                   ConfirmText="Desativar"
+                   OnConfirm="ConfirmarDesativacao" />
+
+    <Toast @bind-IsVisible="toastVisible"
+           Title="Notificação"
+           Message="@mensagemToast"
+           Type="@tipoToast" />
+</AuthorizeView>
+
+@code {
+    private List<UsuarioAdmin>? usuarios;
+    private List<Perfil>? perfis;
+    private UsuarioAdmin usuarioSelecionado = new UsuarioAdmin();
+    private UsuarioAdmin? usuarioParaDesativar;
+    private bool modalVisible;
+    private bool modalSenhaVisible;
+    private bool confirmacaoDesativarVisible;
+    private bool carregando = true;
+    private string termoBusca = "";
+    private bool toastVisible;
+    private string mensagemToast = "";
+    private string tipoToast = "success";
+
+    private IEnumerable<UsuarioAdmin> usuariosFiltrados => usuarios?.Where(u =>
+        string.IsNullOrEmpty(termoBusca)
+        || u.Nome.Contains(termoBusca, StringComparison.OrdinalIgnoreCase)
+        || u.Login.Contains(termoBusca, StringComparison.OrdinalIgnoreCase)
+        || u.Email.Contains(termoBusca, StringComparison.OrdinalIgnoreCase)
+    ) ?? Enumerable.Empty<UsuarioAdmin>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarDados();
+    }
+
+    private async Task CarregarDados()
+    {
+        try
+        {
+            carregando = true;
+            var tarefaUsuarios = ApiService.GetUsuariosAdminAsync();
+            var tarefaPerfis = ApiService.GetPerfisAsync();
+            await Task.WhenAll(tarefaUsuarios, tarefaPerfis);
+            usuarios = await tarefaUsuarios;
+            perfis = await tarefaPerfis;
+        }
+        catch (Exception ex)
+        {
+            MostrarNotificacao("Erro", $"Erro ao carregar usuários: {ex.Message}", "error");
+            usuarios = new List<UsuarioAdmin>();
+            perfis = new List<Perfil>();
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    private void AbrirModalNovo()
+    {
+        usuarioSelecionado = new UsuarioAdmin();
+        modalVisible = true;
+    }
+
+    private void AbrirModalEditar(UsuarioAdmin usuario)
+    {
+        usuarioSelecionado = new UsuarioAdmin
+        {
+            IDUsuario = usuario.IDUsuario,
+            Nome = usuario.Nome,
+            Email = usuario.Email,
+            Login = usuario.Login,
+            IDPerfil = usuario.IDPerfil,
+            Ativo = usuario.Ativo
+        };
+        modalVisible = true;
+    }
+
+    private void AbrirModalSenha(UsuarioAdmin usuario)
+    {
+        usuarioSelecionado = usuario;
+        modalSenhaVisible = true;
+    }
+
+    private async Task SalvarUsuario(UsuarioAdmin usuario)
+    {
+        try
+        {
+            if (usuario.IDUsuario == 0)
+            {
+                await ApiService.CreateUsuarioAsync(usuario);
+                MostrarNotificacao("Sucesso", "Usuário criado com sucesso!", "success");
+            }
+            else
+            {
+                await ApiService.UpdateUsuarioAsync(usuario);
+                MostrarNotificacao("Sucesso", "Usuário atualizado com sucesso!", "success");
+            }
+
+            await CarregarDados();
+        }
+        catch (Exception ex)
+        {
+            MostrarNotificacao("Erro", $"Erro ao salvar usuário: {ex.Message}", "error");
+        }
+    }
+
+    private async Task SalvarNovaSenha((int IDUsuario, string NovaSenha) dados)
+    {
+        try
+        {
+            await ApiService.ResetarSenhaUsuarioAsync(dados.IDUsuario, dados.NovaSenha);
+            MostrarNotificacao("Sucesso", "Senha redefinida com sucesso!", "success");
+        }
+        catch (Exception ex)
+        {
+            MostrarNotificacao("Erro", $"Erro ao redefinir senha: {ex.Message}", "error");
+        }
+    }
+
+    private void PedirDesativacao(UsuarioAdmin usuario)
+    {
+        usuarioParaDesativar = usuario;
+        confirmacaoDesativarVisible = true;
+    }
+
+    private async Task ConfirmarDesativacao()
+    {
+        if (usuarioParaDesativar == null)
+        {
+            return;
+        }
+
+        try
+        {
+            usuarioParaDesativar.Ativo = false;
+            await ApiService.UpdateUsuarioAsync(usuarioParaDesativar);
+            MostrarNotificacao("Sucesso", "Usuário desativado com sucesso!", "success");
+            await CarregarDados();
+        }
+        catch (Exception ex)
+        {
+            MostrarNotificacao("Erro", $"Erro ao desativar usuário: {ex.Message}", "error");
+        }
+        finally
+        {
+            usuarioParaDesativar = null;
+        }
+    }
+
+    private async Task Reativar(UsuarioAdmin usuario)
+    {
+        try
+        {
+            usuario.Ativo = true;
+            await ApiService.UpdateUsuarioAsync(usuario);
+            MostrarNotificacao("Sucesso", "Usuário reativado com sucesso!", "success");
+            await CarregarDados();
+        }
+        catch (Exception ex)
+        {
+            MostrarNotificacao("Erro", $"Erro ao reativar usuário: {ex.Message}", "error");
+        }
+    }
+
+    private void MostrarNotificacao(string titulo, string mensagem, string tipo)
+    {
+        mensagemToast = mensagem;
+        tipoToast = tipo;
+        toastVisible = true;
+    }
+}

@@ -1,6 +1,5 @@
-using System.Security.Cryptography;
-using System.Text;
 using GestaoPiscina.Server.Models;
+using GestaoPiscina.Server.Services;
 
 namespace GestaoPiscina.Server.Data
 {
@@ -68,6 +67,22 @@ namespace GestaoPiscina.Server.Data
                         PodeGerenciarEquipamentos = false,
                         PodeVisualizarRelatorios = false,
                         PodeConfigurarSistema = false
+                    },
+                    new Perfil
+                    {
+                        // Papel distinto de Técnico: valida as fórmulas de dosagem e assina
+                        // digitalmente o relatório mensal (Especificação de Requisitos v4).
+                        Nome = "Química",
+                        Descricao = "Responsável técnica pela qualidade da água e assinatura dos relatórios",
+                        PodeGerenciarUsuarios = false,
+                        PodeGerenciarClientes = false,
+                        PodeGerenciarPiscinas = false,
+                        PodeGerenciarProdutos = false,
+                        PodeGerenciarEstoque = false,
+                        PodeGerenciarOrdensServico = false,
+                        PodeGerenciarEquipamentos = false,
+                        PodeVisualizarRelatorios = true,
+                        PodeConfigurarSistema = false
                     }
                 };
 
@@ -82,6 +97,7 @@ namespace GestaoPiscina.Server.Data
                 var supervisorPerfil = context.Perfis.First(p => p.Nome == "Supervisor");
                 var tecnicoPerfil = context.Perfis.First(p => p.Nome == "Técnico");
                 var clientePerfil = context.Perfis.First(p => p.Nome == "Cliente");
+                var quimicaPerfil = context.Perfis.First(p => p.Nome == "Química");
 
                 var usuarios = new List<Usuario>
                 {
@@ -90,7 +106,7 @@ namespace GestaoPiscina.Server.Data
                         Nome = "Administrador",
                         Email = "admin@gestaopiscina.com",
                         Login = "admin",
-                        SenhaHash = HashPassword("123456"),
+                        SenhaHash = PasswordHasher.Hash("123456"),
                         Ativo = true,
                         DataCriacao = DateTime.Now,
                         IDPerfil = gestorPerfil.IDPerfil
@@ -100,7 +116,7 @@ namespace GestaoPiscina.Server.Data
                         Nome = "João Silva",
                         Email = "joao.silva@gestaopiscina.com",
                         Login = "joao.silva",
-                        SenhaHash = HashPassword("123456"),
+                        SenhaHash = PasswordHasher.Hash("123456"),
                         Ativo = true,
                         DataCriacao = DateTime.Now,
                         IDPerfil = supervisorPerfil.IDPerfil
@@ -110,7 +126,7 @@ namespace GestaoPiscina.Server.Data
                         Nome = "Maria Santos",
                         Email = "maria.santos@gestaopiscina.com",
                         Login = "maria.santos",
-                        SenhaHash = HashPassword("123456"),
+                        SenhaHash = PasswordHasher.Hash("123456"),
                         Ativo = true,
                         DataCriacao = DateTime.Now,
                         IDPerfil = tecnicoPerfil.IDPerfil
@@ -120,14 +136,75 @@ namespace GestaoPiscina.Server.Data
                         Nome = "Cliente Teste",
                         Email = "cliente@teste.com",
                         Login = "cliente",
-                        SenhaHash = HashPassword("123456"),
+                        SenhaHash = PasswordHasher.Hash("123456"),
                         Ativo = true,
                         DataCriacao = DateTime.Now,
                         IDPerfil = clientePerfil.IDPerfil
+                    },
+                    new Usuario
+                    {
+                        // Mesma responsável técnica hoje referenciada nos relatórios
+                        // (assinatura fixa em RelatorioOS.razor/RelatorioOSIndividual.razor).
+                        Nome = "Talina da Silva Ferreira dos Santos",
+                        Email = "talina.santos@gestaopiscina.com",
+                        Login = "talina.santos",
+                        SenhaHash = PasswordHasher.Hash("123456"),
+                        Ativo = true,
+                        DataCriacao = DateTime.Now,
+                        IDPerfil = quimicaPerfil.IDPerfil
                     }
                 };
 
                 context.Usuarios.AddRange(usuarios);
+                await context.SaveChangesAsync();
+            }
+
+            // Migração para bancos já existentes (os blocos acima só rodam em banco vazio):
+            // adiciona o perfil Química e a usuária correspondente se ainda não existirem, e
+            // reidrata para BCrypt qualquer SenhaHash que ainda esteja no formato SHA-256
+            // antigo (hashes BCrypt sempre começam com "$2").
+            if (!context.Perfis.Any(p => p.Nome == "Química"))
+            {
+                context.Perfis.Add(new Perfil
+                {
+                    Nome = "Química",
+                    Descricao = "Responsável técnica pela qualidade da água e assinatura dos relatórios",
+                    PodeGerenciarUsuarios = false,
+                    PodeGerenciarClientes = false,
+                    PodeGerenciarPiscinas = false,
+                    PodeGerenciarProdutos = false,
+                    PodeGerenciarEstoque = false,
+                    PodeGerenciarOrdensServico = false,
+                    PodeGerenciarEquipamentos = false,
+                    PodeVisualizarRelatorios = true,
+                    PodeConfigurarSistema = false
+                });
+                await context.SaveChangesAsync();
+            }
+
+            if (!context.Usuarios.Any(u => u.Login == "talina.santos"))
+            {
+                var quimicaPerfilExistente = context.Perfis.First(p => p.Nome == "Química");
+                context.Usuarios.Add(new Usuario
+                {
+                    Nome = "Talina da Silva Ferreira dos Santos",
+                    Email = "talina.santos@gestaopiscina.com",
+                    Login = "talina.santos",
+                    SenhaHash = PasswordHasher.Hash("123456"),
+                    Ativo = true,
+                    DataCriacao = DateTime.Now,
+                    IDPerfil = quimicaPerfilExistente.IDPerfil
+                });
+                await context.SaveChangesAsync();
+            }
+
+            var usuariosComHashAntigo = context.Usuarios.Where(u => !u.SenhaHash.StartsWith("$2")).ToList();
+            if (usuariosComHashAntigo.Any())
+            {
+                foreach (var usuario in usuariosComHashAntigo)
+                {
+                    usuario.SenhaHash = PasswordHasher.Hash("123456");
+                }
                 await context.SaveChangesAsync();
             }
 
@@ -245,11 +322,5 @@ namespace GestaoPiscina.Server.Data
             }
         }
 
-        private static string HashPassword(string password)
-        {
-            using var sha256 = SHA256.Create();
-            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToBase64String(hashedBytes);
-        }
     }
 } 

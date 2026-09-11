@@ -6,17 +6,22 @@
     <nav class="flex flex-col gap-1">
         @foreach (var item in menuItems)
         {
-            <NavLink href="@item.Href" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150 font-medium text-base"
-                    ActiveClass="bg-cyan-600 text-white font-semibold shadow-lg"
-                    Match="@(item.Href == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)">
-                <i class="fas @item.Icon text-lg mr-2"></i><span>@item.Label</span>
-            </NavLink>
+            @if (item.RequiredPermission == null)
+            {
+                @RenderLink(item)
+            }
+            else
+            {
+                <AuthorizeView Permission="@item.RequiredPermission" NotAuthorized="">
+                    @RenderLink(item)
+                </AuthorizeView>
+            }
         }
     </nav>
 </aside>
 
 @code {
-    private record MenuItem(string Href, string Icon, string Label);
+    private record MenuItem(string Href, string Icon, string Label, string? RequiredPermission = null);
 
     private List<MenuItem> menuItems = new()
     {
@@ -26,6 +31,7 @@
         new("produtos","fa-box","Produtos"),
         new("equipamentos","fa-robot","Equipamentos"),
         new("gestores","fa-user-tie","Gestores"),
+        new("usuarios","fa-users-cog","Usuários","PodeGerenciarUsuarios"),
         new("ordens-servico","fa-tasks","Ordens de Serviço"),
         new("rotas","fa-route","Gestão de Rota"),
         new("reagendamentos","fa-calendar-alt","Reagendamentos"),
@@ -35,4 +41,10 @@
         new("estoque","fa-warehouse","Estoque"),
         new("configuracoes","fa-cogs","Configurações"),
     };
+
+    private RenderFragment RenderLink(MenuItem item) => @<NavLink href="@item.Href" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150 font-medium text-base"
+                ActiveClass="bg-cyan-600 text-white font-semibold shadow-lg"
+                Match="@(item.Href == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)">
+        <i class="fas @item.Icon text-lg mr-2"></i><span>@item.Label</span>
+    </NavLink>;
 }
