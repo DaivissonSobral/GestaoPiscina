@@ -1,0 +1,214 @@
+@page "/equipamentos"
+@using GestaoPiscina.Client.Services
+@using GestaoPiscina.Client.Models
+@using GestaoPiscina.Client.Shared
+@inject ApiService ApiService
+
+<section class="p-4 space-y-6">
+    <div class="flex justify-between items-center">
+        <h3 class="text-xl font-bold">Gestão de Equipamentos</h3>
+        <button @onclick="AbrirModalNovo" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
+            <i class="fas fa-plus mr-2"></i>Novo Equipamento
+        </button>
+    </div>
+
+    <div class="flex space-x-2">
+        <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar equipamentos..." class="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+    </div>
+
+    @if (carregando)
+    {
+        <LoadingSpinner IsVisible="true" Message="Carregando equipamentos..." />
+    }
+    else if (equipamentosFiltrados.Any())
+    {
+        <div class="bg-slate-800 rounded-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-slate-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Cliente</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Descrição</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Número de Série</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Última Calibragem</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700">
+                        @foreach (var equipamento in equipamentosFiltrados)
+                        {
+                            <tr class="hover:bg-slate-700">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-slate-100">@equipamento.Cliente?.Nome</div>
+                                    <div class="text-sm text-slate-400">@equipamento.Cliente?.Tipo</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@equipamento.Descricao</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@equipamento.NumeroSerie</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@(equipamento.UltimaCalibragem?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button @onclick="() => AbrirModalEditar(equipamento)" class="text-cyan-400 hover:text-cyan-300 mr-3" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button @onclick="() => ExcluirEquipamento(equipamento)" class="text-red-400 hover:text-red-300" title="Excluir">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="bg-slate-800 rounded-xl p-8 text-center">
+            <i class="fas fa-robot text-4xl text-slate-600 mb-4"></i>
+            <h4 class="text-lg font-medium text-slate-300 mb-2">Nenhum equipamento encontrado</h4>
+            <p class="text-slate-400">Clique em "Novo Equipamento" para adicionar.</p>
+        </div>
+    }
+</section>
+
+<EquipamentoModal @bind-IsVisible="modalVisible"
+                   Equipamento="equipamentoSelecionado"
+                   Clientes="clientes"
+                   OnSave="SalvarEquipamento" />
+
+<ConfirmDialog @bind-IsVisible="confirmacaoExclusaoVisible"
+               Title="Confirmar Exclusão"
+               Message="Tem certeza que deseja excluir este equipamento?"
+               ConfirmText="Excluir"
+               OnConfirm="ConfirmarExclusao" />
+
+<Toast @bind-IsVisible="toastVisible"
+       Title="Notificação"
+       Message="@mensagemToast"
+       Type="@tipoToast" />
+
+@code {
+    private List<Equipamento>? equipamentos;
+    private List<Cliente>? clientes;
+    private Equipamento equipamentoSelecionado = new Equipamento();
+    private Equipamento? equipamentoParaExcluir;
+    private bool modalVisible = false;
+    private bool confirmacaoExclusaoVisible = false;
+    private bool carregando = true;
+    private string termoBusca = "";
+    private bool toastVisible = false;
+    private string mensagemToast = "";
+    private string tipoToast = "success";
+
+    private IEnumerable<Equipamento> equipamentosFiltrados => equipamentos?.Where(e =>
+        string.IsNullOrEmpty(termoBusca) ||
+        e.Cliente?.Nome?.Contains(termoBusca, StringComparison.OrdinalIgnoreCase) == true ||
+        e.Descricao.Contains(termoBusca, StringComparison.OrdinalIgnoreCase) ||
+        e.NumeroSerie.Contains(termoBusca, StringComparison.OrdinalIgnoreCase)
+    ) ?? Enumerable.Empty<Equipamento>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarDados();
+    }
+
+    private async Task CarregarDados()
+    {
+        try
+        {
+            carregando = true;
+            var equipamentosTask = ApiService.GetEquipamentosAsync();
+            var clientesTask = ApiService.GetClientesAsync();
+
+            await Task.WhenAll(equipamentosTask, clientesTask);
+            equipamentos = await equipamentosTask;
+            clientes = await clientesTask;
+        }
+        catch (Exception ex)
+        {
+            MostrarNotificacao("Erro", $"Erro ao carregar equipamentos: {ex.Message}", "error");
+            equipamentos = new List<Equipamento>();
+            clientes = new List<Cliente>();
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    private void AbrirModalNovo()
+    {
+        equipamentoSelecionado = new Equipamento();
+        modalVisible = true;
+    }
+
+    private void AbrirModalEditar(Equipamento equipamento)
+    {
+        equipamentoSelecionado = new Equipamento
+        {
+            IDEquipamento = equipamento.IDEquipamento,
+            IDCliente = equipamento.IDCliente,
+            Descricao = equipamento.Descricao,
+            NumeroSerie = equipamento.NumeroSerie,
+            UltimaCalibragem = equipamento.UltimaCalibragem,
+            Observacao = equipamento.Observacao
+        };
+        modalVisible = true;
+    }
+
+    private async Task SalvarEquipamento(Equipamento equipamento)
+    {
+        try
+        {
+            if (equipamento.IDEquipamento == 0)
+            {
+                await ApiService.CreateEquipamentoAsync(equipamento);
+                MostrarNotificacao("Sucesso", "Equipamento criado com sucesso!", "success");
+            }
+            else
+            {
+                await ApiService.UpdateEquipamentoAsync(equipamento);
+                MostrarNotificacao("Sucesso", "Equipamento atualizado com sucesso!", "success");
+            }
+
+            await CarregarDados();
+        }
+        catch (Exception ex)
+        {
+            MostrarNotificacao("Erro", $"Erro ao salvar equipamento: {ex.Message}", "error");
+        }
+    }
+
+    private void ExcluirEquipamento(Equipamento equipamento)
+    {
+        equipamentoParaExcluir = equipamento;
+        confirmacaoExclusaoVisible = true;
+    }
+
+    private async Task ConfirmarExclusao()
+    {
+        if (equipamentoParaExcluir != null)
+        {
+            try
+            {
+                await ApiService.DeleteEquipamentoAsync(equipamentoParaExcluir.IDEquipamento);
+                MostrarNotificacao("Sucesso", "Equipamento excluído com sucesso!", "success");
+                await CarregarDados();
+            }
+            catch (Exception ex)
+            {
+                MostrarNotificacao("Erro", $"Erro ao excluir equipamento: {ex.Message}", "error");
+            }
+            finally
+            {
+                equipamentoParaExcluir = null;
+            }
+        }
+    }
+
+    private void MostrarNotificacao(string titulo, string mensagem, string tipo)
+    {
+        mensagemToast = mensagem;
+        tipoToast = tipo;
+        toastVisible = true;
+    }
+}

@@ -152,16 +152,57 @@
                 }
                 else if (StateService.ActiveTab == "equipamentos")
                 {
-                    <EquipamentoForm
-                        ClienteId="StateService.CurrentCliente.IDCliente"
-                        Equipamentos="StateService.Equipamentos"
-                        Equipamento="StateService.CurrentEquipamento"
-                        ShowForm="StateService.ShowEquipamentoForm"
-                        OnCreate="ShowCreateEquipamento"
-                        OnClose="CloseEquipamentoForm"
-                        OnSave="HandleSaveEquipamento"
-                        OnEdit="ShowEditEquipamento"
-                        OnDelete="DeleteEquipamento" />
+                    <div class="space-y-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h5 class="text-lg font-semibold text-slate-200 flex items-center">
+                                <i class="fas fa-robot text-cyan-400 mr-2"></i>Equipamentos
+                            </h5>
+                            <button type="button" @onclick="ShowCreateEquipamento" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-2 rounded-lg text-white text-sm transition-colors">
+                                <i class="fas fa-plus mr-1"></i>Novo Equipamento
+                            </button>
+                        </div>
+
+                        @if (StateService.Equipamentos != null && StateService.Equipamentos.Any())
+                        {
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                @foreach (var equipamento in StateService.Equipamentos)
+                                {
+                                    <div class="bg-slate-800 rounded-xl p-4 space-y-3">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex-1">
+                                                <h4 class="text-sm font-medium text-slate-100">@equipamento.Descricao</h4>
+                                                <span class="text-sm text-slate-400">Série: @equipamento.NumeroSerie</span>
+                                            </div>
+                                            <div class="flex space-x-3 ml-4">
+                                                <button type="button" @onclick="() => ShowEditEquipamento(equipamento)" class="text-cyan-400 hover:text-cyan-300 p-2 rounded transition-colors" title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button type="button" @onclick="() => DeleteEquipamento(equipamento)" class="text-red-400 hover:text-red-300 p-2 rounded transition-colors" title="Excluir">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        @if (equipamento.UltimaCalibragem.HasValue)
+                                        {
+                                            <div class="text-sm text-slate-400">
+                                                <i class="fas fa-calendar-alt text-slate-500 mr-2"></i>
+                                                Última Calibragem: @equipamento.UltimaCalibragem.Value.ToShortDateString()
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-8 text-slate-400">
+                                <i class="fas fa-robot text-4xl mb-4"></i>
+                                <p class="text-lg">Nenhum equipamento cadastrado</p>
+                                <p class="text-sm mt-2">Clique em "Novo Equipamento" para adicionar</p>
+                            </div>
+                        }
+                    </div>
                 }
                 else if (StateService.ActiveTab == "produtos")
                 {
@@ -204,6 +245,11 @@
               ClienteId="StateService.CurrentCliente.IDCliente"
               OnSave="HandleSavePiscina" />
 
+<EquipamentoModal @bind-IsVisible="equipamentoModalVisible"
+                  Equipamento="StateService.CurrentEquipamento"
+                  ClienteId="StateService.CurrentCliente.IDCliente"
+                  OnSave="HandleSaveEquipamento" />
+
 <ConfirmDialog @bind-IsVisible="showConfirmDialog"
                Title="Confirmar Exclusão"
                Message="Tem certeza que deseja excluir este item?"
@@ -220,6 +266,7 @@
     private bool isLoading = false;
     private bool showConfirmDialog = false;
     private bool piscinaModalVisible = false;
+    private bool equipamentoModalVisible = false;
     private object? itemToDelete = null;
     private bool ClienteSalvo => StateService.CurrentCliente.IDCliente > 0;
     private List<Gestor>? gestores;
@@ -528,7 +575,7 @@
     private void ShowCreateEquipamento()
     {
         StateService.CurrentEquipamento = new Equipamento { IDCliente = StateService.CurrentCliente.IDCliente };
-        StateService.ShowEquipamentoForm = true;
+        equipamentoModalVisible = true;
     }
 
     private void ShowEditEquipamento(Equipamento equipamento)
@@ -542,35 +589,26 @@
             UltimaCalibragem = equipamento.UltimaCalibragem,
             Observacao = equipamento.Observacao
         };
-        StateService.ShowEquipamentoForm = true;
+        equipamentoModalVisible = true;
     }
 
-    private void CloseEquipamentoForm()
-    {
-        StateService.ShowEquipamentoForm = false;
-        StateService.CurrentEquipamento = new Equipamento();
-    }
-
-    private async Task HandleSaveEquipamento()
+    private async Task HandleSaveEquipamento(Equipamento equipamento)
     {
         isLoading = true;
         try
         {
-            StateService.CurrentEquipamento.IDCliente = StateService.CurrentCliente.IDCliente;
-
-            if (StateService.CurrentEquipamento.IDEquipamento > 0)
+            if (equipamento.IDEquipamento > 0)
             {
-                await ApiService.UpdateEquipamentoAsync(StateService.CurrentEquipamento);
+                await ApiService.UpdateEquipamentoAsync(equipamento);
                 ShowToast("Sucesso", "Equipamento atualizado com sucesso!", "success");
             }
             else
             {
-                await ApiService.CreateEquipamentoAsync(StateService.CurrentEquipamento);
+                await ApiService.CreateEquipamentoAsync(equipamento);
                 ShowToast("Sucesso", "Equipamento criado com sucesso!", "success");
             }
 
             await LoadRelatedData();
-            CloseEquipamentoForm();
         }
         catch (Exception ex)
         {

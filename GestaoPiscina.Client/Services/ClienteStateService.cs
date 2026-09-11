@@ -14,7 +14,6 @@ namespace GestaoPiscina.Client.Services
         public List<Produto>? Produtos { get; set; }
 
         // Estado dos formulários
-        public bool ShowEquipamentoForm { get; set; }
         public bool ShowEstoqueForm { get; set; }
         
         // Objetos atuais dos formulários
@@ -61,7 +60,6 @@ namespace GestaoPiscina.Client.Services
             Equipamentos = null;
             Estoques = null;
             Produtos = null;
-            ShowEquipamentoForm = false;
             ShowEstoqueForm = false;
             CurrentPiscina = new Piscina();
             CurrentEquipamento = new Equipamento();
