@@ -68,12 +68,14 @@
                 <header class="top">
                     <div class="top-row">
                         <div>
-                            <div class="brand-tag">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c4 5 7 8.5 7 12a7 7 0 1 1-14 0c0-3.5 3-7 7-12Z" /></svg>
-                                Manutenção de piscinas
-                            </div>
                             <h1>@clienteRelatorio.Nome</h1>
-                            <p class="sub">Relatório técnico da qualidade da água — @NomesPiscinas()</p>
+                            <p class="sub-destaque">Relatório técnico da qualidade da água</p>
+                            <div class="piscinas-lines">
+                                @foreach (var piscina in piscinasRelatorio)
+                                {
+                                    <div><b>@NomePiscinaCapitalizado(piscina)</b> — Volume: @VolumeFormatado(piscina)m³</div>
+                                }
+                            </div>
                             <div class="meta-lines">
                                 Competência: @NomePeriodo()
                                 @if (!string.IsNullOrWhiteSpace(clienteRelatorio.CNPJ))
@@ -313,10 +315,6 @@
                             {
                                 <br />@:CNPJ @clienteRelatorio.CNPJ
                             }
-                            @foreach (var piscina in piscinasRelatorio)
-                            {
-                                <br />@:Volume: @((piscina.VolumeLitros / 1000).ToString("0.##", CultureInfo.GetCultureInfo("pt-BR")))m³ (@NomePiscina(piscina))
-                            }
                         </p>
                         <div class="badge-row">
                             @foreach (var selo in SelosEmpresa)
@@ -415,8 +413,6 @@
 
     private string NomePeriodo() => $"{CultureInfo.GetCultureInfo("pt-BR").DateTimeFormat.GetMonthName(selectedMes)} de {selectedAno}";
 
-    private string NomesPiscinas() => string.Join(", ", piscinasRelatorio.Select(NomePiscina).Distinct());
-
     private string NomePiscina(Piscina? piscina) => piscina?.Tipo switch
     {
         "adulto" => "piscina adulta",
@@ -424,6 +420,16 @@
         "espelho" => "espelho d'água",
         _ => piscina?.Tipo ?? ""
     };
+
+    private string NomePiscinaCapitalizado(Piscina piscina) => piscina.Tipo switch
+    {
+        "adulto" => "Piscina Adulta",
+        "infantil" => "Piscina Infantil",
+        "espelho" => "Espelho D'água",
+        _ => piscina.Tipo
+    };
+
+    private string VolumeFormatado(Piscina piscina) => (piscina.VolumeLitros / 1000).ToString("0.##", CultureInfo.GetCultureInfo("pt-BR"));
 
     private Piscina? PiscinaDe(int idPiscina) => piscinasRelatorio.FirstOrDefault(p => p.IDPiscina == idPiscina);
 
