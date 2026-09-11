@@ -307,21 +307,9 @@
                         <div class="sig-role">Química responsável<br>@CrqResponsavel</div>
                         <p class="obs">A alcalinidade deve ser medida uma vez por semana e a dureza cálcica a cada 15 dias; os demais parâmetros são verificados em cada visita técnica.</p>
                     </div>
-                    <div class="meta-block">
-                        <h4>Dados do condomínio</h4>
-                        <p>
-                            <b>@clienteRelatorio.Nome</b>
-                            @if (!string.IsNullOrWhiteSpace(clienteRelatorio.CNPJ))
-                            {
-                                <br />@:CNPJ @clienteRelatorio.CNPJ
-                            }
-                        </p>
-                        <div class="badge-row">
-                            @foreach (var selo in SelosEmpresa)
-                            {
-                                <span class="badge">@selo</span>
-                            }
-                        </div>
+                    <div class="brand-block">
+                        <img class="logo-empresa" src="/images/logo-fort-piscina.png" alt="Fort Piscina" />
+                        <img class="logo-app" src="/images/logo-foot-fortpool.png" alt="FortPool" />
                     </div>
                 </footer>
 
@@ -333,7 +321,6 @@
 @code {
     private const string QuimicaResponsavel = "Talina da Silva Ferreira dos Santos";
     private const string CrqResponsavel = "CRQ/CE nº 101000447";
-    private static readonly string[] SelosEmpresa = { "Elias Mendes Consultoria", "Aqua Limpe", "CRQ", "ANAPP" };
     private static readonly string[] PaletaCores = { "#167D8C", "#C9820F", "#7C5CBF", "#C4507A", "#3E8E5B" };
 
     private record Parametro(string Nome, string Unidade, string Icone, decimal IdealMin, decimal IdealMax, decimal DispMin, decimal DispMax, string Formato, Func<OrdemDeServico, decimal> Valor);

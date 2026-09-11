@@ -708,30 +708,32 @@
     max-width: 320px;
 }
 
-.relatorio-page .meta-block p {
-    font-size: 13px;
-    line-height: 2;
-    color: #DCF3F4;
-}
-
-.relatorio-page .meta-block b {
-    color: #fff;
-}
-
-.relatorio-page .badge-row {
+/* Logos ao lado dos dados da química responsável, substituindo os antigos
+   "Dados do condomínio" e selos no rodapé: a logo da empresa (fundo branco,
+   porque tem texto em tom escuro, ilegível sobre o rodapé escuro) e, um
+   pouco menor e empilhada abaixo dela no mesmo bloco, a logo do aplicativo
+   (já clara, sem precisar de fundo próprio). */
+.relatorio-page .brand-block {
     display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-top: 18px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
 }
 
-.relatorio-page .badge {
-    font-size: 11.5px;
-    font-weight: 600;
-    color: #EAF5F6;
-    border: 1px solid rgba(255,255,255,0.3);
-    padding: 6px 12px;
-    border-radius: 999px;
+.relatorio-page .brand-block .logo-empresa {
+    max-width: 220px;
+    width: 100%;
+    height: auto;
+    background: #fff;
+    border-radius: 18px;
+    padding: 18px 22px;
+}
+
+.relatorio-page .brand-block .logo-app {
+    height: 22px;
+    width: auto;
+    object-fit: contain;
 }
 
 @media screen and (max-width: 720px) {
