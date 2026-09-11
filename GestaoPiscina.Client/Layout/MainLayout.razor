@@ -70,4 +70,21 @@
         showToast = true;
         StateHasChanged();
     }
+
+    public bool MobileMenuOpen { get; private set; }
+
+    public void ToggleMobileMenu()
+    {
+        MobileMenuOpen = !MobileMenuOpen;
+        StateHasChanged();
+    }
+
+    public void CloseMobileMenu()
+    {
+        if (MobileMenuOpen)
+        {
+            MobileMenuOpen = false;
+            StateHasChanged();
+        }
+    }
 }
