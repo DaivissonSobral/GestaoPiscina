@@ -610,14 +610,19 @@
     margin-bottom: 12px;
 }
 
+/* Flex em vez de grid: cada foto mantém um tamanho fixo e as fotos
+   fluem em colunas na mesma linha, só quebrando para a linha de baixo
+   quando não cabe mais nenhuma — em vez de esticar para preencher a
+   largura toda quando há poucas fotos. */
 .relatorio-page .photo-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 12px;
 }
 
 .relatorio-page .photo-grid img {
-    width: 100%;
+    flex: 0 0 160px;
+    width: 160px;
     aspect-ratio: 4 / 3;
     object-fit: cover;
     border-radius: 14px;
