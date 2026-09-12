@@ -135,7 +135,7 @@
                             @coluna.Label
                             <span class="bg-slate-900 text-slate-300 text-xs font-semibold rounded-full px-2 py-0.5">@ordensColuna.Count</span>
                         </h3>
-                        <div class="space-y-2 max-h-[65vh] overflow-y-auto pr-1 kanban-scroll">
+                        <div class="space-y-2 max-h-[65vh] overflow-y-auto pr-1 scroll-tema">
                             @foreach (var os in ordensColuna)
                             {
                                 <div @onclick="() => VerDetalhes(os)"

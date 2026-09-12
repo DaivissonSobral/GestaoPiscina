@@ -92,24 +92,26 @@ code {
     color: #c02d76;
 }
 
-.kanban-scroll {
+/* Barra de rolagem fina e com cor do tema — usada em qualquer área com scroll interno
+   (kanban, modais de OS), no lugar da barra padrão do navegador. */
+.scroll-tema {
     scrollbar-width: thin;
     scrollbar-color: #475569 transparent;
 }
 
-.kanban-scroll::-webkit-scrollbar {
+.scroll-tema::-webkit-scrollbar {
     width: 6px;
 }
 
-.kanban-scroll::-webkit-scrollbar-track {
+.scroll-tema::-webkit-scrollbar-track {
     background: transparent;
 }
 
-.kanban-scroll::-webkit-scrollbar-thumb {
+.scroll-tema::-webkit-scrollbar-thumb {
     background-color: #475569;
     border-radius: 9999px;
 }
 
-.kanban-scroll::-webkit-scrollbar-thumb:hover {
+.scroll-tema::-webkit-scrollbar-thumb:hover {
     background-color: #64748b;
 }

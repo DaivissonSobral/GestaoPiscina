@@ -26,7 +26,7 @@
         <EditForm Model="OrdemDeServico" OnValidSubmit="HandleSubmit" OnInvalidSubmit="HandleInvalidSubmit" class="flex flex-col flex-1 min-h-0">
             <DataAnnotationsValidator />
 
-            <div class="flex-1 overflow-y-auto px-6 space-y-3">
+            <div class="flex-1 overflow-y-auto px-6 space-y-3 scroll-tema">
                 <ValidationMessage For="@(() => OrdemDeServico.Status)" />
 
                 <div class="border border-slate-700 rounded-lg overflow-hidden">
@@ -125,11 +125,6 @@
                                 <CampoNumerico Label="Alcalinidade" Unidade="ppm" @bind-Value="OrdemDeServico.Alcalinidade" Step="10m" Min="0m" Max="300m" />
                                 <CampoNumerico Label="Cloro Livre" Unidade="ppm" @bind-Value="OrdemDeServico.CloroLivre" Step="0.5m" Min="0m" Max="10m" />
                                 <CampoNumerico Label="Dureza Cálcica" Unidade="ppm" @bind-Value="OrdemDeServico.DurezaCalcica" Step="10m" Min="0m" Max="800m" />
-                            </div>
-
-                            <div class="flex items-center">
-                                <InputCheckbox @bind-Value="OrdemDeServico.RelatorioGerado" class="mr-2" />
-                                <label class="text-sm font-medium text-slate-300">Relatório Gerado</label>
                             </div>
                         </div>
                     }

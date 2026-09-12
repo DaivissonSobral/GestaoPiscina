@@ -2,7 +2,7 @@
 @inject NavigationManager Navigation
 
 <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 @(IsVisible ? "" : "hidden")">
-    <div class="bg-slate-800 rounded-xl p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+    <div class="bg-slate-800 rounded-xl p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto scroll-tema">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-semibold text-slate-100">
                 Detalhes da Ordem de Serviço #@OrdemDeServico.IDOS
@@ -168,11 +168,11 @@
         </div>
 
         <div class="flex space-x-3 mt-6">
-            <button @onclick="AbrirRelatorio" class="flex-1 bg-teal-600 hover:bg-teal-500 px-4 py-2 rounded-lg text-white transition-colors">
-                <i class="fas fa-file-alt mr-2"></i>Relatório
-            </button>
             <button @onclick="() => OnEdit.InvokeAsync(OrdemDeServico)" class="flex-1 bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
-                <i class="fas fa-edit mr-2"></i>@(OrdemDeServico.Status == "Em Aberto" ? "Iniciar" : "Continuar")
+                <i class="fas fa-edit mr-2"></i>@TextoBotaoEditar()
+            </button>
+            <button @onclick="AbrirRelatorio" disabled="@(OrdemDeServico.Status != "Finalizada")" class="flex-1 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors" title="@(OrdemDeServico.Status == "Finalizada" ? "" : "Disponível quando a OS estiver finalizada")">
+                <i class="fas fa-file-alt mr-2"></i>Relatório
             </button>
             <button @onclick="Close" class="flex-1 bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded-lg text-white transition-colors">
                 Fechar
@@ -197,6 +197,13 @@
     {
         Navigation.NavigateTo($"/relatorios/os/{OrdemDeServico.IDOS}");
     }
+
+    private string TextoBotaoEditar() => OrdemDeServico.Status switch
+    {
+        "Em Aberto" => "Iniciar",
+        "Finalizada" => "Abrir",
+        _ => "Continuar"
+    };
 
     private string GetStatusClass(string status)
     {
