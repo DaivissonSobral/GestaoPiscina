@@ -1,0 +1,96 @@
+@using GestaoPiscina.Client.Models
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    @foreach (var gestor in Gestores)
+    {
+        <div class="bg-slate-800 rounded-xl p-4 space-y-3">
+            <div class="flex justify-between items-start">
+                <div class="flex-1">
+                    <h4 class="text-sm font-medium text-slate-100">@gestor.Nome</h4>
+                    <span class="text-sm text-slate-400 block">@gestor.Telefone</span>
+                    <span class="text-sm text-slate-400 block">@gestor.Email</span>
+                </div>
+                <div class="flex space-x-3 ml-4">
+                    <button @onclick="() => OnToggleVinculos.InvokeAsync(gestor)" class="text-blue-400 hover:text-blue-300 p-2 rounded transition-colors" title="Gerenciar clientes vinculados">
+                        <i class="fas fa-link"></i>
+                    </button>
+                    <button @onclick="() => OnEdit.InvokeAsync(gestor)" class="text-cyan-400 hover:text-cyan-300 p-2 rounded transition-colors" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button @onclick="() => OnDelete.InvokeAsync(gestor)" class="text-red-400 hover:text-red-300 p-2 rounded transition-colors" title="Excluir">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full @(gestor.Ativo ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-800")">
+                    @(gestor.Ativo ? "Ativo" : "Inativo")
+                </span>
+                <span class="text-sm text-slate-300">@gestor.GestorClientes.Count cliente(s)</span>
+            </div>
+
+            @if (GestorExpandidoId == gestor.IDGestor)
+            {
+                <div class="pt-3 border-t border-slate-700 space-y-3">
+                    <h5 class="text-sm font-semibold text-slate-200">Clientes vinculados</h5>
+                    @if (gestor.GestorClientes.Any())
+                    {
+                        <ul class="space-y-1">
+                            @foreach (var vinculo in gestor.GestorClientes)
+                            {
+                                <li class="flex justify-between items-center bg-slate-900 rounded-lg px-3 py-2">
+                                    <span class="text-sm text-slate-200">@vinculo.Cliente?.Nome</span>
+                                    <button @onclick="() => OnDesvincular.InvokeAsync((gestor, vinculo))" class="text-red-400 hover:text-red-300 text-sm">
+                                        <i class="fas fa-unlink mr-1"></i>Desvincular
+                                    </button>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-sm text-slate-400">Nenhum cliente vinculado.</p>
+                    }
+
+                    <div class="flex space-x-2">
+                        <select value="@ClienteParaVincularId" @onchange="AoMudarClienteSelecionado" class="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 text-sm">
+                            <option value="0">Selecione um cliente para vincular...</option>
+                            @if (Clientes != null)
+                            {
+                                @foreach (var cliente in Clientes.Where(c => gestor.GestorClientes.All(gc => gc.IDCliente != c.IDCliente)))
+                                {
+                                    <option value="@cliente.IDCliente">@cliente.Nome</option>
+                                }
+                            }
+                        </select>
+                        <button @onclick="() => OnVincular.InvokeAsync(gestor)" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors text-sm whitespace-nowrap">
+                            Vincular
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public List<Gestor> Gestores { get; set; } = new();
+    [Parameter] public List<Cliente>? Clientes { get; set; }
+    [Parameter] public int? GestorExpandidoId { get; set; }
+    [Parameter] public int ClienteParaVincularId { get; set; }
+    [Parameter] public EventCallback<int> ClienteParaVincularIdChanged { get; set; }
+    [Parameter] public EventCallback<Gestor> OnEdit { get; set; }
+    [Parameter] public EventCallback<Gestor> OnDelete { get; set; }
+    [Parameter] public EventCallback<Gestor> OnToggleVinculos { get; set; }
+    [Parameter] public EventCallback<Gestor> OnVincular { get; set; }
+    [Parameter] public EventCallback<(Gestor Gestor, GestorCliente Vinculo)> OnDesvincular { get; set; }
+
+    private async Task AoMudarClienteSelecionado(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var id))
+        {
+            await ClienteParaVincularIdChanged.InvokeAsync(id);
+        }
+    }
+}

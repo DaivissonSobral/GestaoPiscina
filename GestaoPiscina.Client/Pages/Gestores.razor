@@ -12,12 +12,39 @@
         </button>
     </div>
 
+    <div class="flex justify-end space-x-2">
+        <button @onclick="SetListView"
+                class="@GetListViewButtonClass()"
+                title="Lista">
+            <i class="fas fa-list"></i>
+        </button>
+        <button @onclick="SetCardsView"
+                class="@GetCardsViewButtonClass()"
+                title="Cards">
+            <i class="fas fa-th-large"></i>
+        </button>
+    </div>
+
     @if (carregando)
     {
         <LoadingSpinner IsVisible="true" Message="Carregando gestores..." />
     }
     else if (gestores != null && gestores.Any())
     {
+        @if (viewMode == "cards")
+        {
+            <GestorCards Gestores="gestores"
+                         Clientes="clientes"
+                         GestorExpandidoId="gestorExpandidoId"
+                         @bind-ClienteParaVincularId="clienteParaVincularId"
+                         OnEdit="AbrirModalEditar"
+                         OnDelete="ExcluirGestor"
+                         OnToggleVinculos="ToggleVinculos"
+                         OnVincular="VincularCliente"
+                         OnDesvincular="DesvincularClienteVinculo" />
+        }
+        else
+        {
         <div class="bg-slate-800 rounded-xl overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full">
@@ -107,6 +134,7 @@
                 </table>
             </div>
         </div>
+        }
     }
     else
     {
@@ -143,9 +171,35 @@
     private bool carregando = true;
     private int? gestorExpandidoId;
     private int clienteParaVincularId;
+    private string viewMode = "lista";
     private bool toastVisible = false;
     private string mensagemToast = "";
     private string tipoToast = "success";
+
+    private void SetListView()
+    {
+        viewMode = "lista";
+    }
+
+    private void SetCardsView()
+    {
+        viewMode = "cards";
+    }
+
+    private string GetListViewButtonClass() =>
+        viewMode == "lista"
+            ? "px-3 py-2 rounded-lg transition-colors bg-cyan-600 text-white"
+            : "px-3 py-2 rounded-lg transition-colors bg-slate-700 text-slate-300 hover:bg-slate-600";
+
+    private string GetCardsViewButtonClass() =>
+        viewMode == "cards"
+            ? "px-3 py-2 rounded-lg transition-colors bg-cyan-600 text-white"
+            : "px-3 py-2 rounded-lg transition-colors bg-slate-700 text-slate-300 hover:bg-slate-600";
+
+    private async Task DesvincularClienteVinculo((Gestor Gestor, GestorCliente Vinculo) args)
+    {
+        await DesvincularCliente(args.Gestor, args.Vinculo);
+    }
 
     protected override async Task OnInitializedAsync()
     {
