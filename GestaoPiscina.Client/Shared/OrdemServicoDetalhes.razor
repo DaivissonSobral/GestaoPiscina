@@ -134,6 +134,18 @@
                             </div>
                         }
                         <div class="flex items-start space-x-2 pt-1 border-t border-slate-600">
+                            <i class="fas @(ParametrosAguaPreenchidos ? "fa-check-circle text-green-400" : "fa-times-circle text-red-400") mt-0.5"></i>
+                            <span class="text-sm @(ParametrosAguaPreenchidos ? "text-slate-300" : "text-slate-500")">
+                                @(ParametrosAguaPreenchidos ? "Parâmetros da água informados." : "Parâmetros da água ainda não informados.")
+                            </span>
+                        </div>
+                        <div class="flex items-start space-x-2">
+                            <i class="fas @(FotosCompletas ? "fa-check-circle text-green-400" : "fa-times-circle text-red-400") mt-0.5"></i>
+                            <span class="text-sm @(FotosCompletas ? "text-slate-300" : "text-slate-500")">
+                                @(FotosCompletas ? "Fotos de antes e depois anexadas." : "Fotos de antes e depois ainda não anexadas.")
+                            </span>
+                        </div>
+                        <div class="flex items-start space-x-2">
                             <i class="fas @(dosagensAtuais.Any() ? "fa-check-circle text-green-400" : "fa-times-circle text-red-400") mt-0.5"></i>
                             <span class="text-sm @(dosagensAtuais.Any() ? "text-slate-300" : "text-slate-500")">
                                 @(dosagensAtuais.Any() ? TextoDosagemAplicada : "Nenhum produto dosado ainda.")
@@ -245,6 +257,12 @@
     [Parameter] public EventCallback<OrdemDeServico> OnEdit { get; set; }
 
     private List<DosagemProduto> dosagensAtuais = new();
+
+    private bool ParametrosAguaPreenchidos =>
+        OrdemDeServico.pH > 0 && OrdemDeServico.Alcalinidade > 0 && OrdemDeServico.CloroLivre > 0;
+
+    private bool FotosCompletas =>
+        !string.IsNullOrWhiteSpace(OrdemDeServico.FotosAntes) && !string.IsNullOrWhiteSpace(OrdemDeServico.FotosDepois);
     private bool eraVisivel;
 
     private HashSet<string> ChecklistMarcados => ChecklistOS.ItensMarcados(OrdemDeServico.ChecklistItens);
