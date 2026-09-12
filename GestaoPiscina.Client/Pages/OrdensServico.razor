@@ -201,7 +201,7 @@
                    Tecnicos="tecnicos"
                    Aprovadores="quimicos"
                    OnSave="SalvarOS"
-                   OnFinalizado="AbrirDetalhesAposFinalizar" />
+                   OnSalvo="AbrirDetalhesAposSalvar" />
 
 <OrdemServicoDetalhes @bind-IsVisible="modalDetalhesVisible" 
                       OrdemDeServico="osSelecionada"
@@ -455,13 +455,14 @@
 
     private void EditarOS(OrdemDeServico os)
     {
-        osSelecionada = new OrdemDeServico
+        var copia = new OrdemDeServico
         {
             IDOS = os.IDOS,
             IDPiscina = os.IDPiscina,
             DataExecucao = os.DataExecucao,
             Status = os.Status,
             ChecklistConcluido = os.ChecklistConcluido,
+            ChecklistItens = os.ChecklistItens,
             Observacoes = os.Observacoes,
             FotosAntes = os.FotosAntes,
             FotosDepois = os.FotosDepois,
@@ -477,6 +478,18 @@
             HoraTermino = os.HoraTermino,
             Piscina = os.Piscina
         };
+
+        // Abrir uma OS "Em Aberto" para edição (botão Iniciar/Continuar) marca o começo do
+        // atendimento. Fica aqui — disparado só por essa ação explícita do usuário — e não
+        // dentro do modal, porque o modal (mesmo escondido) também recebe osSelecionada
+        // quando o usuário só abre a Visualização, e não deve reagir a isso.
+        if (copia.Status == "Em Aberto")
+        {
+            copia.Status = "Em Andamento";
+            copia.HoraInicio = copia.DataExecucao.Date + DateTime.Now.TimeOfDay;
+        }
+
+        osSelecionada = copia;
         modalDetalhesVisible = false;
         modalOSVisible = true;
     }
@@ -487,9 +500,9 @@
         modalDetalhesVisible = true;
     }
 
-    // Ao finalizar uma OS pelo modal de edição, abre a Visualização dela em seguida
+    // Ao salvar (ou finalizar) uma OS pelo modal de edição, volta para a Visualização dela
     // (osSelecionada já é a mesma instância recém-salva, não precisa recarregar).
-    private void AbrirDetalhesAposFinalizar(OrdemDeServico os)
+    private void AbrirDetalhesAposSalvar(OrdemDeServico os)
     {
         modalDetalhesVisible = true;
     }

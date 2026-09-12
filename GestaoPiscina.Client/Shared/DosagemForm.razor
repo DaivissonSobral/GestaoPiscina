@@ -57,8 +57,10 @@
 @code {
     [Parameter] public int OsId { get; set; }
     [Parameter] public int ClienteId { get; set; }
+    [Parameter] public EventCallback<List<DosagemProduto>> OnDosagensAtualizadas { get; set; }
 
     private List<Produto> produtos = new();
+    private List<DosagemProduto> dosagensAtuais = new();
     private Dictionary<int, decimal> valorInicial = new();
     private Dictionary<int, decimal> valores = new();
     private Dictionary<int, decimal> maximos = new();
@@ -91,6 +93,9 @@
             await Task.WhenAll(tarefaEstoque, tarefaDosagens);
             var estoque = await tarefaEstoque;
             var dosagens = await tarefaDosagens;
+
+            dosagensAtuais = dosagens.Where(d => d.Quantidade > 0).ToList();
+            await OnDosagensAtualizadas.InvokeAsync(dosagensAtuais);
 
             produtos = estoque.Select(e => e.Produto).OrderBy(p => p.Nome).ToList();
             valores.Clear();

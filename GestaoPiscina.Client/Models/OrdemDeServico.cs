@@ -14,7 +14,12 @@ namespace GestaoPiscina.Client.Models
         public DateTime DataExecucao { get; set; }
         
         public bool ChecklistConcluido { get; set; }
-        
+
+        // Chaves (separadas por vírgula) dos itens fixos de checklist marcados como concluídos
+        // nesta OS. ChecklistConcluido é recalculado a cada mudança: todos os itens marcados +
+        // pelo menos uma dosagem de produto registrada.
+        public string? ChecklistItens { get; set; }
+
         [StringLength(1000, ErrorMessage = "Observações devem ter no máximo 1000 caracteres")]
         public string? Observacoes { get; set; }
         
