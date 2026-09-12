@@ -5,8 +5,6 @@
 @inject ApiService ApiService
 
 <section class="p-4 space-y-6">
-    <h3 class="text-xl font-bold">Gestão de Estoque</h3>
-
     <div class="bg-slate-800 rounded-xl p-4 space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="space-y-1">
@@ -43,14 +41,14 @@
             </div>
         </div>
 
-        <div class="flex justify-between items-center gap-4">
-            <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar produto ou cliente..." class="flex-1 max-w-sm bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+        <div class="flex items-center gap-4">
             @if (clienteSelecionadoId > 0)
             {
                 <button @onclick="() => AbrirNovaMovimentacao(null)" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors whitespace-nowrap">
                     <i class="fas fa-plus mr-2"></i>Nova Movimentação
                 </button>
             }
+            <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar produto ou cliente..." class="flex-1 max-w-sm bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
         </div>
     </div>
 

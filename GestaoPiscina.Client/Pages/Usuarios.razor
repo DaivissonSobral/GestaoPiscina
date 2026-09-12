@@ -6,8 +6,7 @@
 
 <AuthorizeView Permission="PodeGerenciarUsuarios" NotAuthorized="Você não tem permissão para gerenciar usuários.">
     <section class="p-4 space-y-6">
-        <div class="flex justify-between items-center">
-            <h3 class="text-xl font-bold">Gestão de Usuários</h3>
+        <div>
             <button @onclick="AbrirModalNovo" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
                 <i class="fas fa-user-plus mr-2"></i>Novo Usuário
             </button>
