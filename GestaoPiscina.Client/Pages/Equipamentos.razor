@@ -14,6 +14,10 @@
 
     <div class="flex space-x-2">
         <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar equipamentos..." class="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+        <select @bind="filtroCalibracao" class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+            <option value="">Todas as Calibrações</option>
+            <option value="pendente">Calibração Pendente</option>
+        </select>
     </div>
 
     @if (carregando)
@@ -95,19 +99,32 @@
     private bool confirmacaoExclusaoVisible = false;
     private bool carregando = true;
     private string termoBusca = "";
+    private string filtroCalibracao = "";
     private bool toastVisible = false;
     private string mensagemToast = "";
     private string tipoToast = "success";
 
-    private IEnumerable<Equipamento> equipamentosFiltrados => equipamentos?.Where(e =>
-        string.IsNullOrEmpty(termoBusca) ||
-        e.Cliente?.Nome?.Contains(termoBusca, StringComparison.OrdinalIgnoreCase) == true ||
-        e.Descricao.Contains(termoBusca, StringComparison.OrdinalIgnoreCase) ||
-        e.NumeroSerie.Contains(termoBusca, StringComparison.OrdinalIgnoreCase)
-    ) ?? Enumerable.Empty<Equipamento>();
+    [SupplyParameterFromQuery(Name = "calibracao")]
+    public string? CalibracaoQuery { get; set; }
+
+    private bool CalibracaoPendente(Equipamento e) =>
+        !e.UltimaCalibragem.HasValue || e.UltimaCalibragem.Value.Date < DateTime.Today.AddYears(-1);
+
+    private IEnumerable<Equipamento> equipamentosFiltrados => (equipamentos ?? Enumerable.Empty<Equipamento>())
+        .Where(e =>
+            string.IsNullOrEmpty(termoBusca) ||
+            e.Cliente?.Nome?.Contains(termoBusca, StringComparison.OrdinalIgnoreCase) == true ||
+            e.Descricao.Contains(termoBusca, StringComparison.OrdinalIgnoreCase) ||
+            e.NumeroSerie.Contains(termoBusca, StringComparison.OrdinalIgnoreCase))
+        .Where(e => filtroCalibracao != "pendente" || CalibracaoPendente(e));
 
     protected override async Task OnInitializedAsync()
     {
+        if (CalibracaoQuery == "pendente")
+        {
+            filtroCalibracao = "pendente";
+        }
+
         await CarregarDados();
     }
 

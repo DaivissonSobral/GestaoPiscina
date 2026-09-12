@@ -13,7 +13,7 @@
     else
     {
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-slate-800 rounded-xl p-4">
+            <div @onclick="IrParaOsHoje" class="bg-slate-800 hover:bg-slate-700 rounded-xl p-4 cursor-pointer transition-colors">
                 <h3 class="text-slate-400 text-sm">OS do Dia</h3>
                 <p class="text-2xl font-bold mt-2">@OsHoje.Count</p>
                 @if (OsAbertasHoje > 0)
@@ -25,12 +25,12 @@
                     <span class="text-green-500 text-sm">Tudo em dia</span>
                 }
             </div>
-            <div class="bg-slate-800 rounded-xl p-4">
+            <div @onclick="IrParaPiscinasAtendidas" class="bg-slate-800 hover:bg-slate-700 rounded-xl p-4 cursor-pointer transition-colors">
                 <h3 class="text-slate-400 text-sm">Piscinas Atendidas</h3>
                 <p class="text-2xl font-bold mt-2">@PiscinasAtendidasHoje</p>
                 <span class="text-green-500 text-sm">Hoje</span>
             </div>
-            <div class="bg-slate-800 rounded-xl p-4">
+            <div @onclick="IrParaProdutosEmBaixa" class="bg-slate-800 hover:bg-slate-700 rounded-xl p-4 cursor-pointer transition-colors">
                 <h3 class="text-slate-400 text-sm">Produtos em Baixa</h3>
                 <p class="text-2xl font-bold mt-2">@ProdutosEmBaixa.Count</p>
                 @if (ProdutosEmBaixa.Any())
@@ -42,7 +42,7 @@
                     <span class="text-green-500 text-sm">Estoque OK</span>
                 }
             </div>
-            <div class="bg-slate-800 rounded-xl p-4">
+            <div @onclick="IrParaAlertasPendentes" class="bg-slate-800 hover:bg-slate-700 rounded-xl p-4 cursor-pointer transition-colors">
                 <h3 class="text-slate-400 text-sm">Alertas Pendentes</h3>
                 <p class="text-2xl font-bold mt-2">@OsAtrasadas.Count</p>
                 @if (OsAtrasadas.Any())
@@ -132,19 +132,19 @@
         </div>
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-slate-800 rounded-xl p-4">
+            <div @onclick="IrParaOsAbertas" class="bg-slate-800 hover:bg-slate-700 rounded-xl p-4 cursor-pointer transition-colors">
                 <h3 class="text-sm text-slate-400">OS Abertas</h3>
                 <p class="text-lg font-semibold mt-1">@OsAbertasTotal pendente(s)</p>
             </div>
-            <div class="bg-slate-800 rounded-xl p-4">
+            <div @onclick="IrParaChecklistsConcluidos" class="bg-slate-800 hover:bg-slate-700 rounded-xl p-4 cursor-pointer transition-colors">
                 <h3 class="text-sm text-slate-400">Checklists Concluídos</h3>
                 <p class="text-lg font-semibold mt-1">@ChecklistsHoje hoje</p>
             </div>
-            <div class="bg-slate-800 rounded-xl p-4">
+            <div @onclick="IrParaOsFinalizadasMes" class="bg-slate-800 hover:bg-slate-700 rounded-xl p-4 cursor-pointer transition-colors">
                 <h3 class="text-sm text-slate-400">OS Finalizadas (Mês)</h3>
                 <p class="text-lg font-semibold mt-1">@OsFinalizadasMes finalizada(s)</p>
             </div>
-            <div class="bg-slate-800 rounded-xl p-4">
+            <div @onclick="IrParaCalibracaoEquipamentos" class="bg-slate-800 hover:bg-slate-700 rounded-xl p-4 cursor-pointer transition-colors">
                 <h3 class="text-sm text-slate-400">Calibração de Equipamentos</h3>
                 <p class="text-lg font-semibold mt-1">@CalibracaoPendente.Count pendente(s)</p>
             </div>
@@ -281,5 +281,45 @@
     private void Configuracoes()
     {
         Navigation.NavigateTo("/configuracoes");
+    }
+
+    private void IrParaOsHoje()
+    {
+        Navigation.NavigateTo("/ordens-servico?data=hoje");
+    }
+
+    private void IrParaPiscinasAtendidas()
+    {
+        Navigation.NavigateTo("/ordens-servico?status=" + Uri.EscapeDataString("Finalizada") + "&data=hoje");
+    }
+
+    private void IrParaProdutosEmBaixa()
+    {
+        Navigation.NavigateTo("/estoque?nivel=baixo");
+    }
+
+    private void IrParaAlertasPendentes()
+    {
+        Navigation.NavigateTo("/ordens-servico?data=atrasada");
+    }
+
+    private void IrParaOsAbertas()
+    {
+        Navigation.NavigateTo("/ordens-servico?status=" + Uri.EscapeDataString("Em Aberto"));
+    }
+
+    private void IrParaChecklistsConcluidos()
+    {
+        Navigation.NavigateTo("/ordens-servico?data=hoje");
+    }
+
+    private void IrParaOsFinalizadasMes()
+    {
+        Navigation.NavigateTo("/ordens-servico?status=" + Uri.EscapeDataString("Finalizada") + "&data=mes");
+    }
+
+    private void IrParaCalibracaoEquipamentos()
+    {
+        Navigation.NavigateTo("/equipamentos?calibracao=pendente");
     }
 }

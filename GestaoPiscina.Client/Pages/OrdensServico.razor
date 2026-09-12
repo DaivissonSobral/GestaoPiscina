@@ -35,6 +35,7 @@
                 <option value="hoje">Hoje</option>
                 <option value="semana">Esta Semana</option>
                 <option value="mes">Este Mês</option>
+                <option value="atrasada">Atrasadas</option>
             </select>
             <button type="button" @onclick="FiltrarOS" class="bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 transition-colors" title="Buscar">
                 <i class="fas fa-search"></i>
@@ -278,6 +279,12 @@
             }
         }
     }
+    [SupplyParameterFromQuery(Name = "status")]
+    public string? StatusQuery { get; set; }
+
+    [SupplyParameterFromQuery(Name = "data")]
+    public string? DataQuery { get; set; }
+
     private OrdemDeServico? osParaExcluir;
     private bool toastVisible = false;
     private string mensagemToast = "";
@@ -299,8 +306,25 @@
 
     private bool EstaAtrasada(OrdemDeServico os) => os.Status == "Em Aberto" && os.DataExecucao.Date < DateTime.Today;
 
+    private static readonly HashSet<string> StatusValidos = new()
+    {
+        "Em Aberto", "Em Andamento", "Finalizada", "Ocorrência", "Reagendada", "Cancelada"
+    };
+
+    private static readonly HashSet<string> DatasValidas = new() { "hoje", "semana", "mes", "atrasada" };
+
     protected override async Task OnInitializedAsync()
     {
+        if (!string.IsNullOrEmpty(StatusQuery) && StatusValidos.Contains(StatusQuery))
+        {
+            _filtroStatus = StatusQuery;
+        }
+
+        if (!string.IsNullOrEmpty(DataQuery) && DatasValidas.Contains(DataQuery))
+        {
+            _filtroData = DataQuery;
+        }
+
         await CarregarDados();
     }
 
@@ -380,6 +404,7 @@
                 "hoje" => ordensFiltradas.Where(os => os.DataExecucao.Date == hoje).ToList(),
                 "semana" => ordensFiltradas.Where(os => os.DataExecucao.Date >= inicioSemana && os.DataExecucao.Date <= fimSemana).ToList(),
                 "mes" => ordensFiltradas.Where(os => os.DataExecucao.Month == hoje.Month && os.DataExecucao.Year == hoje.Year).ToList(),
+                "atrasada" => ordensFiltradas.Where(os => os.Status == "Em Aberto" && os.DataExecucao.Date < hoje).ToList(),
                 _ => ordensFiltradas
             };
         }

@@ -163,6 +163,9 @@
     private DateTime? filtroDataAte;
     private bool carregando = false;
 
+    [SupplyParameterFromQuery(Name = "nivel")]
+    public string? NivelQuery { get; set; }
+
     private bool modalMovimentacaoVisible = false;
     private int clienteIdAcao;
     private int? produtoIdFixoParaMovimentacao;
@@ -196,6 +199,11 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (NivelQuery == "baixo" || NivelQuery == "ok")
+        {
+            filtroNivel = NivelQuery;
+        }
+
         try
         {
             clientes = await ApiService.GetClientesAsync();
