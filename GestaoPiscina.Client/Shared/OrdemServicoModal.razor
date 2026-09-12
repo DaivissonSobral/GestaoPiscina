@@ -16,15 +16,23 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Cliente</label>
+                    <select value="@clienteSelecionadoId" @onchange="OnClienteMudou" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                        <option value="0">Selecione um cliente...</option>
+                        @foreach (var cliente in ClientesDisponiveis)
+                        {
+                            <option value="@cliente.IDCliente">@cliente.Nome</option>
+                        }
+                    </select>
+                </div>
+
+                <div>
                     <label class="block text-sm font-medium text-slate-300 mb-2">Piscina</label>
                     <InputSelect @bind-Value="OrdemDeServico.IDPiscina" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
                         <option value="0">Selecione uma piscina...</option>
-                        @if (Piscinas != null)
+                        @foreach (var piscina in PiscinasDoCliente)
                         {
-                            @foreach (var piscina in Piscinas)
-                            {
-                                <option value="@piscina.IDPiscina">@piscina.Cliente?.Nome - @piscina.Tipo (@piscina.VolumeLitros L)</option>
-                            }
+                            <option value="@piscina.IDPiscina">@piscina.Tipo (@piscina.VolumeLitros L)</option>
                         }
                     </InputSelect>
                     <ValidationMessage For="@(() => OrdemDeServico.IDPiscina)" />
@@ -172,17 +180,41 @@
         ?? Piscinas?.FirstOrDefault(p => p.IDPiscina == OrdemDeServico.IDPiscina)?.Cliente?.IDCliente
         ?? 0;
 
+    private int clienteSelecionadoId;
+
+    private IEnumerable<Cliente> ClientesDisponiveis =>
+        (Piscinas ?? new List<Piscina>())
+            .Where(p => p.Cliente != null)
+            .Select(p => p.Cliente)
+            .GroupBy(c => c.IDCliente)
+            .Select(g => g.First())
+            .OrderBy(c => c.Nome);
+
+    private IEnumerable<Piscina> PiscinasDoCliente =>
+        (Piscinas ?? new List<Piscina>()).Where(p => p.IDCliente == clienteSelecionadoId);
+
+    private void OnClienteMudou(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var id))
+        {
+            clienteSelecionadoId = id;
+            OrdemDeServico.IDPiscina = 0;
+        }
+    }
+
     protected override void OnInitialized()
     {
         if (OrdemDeServico.DataExecucao == default)
         {
             OrdemDeServico.DataExecucao = DateTime.Today;
         }
-        
+
         if (string.IsNullOrEmpty(OrdemDeServico.Status))
         {
             OrdemDeServico.Status = "Em Aberto";
         }
+
+        clienteSelecionadoId = ClienteIdDaOS;
     }
 
     private async Task Close()
