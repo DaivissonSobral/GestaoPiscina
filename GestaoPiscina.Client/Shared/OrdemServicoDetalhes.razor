@@ -1,5 +1,7 @@
 @using GestaoPiscina.Client.Models
+@using GestaoPiscina.Client.Services
 @inject NavigationManager Navigation
+@inject ApiService ApiService
 
 <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 @(IsVisible ? "" : "hidden")">
     <div class="bg-slate-800 rounded-xl p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto scroll-tema">
@@ -15,7 +17,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-4">
                 <div class="bg-slate-700 rounded-lg p-4">
-                    <h4 class="text-md font-semibold text-slate-200 mb-3">Informações da OS</h4>
+                    <h4 class="text-md font-semibold text-slate-200 mb-3">Dados Gerais</h4>
                     <div class="space-y-2">
                         <div class="flex justify-between">
                             <span class="text-slate-400">OS:</span>
@@ -30,42 +32,8 @@
                             <span class="@GetStatusClass(OrdemDeServico.Status)">@OrdemDeServico.Status</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-slate-400">Checklist:</span>
-                            <span class="@(OrdemDeServico.ChecklistConcluido ? "text-green-400" : "text-red-400")">
-                                @(OrdemDeServico.ChecklistConcluido ? "Concluído" : "Pendente")
-                            </span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-400">Relatório:</span>
-                            <span class="@(OrdemDeServico.RelatorioGerado ? "text-green-400" : "text-red-400")">
-                                @(OrdemDeServico.RelatorioGerado ? "Gerado" : "Pendente")
-                            </span>
-                        </div>
-                        <div class="flex justify-between">
                             <span class="text-slate-400">Início / Término:</span>
                             <span class="text-slate-100">@OrdemDeServico.HoraInicio.ToString("HH:mm") - @OrdemDeServico.HoraTermino.ToString("HH:mm")</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-slate-700 rounded-lg p-4">
-                    <h4 class="text-md font-semibold text-slate-200 mb-3">Parâmetros da Água</h4>
-                    <div class="space-y-2">
-                        <div class="flex justify-between">
-                            <span class="text-slate-400">pH:</span>
-                            <span class="text-slate-100">@OrdemDeServico.pH</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-400">Alcalinidade:</span>
-                            <span class="text-slate-100">@OrdemDeServico.Alcalinidade ppm</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-400">Cloro Livre:</span>
-                            <span class="text-slate-100">@OrdemDeServico.CloroLivre ppm</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-400">Dureza Cálcica:</span>
-                            <span class="text-slate-100">@OrdemDeServico.DurezaCalcica ppm</span>
                         </div>
                     </div>
                 </div>
@@ -97,71 +65,154 @@
                         </div>
                     </div>
                 }
+
+                <div class="bg-slate-700 rounded-lg p-4">
+                    <h4 class="text-md font-semibold text-slate-200 mb-3">Parâmetros da Água</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">pH:</span>
+                            <span class="text-slate-100">@OrdemDeServico.pH</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Alcalinidade:</span>
+                            <span class="text-slate-100">@OrdemDeServico.Alcalinidade ppm</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Cloro Livre:</span>
+                            <span class="text-slate-100">@OrdemDeServico.CloroLivre ppm</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Dureza Cálcica:</span>
+                            <span class="text-slate-100">@OrdemDeServico.DurezaCalcica ppm</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-700 rounded-lg p-4">
+                    <h4 class="text-md font-semibold text-slate-200 mb-3">Dosagem</h4>
+                    @if (dosagensAtuais.Any())
+                    {
+                        <div class="space-y-2">
+                            @foreach (var dosagem in dosagensAtuais)
+                            {
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">@dosagem.Produto?.Nome:</span>
+                                    <span class="text-slate-100">@dosagem.Quantidade.ToString("0.##") @dosagem.Produto?.Unidade</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-slate-400 text-sm">Nenhum produto dosado.</p>
+                    }
+                </div>
             </div>
 
             <div class="space-y-4">
                 @if (!string.IsNullOrEmpty(OrdemDeServico.Observacoes))
                 {
                     <div class="bg-slate-700 rounded-lg p-4">
-                        <h4 class="text-md font-semibold text-slate-200 mb-3">Observações</h4>
+                        <h4 class="text-md font-semibold text-slate-200 mb-3">Observação</h4>
                         <p class="text-slate-300 text-sm leading-relaxed">@OrdemDeServico.Observacoes</p>
                     </div>
                 }
 
-                @if (!string.IsNullOrEmpty(OrdemDeServico.FotosAntes))
-                {
-                    <div class="bg-slate-700 rounded-lg p-4">
-                        <h4 class="text-md font-semibold text-slate-200 mb-3">Fotos Antes</h4>
-                        <div class="grid grid-cols-2 gap-2">
-                            @foreach (var foto in OrdemDeServico.FotosAntes.Split(',', StringSplitOptions.RemoveEmptyEntries).Take(4))
-                            {
-                                <div class="aspect-square bg-slate-600 rounded-lg flex items-center justify-center">
-                                    <img src="@foto.Trim()" alt="Foto antes" class="w-full h-full object-cover rounded-lg"
-                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    <div class="hidden w-full h-full items-center justify-center text-slate-400 text-xs">
-                                        <i class="fas fa-image mr-2"></i>Foto não disponível
-                                    </div>
-                                </div>
-                            }
+                <div class="bg-slate-700 rounded-lg p-4">
+                    <h4 class="text-md font-semibold text-slate-200 mb-3">Checklist</h4>
+                    <div class="space-y-2">
+                        @foreach (var item in ChecklistOS.ItensFixos)
+                        {
+                            var marcado = ChecklistMarcados.Contains(item.Chave);
+                            <div class="flex items-start space-x-2">
+                                <i class="fas @(marcado ? "fa-check-circle text-green-400" : "fa-times-circle text-red-400") mt-0.5"></i>
+                                <span class="text-sm @(marcado ? "text-slate-300" : "text-slate-500")">@item.Texto</span>
+                            </div>
+                        }
+                        <div class="flex items-start space-x-2 pt-1 border-t border-slate-600">
+                            <i class="fas @(dosagensAtuais.Any() ? "fa-check-circle text-green-400" : "fa-times-circle text-red-400") mt-0.5"></i>
+                            <span class="text-sm @(dosagensAtuais.Any() ? "text-slate-300" : "text-slate-500")">
+                                @(dosagensAtuais.Any() ? TextoDosagemAplicada : "Nenhum produto dosado ainda.")
+                            </span>
                         </div>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(OrdemDeServico.FotosAntes) || !string.IsNullOrEmpty(OrdemDeServico.FotosDepois))
+                {
+                    <div class="bg-slate-700 rounded-lg p-4 space-y-4">
+                        <h4 class="text-md font-semibold text-slate-200">Fotos</h4>
+
+                        @if (!string.IsNullOrEmpty(OrdemDeServico.FotosAntes))
+                        {
+                            <div>
+                                <h5 class="text-sm font-medium text-slate-300 mb-2">Antes</h5>
+                                <div class="grid grid-cols-2 gap-2">
+                                    @foreach (var foto in OrdemDeServico.FotosAntes.Split(',', StringSplitOptions.RemoveEmptyEntries).Take(4))
+                                    {
+                                        <div class="aspect-square bg-slate-600 rounded-lg flex items-center justify-center">
+                                            <img src="@foto.Trim()" alt="Foto antes" class="w-full h-full object-cover rounded-lg"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="hidden w-full h-full items-center justify-center text-slate-400 text-xs">
+                                                <i class="fas fa-image mr-2"></i>Foto não disponível
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(OrdemDeServico.FotosDepois))
+                        {
+                            <div>
+                                <h5 class="text-sm font-medium text-slate-300 mb-2">Depois</h5>
+                                <div class="grid grid-cols-2 gap-2">
+                                    @foreach (var foto in OrdemDeServico.FotosDepois.Split(',', StringSplitOptions.RemoveEmptyEntries).Take(4))
+                                    {
+                                        <div class="aspect-square bg-slate-600 rounded-lg flex items-center justify-center">
+                                            <img src="@foto.Trim()" alt="Foto depois" class="w-full h-full object-cover rounded-lg"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="hidden w-full h-full items-center justify-center text-slate-400 text-xs">
+                                                <i class="fas fa-image mr-2"></i>Foto não disponível
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
                     </div>
                 }
 
-                @if (!string.IsNullOrEmpty(OrdemDeServico.FotosDepois))
+                @if (OrdemDeServico.Status == "Ocorrência" || !string.IsNullOrEmpty(OrdemDeServico.FotosOcorrencias))
                 {
-                    <div class="bg-slate-700 rounded-lg p-4">
-                        <h4 class="text-md font-semibold text-slate-200 mb-3">Fotos Depois</h4>
-                        <div class="grid grid-cols-2 gap-2">
-                            @foreach (var foto in OrdemDeServico.FotosDepois.Split(',', StringSplitOptions.RemoveEmptyEntries).Take(4))
-                            {
-                                <div class="aspect-square bg-slate-600 rounded-lg flex items-center justify-center">
-                                    <img src="@foto.Trim()" alt="Foto depois" class="w-full h-full object-cover rounded-lg"
-                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    <div class="hidden w-full h-full items-center justify-center text-slate-400 text-xs">
-                                        <i class="fas fa-image mr-2"></i>Foto não disponível
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    </div>
-                }
+                    <div class="bg-purple-950/20 border border-purple-800 rounded-lg p-4 space-y-3">
+                        <h4 class="text-md font-semibold text-purple-300">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>Ocorrência
+                        </h4>
 
-                @if (!string.IsNullOrEmpty(OrdemDeServico.FotosOcorrencias))
-                {
-                    <div class="bg-slate-700 rounded-lg p-4">
-                        <h4 class="text-md font-semibold text-slate-200 mb-3">Fotos da Ocorrência</h4>
-                        <div class="grid grid-cols-2 gap-2">
-                            @foreach (var foto in OrdemDeServico.FotosOcorrencias.Split(',', StringSplitOptions.RemoveEmptyEntries).Take(4))
-                            {
-                                <div class="aspect-square bg-slate-600 rounded-lg flex items-center justify-center">
-                                    <img src="@foto.Trim()" alt="Foto da ocorrência" class="w-full h-full object-cover rounded-lg"
-                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    <div class="hidden w-full h-full items-center justify-center text-slate-400 text-xs">
-                                        <i class="fas fa-image mr-2"></i>Foto não disponível
-                                    </div>
-                                </div>
-                            }
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Aprovador:</span>
+                            <span class="text-slate-100">@NomeAprovador()</span>
                         </div>
+
+                        @if (!string.IsNullOrEmpty(OrdemDeServico.FotosOcorrencias))
+                        {
+                            <div>
+                                <h5 class="text-sm font-medium text-slate-300 mb-2">Foto</h5>
+                                <div class="grid grid-cols-2 gap-2">
+                                    @foreach (var foto in OrdemDeServico.FotosOcorrencias.Split(',', StringSplitOptions.RemoveEmptyEntries).Take(4))
+                                    {
+                                        <div class="aspect-square bg-slate-600 rounded-lg flex items-center justify-center">
+                                            <img src="@foto.Trim()" alt="Foto da ocorrência" class="w-full h-full object-cover rounded-lg"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="hidden w-full h-full items-center justify-center text-slate-400 text-xs">
+                                                <i class="fas fa-image mr-2"></i>Foto não disponível
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
                     </div>
                 }
             </div>
@@ -171,7 +222,7 @@
             <button @onclick="() => OnEdit.InvokeAsync(OrdemDeServico)" class="flex-1 bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
                 <i class="fas fa-edit mr-2"></i>@TextoBotaoEditar()
             </button>
-            <button @onclick="AbrirRelatorio" disabled="@(OrdemDeServico.Status != "Finalizada")" class="flex-1 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors" title="@(OrdemDeServico.Status == "Finalizada" ? "" : "Disponível quando a OS estiver finalizada")">
+            <button @onclick="AbrirRelatorio" disabled="@(!PodeVerRelatorio)" class="flex-1 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors" title="@(PodeVerRelatorio ? "" : "Disponível quando a OS estiver finalizada ou com ocorrência")">
                 <i class="fas fa-file-alt mr-2"></i>Relatório
             </button>
             <button @onclick="Close" class="flex-1 bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded-lg text-white transition-colors">
@@ -184,8 +235,50 @@
 @code {
     [Parameter] public bool IsVisible { get; set; }
     [Parameter] public OrdemDeServico OrdemDeServico { get; set; } = new OrdemDeServico();
+    [Parameter] public List<Usuario>? Aprovadores { get; set; }
     [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
     [Parameter] public EventCallback<OrdemDeServico> OnEdit { get; set; }
+
+    private List<DosagemProduto> dosagensAtuais = new();
+    private bool eraVisivel;
+
+    private HashSet<string> ChecklistMarcados => ChecklistOS.ItensMarcados(OrdemDeServico.ChecklistItens);
+
+    private string TextoDosagemAplicada =>
+        ChecklistOS.TextoDosagemAplicada(ChecklistOS.NomePiscina(OrdemDeServico.Piscina?.Tipo), dosagensAtuais);
+
+    private bool PodeVerRelatorio => OrdemDeServico.Status is "Finalizada" or "Ocorrência";
+
+    private string NomeAprovador() =>
+        Aprovadores?.FirstOrDefault(a => a.IDUsuario == OrdemDeServico.Aprovador)?.Nome ?? "-";
+
+    // Busca as dosagens só quando o modal realmente acaba de abrir (transição de
+    // IsVisible para true) — não a cada re-render do pai, e sem depender de comparação de
+    // referência (a mesma instância de OrdemDeServico pode voltar aqui logo após ser editada).
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsVisible && !eraVisivel)
+        {
+            if (OrdemDeServico.IDOS > 0)
+            {
+                try
+                {
+                    var dosagens = await ApiService.GetDosagensPorOSAsync(OrdemDeServico.IDOS);
+                    dosagensAtuais = dosagens.Where(d => d.Quantidade > 0).ToList();
+                }
+                catch
+                {
+                    dosagensAtuais = new List<DosagemProduto>();
+                }
+            }
+            else
+            {
+                dosagensAtuais = new List<DosagemProduto>();
+            }
+        }
+
+        eraVisivel = IsVisible;
+    }
 
     private async Task Close()
     {
@@ -218,4 +311,4 @@
             _ => "text-slate-400"
         };
     }
-} 
+}

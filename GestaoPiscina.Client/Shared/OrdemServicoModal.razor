@@ -1,6 +1,7 @@
 @using GestaoPiscina.Client.Models
 @using GestaoPiscina.Client.Services
 @inject ApiService ApiService
+@inject NavigationManager Navigation
 
 <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 @(IsVisible ? "" : "hidden")">
     <div class="bg-slate-800 rounded-xl w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
@@ -180,7 +181,7 @@
                     @if (secaoChecklistAberta)
                     {
                         <div class="p-4 space-y-3">
-                            @foreach (var item in ItensChecklistFixos)
+                            @foreach (var item in ChecklistOS.ItensFixos)
                             {
                                 <div class="flex items-start">
                                     <input type="checkbox" checked="@ItemChecklistMarcado(item.Chave)" @onchange="@(e => AlternarItemChecklist(item.Chave, e))" class="mr-2 mt-1 shrink-0" />
@@ -236,12 +237,21 @@
             </div>
 
             <div class="flex space-x-3 p-6 pt-4 border-t border-slate-700 shrink-0">
-                <button type="submit" class="flex-1 bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded-lg text-white transition-colors">
+                <button type="submit" disabled="@EstaFinalizadaOuOcorrencia" class="flex-1 bg-slate-600 hover:bg-slate-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors" title="@(EstaFinalizadaOuOcorrencia ? "OS finalizada ou com ocorrência não pode mais ser salva por aqui" : "")">
                     <i class="fas fa-save mr-2"></i>Salvar
                 </button>
-                <button type="submit" @onclick="PrepararFinalizar" disabled="@(!PodeFinalizar)" class="flex-1 bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors" title="@(PodeFinalizar ? "" : "Conclua o checklist, os parâmetros da água e as fotos de antes/depois para finalizar")">
-                    <i class="fas fa-check-circle mr-2"></i>Finalizar
-                </button>
+                @if (EstaFinalizadaOuOcorrencia)
+                {
+                    <button type="button" @onclick="AbrirRelatorio" class="flex-1 bg-teal-600 hover:bg-teal-500 px-4 py-2 rounded-lg text-white transition-colors">
+                        <i class="fas fa-file-alt mr-2"></i>Relatório
+                    </button>
+                }
+                else
+                {
+                    <button type="submit" @onclick="PrepararFinalizar" disabled="@(!PodeFinalizar)" class="flex-1 bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors" title="@(PodeFinalizar ? "" : "Conclua o checklist, os parâmetros da água e as fotos de antes/depois para finalizar")">
+                        <i class="fas fa-check-circle mr-2"></i>Finalizar
+                    </button>
+                }
                 <button type="button" @onclick="Close" class="flex-1 bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-white transition-colors">
                     Cancelar
                 </button>
@@ -276,17 +286,6 @@
     private bool secaoFotosAberta = false;
     private bool secaoChecklistAberta = false;
     private bool secaoOcorrenciaAberta = true;
-
-    // Itens fixos do checklist de atendimento (chave usada para persistir em ChecklistItens,
-    // separado por vírgula, e o texto exibido ao lado do checkbox).
-    private static readonly (string Chave, string Texto)[] ItensChecklistFixos = new[]
-    {
-        ("cesto", "Realizamos a limpeza do cesto pré-filtro."),
-        ("aspiracao", "Foi realizada a aspiração filtrando, isso gera economia de água para o estabelecimento."),
-        ("bordas", "Realizamos a limpeza das bordas."),
-        ("material", "Foi realizada a retirada de material suspenso."),
-        ("retrolavagem", "Realizamos a retrolavagem do filtro."),
-    };
 
     // Dosagens de produtos já salvas nesta OS (reportadas pelo DosagemForm) — usadas para
     // montar o item dinâmico "produtos aplicados" do checklist e para exigir que pelo menos
@@ -332,8 +331,7 @@
     // Checklist concluído = todos os itens fixos marcados + pelo menos um produto dosado.
     // Recalculado (e persistido em ChecklistConcluido) a cada mudança relevante, pra manter os
     // outros lugares do sistema que já leem esse bool (dashboard, listagem, relatórios) corretos.
-    private HashSet<string> ChecklistMarcados =>
-        (OrdemDeServico.ChecklistItens ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
+    private HashSet<string> ChecklistMarcados => ChecklistOS.ItensMarcados(OrdemDeServico.ChecklistItens);
 
     private bool ItemChecklistMarcado(string chave) => ChecklistMarcados.Contains(chave);
 
@@ -363,35 +361,25 @@
     private void AtualizarChecklistConcluido()
     {
         OrdemDeServico.ChecklistConcluido =
-            ItensChecklistFixos.All(item => ItemChecklistMarcado(item.Chave)) && dosagensAtuais.Any();
+            ChecklistOS.ItensFixos.All(item => ItemChecklistMarcado(item.Chave)) && dosagensAtuais.Any();
     }
 
     private string NomePiscinaAtual()
     {
         var tipo = PiscinasDoCliente.FirstOrDefault(p => p.IDPiscina == OrdemDeServico.IDPiscina)?.Tipo
             ?? OrdemDeServico.Piscina?.Tipo;
-        return string.IsNullOrEmpty(tipo) ? "A piscina" : $"Piscina {char.ToUpper(tipo[0])}{tipo[1..]}";
+        return ChecklistOS.NomePiscina(tipo);
     }
 
-    // Monta a frase dinâmica de produtos aplicados, ex.:
-    // "Piscina Infantil: foi adicionado 1,8kg de dicloro e 8L de redutor de pH."
-    private string TextoDosagemAplicada()
+    private string TextoDosagemAplicada() => ChecklistOS.TextoDosagemAplicada(NomePiscinaAtual(), dosagensAtuais);
+
+    // "Finalizar" deixa de fazer sentido para uma OS já finalizada ou com ocorrência
+    // registrada — nesses casos o botão vira atalho para o Relatório, e Salvar é bloqueado.
+    private bool EstaFinalizadaOuOcorrencia => OrdemDeServico.Status is "Finalizada" or "Ocorrência";
+
+    private void AbrirRelatorio()
     {
-        if (!dosagensAtuais.Any())
-        {
-            return "";
-        }
-
-        var partes = dosagensAtuais
-            .Select(d => $"{d.Quantidade.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}{d.Produto?.Unidade} de {d.Produto?.Nome}")
-            .ToList();
-
-        var descricao = partes.Count == 1
-            ? partes[0]
-            : string.Join(", ", partes.Take(partes.Count - 1)) + " e " + partes[^1];
-
-        var verbo = partes.Count == 1 ? "foi adicionado" : "foram adicionados";
-        return $"{NomePiscinaAtual()}: {verbo} {descricao}.";
+        Navigation.NavigateTo($"/relatorios/os/{OrdemDeServico.IDOS}");
     }
 
     // Aproximação do que dá para checar sem sair do formulário: checklist concluído (itens +

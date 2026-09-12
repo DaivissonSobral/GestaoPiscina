@@ -203,8 +203,9 @@
                    OnSave="SalvarOS"
                    OnSalvo="AbrirDetalhesAposSalvar" />
 
-<OrdemServicoDetalhes @bind-IsVisible="modalDetalhesVisible" 
+<OrdemServicoDetalhes @bind-IsVisible="modalDetalhesVisible"
                       OrdemDeServico="osSelecionada"
+                      Aprovadores="quimicos"
                       OnEdit="EditarOS" />
 
 <GerarOSModal @bind-IsVisible="modalGerarOSVisible"
