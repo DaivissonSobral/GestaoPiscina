@@ -326,6 +326,11 @@ namespace GestaoPiscina.Server.Controllers
                 return "É necessário informar o aprovador responsável para finalizar uma OS com ocorrência.";
             }
 
+            if (ordemDeServico.Status == "Cancelada" && string.IsNullOrWhiteSpace(ordemDeServico.Observacoes))
+            {
+                return "Observações são obrigatórias para cancelar a OS.";
+            }
+
             if (ordemDeServico.HoraTermino < ordemDeServico.HoraInicio)
             {
                 return "O horário de término não pode ser anterior ao horário de início.";

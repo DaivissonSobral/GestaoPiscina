@@ -71,6 +71,13 @@ namespace GestaoPiscina.Client.Models
                     "O horário de término não pode ser anterior ao horário de início.",
                     new[] { nameof(HoraTermino) });
             }
+
+            if (Status == "Cancelada" && string.IsNullOrWhiteSpace(Observacoes))
+            {
+                yield return new ValidationResult(
+                    "Observações são obrigatórias para cancelar a OS.",
+                    new[] { nameof(Observacoes) });
+            }
         }
     }
 } 

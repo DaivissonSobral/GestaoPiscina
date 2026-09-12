@@ -2,17 +2,28 @@
 
 <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 @(IsVisible ? "" : "hidden")">
     <div class="bg-slate-800 rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex justify-between items-center mb-4 gap-3">
             <h3 class="text-lg font-semibold text-slate-100">
                 @(OrdemDeServico.IDOS > 0 ? "Editar Ordem de Serviço" : "Nova Ordem de Serviço")
             </h3>
-            <button @onclick="Close" class="text-slate-400 hover:text-slate-200">
-                <i class="fas fa-times"></i>
-            </button>
+            <div class="flex items-center gap-2">
+                <select @bind="OrdemDeServico.Status" @bind:after="OnStatusAlterado" class="@GetStatusBadgeClass() text-xs font-semibold rounded-full pl-3 pr-2 py-1.5 border-0 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                    <option value="Em Aberto">Em Aberto</option>
+                    <option value="Em Andamento">Em Andamento</option>
+                    <option value="Finalizada" disabled="@(!PodeFinalizar)">Finalizada</option>
+                    <option value="Ocorrência">Ocorrência</option>
+                    <option value="Reagendada">Reagendada</option>
+                    <option value="Cancelada">Cancelada</option>
+                </select>
+                <button @onclick="Close" class="text-slate-400 hover:text-slate-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
         </div>
 
         <EditForm Model="OrdemDeServico" OnValidSubmit="HandleSubmit">
             <DataAnnotationsValidator />
+            <ValidationMessage For="@(() => OrdemDeServico.Status)" />
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -40,22 +51,8 @@
 
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-2">Data de Execução</label>
-                    <InputDate @bind-Value="OrdemDeServico.DataExecucao" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+                    <InputDate @bind-Value="OrdemDeServico.DataExecucao" @bind-Value:after="OnDataExecucaoAlterada" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
                     <ValidationMessage For="@(() => OrdemDeServico.DataExecucao)" />
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Status</label>
-                    <InputSelect @bind-Value="OrdemDeServico.Status" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-                        <option value="">Selecione...</option>
-                        <option value="Em Aberto">Em Aberto</option>
-                        <option value="Em Andamento">Em Andamento</option>
-                        <option value="Finalizada">Finalizada</option>
-                        <option value="Ocorrência">Ocorrência</option>
-                        <option value="Reagendada">Reagendada</option>
-                        <option value="Cancelada">Cancelada</option>
-                    </InputSelect>
-                    <ValidationMessage For="@(() => OrdemDeServico.Status)" />
                 </div>
 
                 <div>
@@ -73,31 +70,20 @@
                     <ValidationMessage For="@(() => OrdemDeServico.IDUsuario)" />
                 </div>
 
-                @if (OrdemDeServico.Status == "Ocorrência")
-                {
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Aprovador (obrigatório para Ocorrência)</label>
-                        <InputSelect @bind-Value="OrdemDeServico.Aprovador" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-                            <option value="">Selecione...</option>
-                            @if (Aprovadores != null)
-                            {
-                                @foreach (var aprovador in Aprovadores)
-                                {
-                                    <option value="@aprovador.IDUsuario">@aprovador.Nome</option>
-                                }
-                            }
-                        </InputSelect>
-                    </div>
-                }
-
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-2">Horário de Início</label>
-                    <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="OrdemDeServico.HoraInicio" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+                    <InputDate Type="InputDateType.Time" @bind-Value="HoraInicioTime" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Horário de Término</label>
-                    <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="OrdemDeServico.HoraTermino" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+                    <label class="block text-sm font-medium text-slate-300 mb-2">
+                        Horário de Término
+                        @if (!PermiteEditarHoraTermino)
+                        {
+                            <span class="text-xs text-slate-500 font-normal">(preenchido ao finalizar ou registrar ocorrência)</span>
+                        }
+                    </label>
+                    <InputDate Type="InputDateType.Time" @bind-Value="HoraTerminoTime" disabled="@(!PermiteEditarHoraTermino)" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 disabled:opacity-50" />
                     <ValidationMessage For="@(() => OrdemDeServico.HoraTermino)" />
                 </div>
 
@@ -121,11 +107,44 @@
                 </div>
             </div>
 
-            <div class="mt-4">
-                <label class="block text-sm font-medium text-slate-300 mb-2">Observações</label>
-                <InputTextArea @bind-Value="OrdemDeServico.Observacoes" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" rows="4" placeholder="Descreva detalhes da ordem de serviço..." />
-                <ValidationMessage For="@(() => OrdemDeServico.Observacoes)" />
-            </div>
+            @if (OrdemDeServico.Status == "Ocorrência")
+            {
+                <div class="mt-4 bg-purple-950/30 border border-purple-800 rounded-lg p-4 space-y-4">
+                    <h4 class="text-sm font-semibold text-purple-300">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>Ocorrência
+                    </h4>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Aprovador (obrigatório)</label>
+                        <InputSelect @bind-Value="OrdemDeServico.Aprovador" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                            <option value="">Selecione...</option>
+                            @if (Aprovadores != null)
+                            {
+                                @foreach (var aprovador in Aprovadores)
+                                {
+                                    <option value="@aprovador.IDUsuario">@aprovador.Nome</option>
+                                }
+                            }
+                        </InputSelect>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Descrição da Ocorrência</label>
+                        <InputTextArea @bind-Value="OrdemDeServico.Observacoes" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" rows="4" placeholder="Descreva o que aconteceu..." />
+                        <ValidationMessage For="@(() => OrdemDeServico.Observacoes)" />
+                    </div>
+
+                    <UploadFotos Label="Foto da Ocorrência" @bind-Urls="OrdemDeServico.FotosOcorrencias" />
+                </div>
+            }
+            else
+            {
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Observações</label>
+                    <InputTextArea @bind-Value="OrdemDeServico.Observacoes" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" rows="4" placeholder="Descreva detalhes da ordem de serviço..." />
+                    <ValidationMessage For="@(() => OrdemDeServico.Observacoes)" />
+                </div>
+            }
 
             <div class="mt-6">
                 @if (OrdemDeServico.IDOS > 0)
@@ -150,9 +169,12 @@
                 <UploadFotos Label="Fotos Depois" @bind-Urls="OrdemDeServico.FotosDepois" />
             </div>
 
-            <div class="mt-4">
-                <UploadFotos Label="Fotos da Ocorrência" @bind-Urls="OrdemDeServico.FotosOcorrencias" />
-            </div>
+            @if (OrdemDeServico.Status != "Ocorrência" && !string.IsNullOrEmpty(OrdemDeServico.FotosOcorrencias))
+            {
+                <div class="mt-4">
+                    <UploadFotos Label="Fotos da Ocorrência" @bind-Urls="OrdemDeServico.FotosOcorrencias" />
+                </div>
+            }
 
             <div class="flex space-x-3 mt-6">
                 <button type="submit" class="flex-1 bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
@@ -181,6 +203,7 @@
         ?? 0;
 
     private int clienteSelecionadoId;
+    private DateTime dataExecucaoOriginal;
 
     private IEnumerable<Cliente> ClientesDisponiveis =>
         (Piscinas ?? new List<Piscina>())
@@ -202,8 +225,81 @@
         }
     }
 
-    protected override void OnInitialized()
+    // Horário de Início/Término exibem só a hora — a data acompanha sempre a Data de Execução.
+    private TimeOnly HoraInicioTime
     {
+        get => TimeOnly.FromDateTime(OrdemDeServico.HoraInicio);
+        set => OrdemDeServico.HoraInicio = OrdemDeServico.DataExecucao.Date + value.ToTimeSpan();
+    }
+
+    private TimeOnly HoraTerminoTime
+    {
+        get => TimeOnly.FromDateTime(OrdemDeServico.HoraTermino);
+        set => OrdemDeServico.HoraTermino = OrdemDeServico.DataExecucao.Date + value.ToTimeSpan();
+    }
+
+    // Só é possível preencher o horário de término ao finalizar a OS ou registrar uma ocorrência.
+    private bool PermiteEditarHoraTermino => OrdemDeServico.Status is "Finalizada" or "Ocorrência";
+
+    // Aproximação do que dá para checar sem sair do formulário: checklist concluído, os 4
+    // parâmetros da água informados (diferentes de zero) e as fotos de antes/depois anexadas.
+    // Não valida a dosagem de materiais, que é gerenciada por um componente à parte só
+    // disponível depois que a OS é salva.
+    private bool PodeFinalizar =>
+        OrdemDeServico.ChecklistConcluido
+        && OrdemDeServico.pH > 0
+        && OrdemDeServico.Alcalinidade > 0
+        && OrdemDeServico.CloroLivre > 0
+        && OrdemDeServico.DurezaCalcica > 0
+        && !string.IsNullOrWhiteSpace(OrdemDeServico.FotosAntes)
+        && !string.IsNullOrWhiteSpace(OrdemDeServico.FotosDepois);
+
+    private void OnDataExecucaoAlterada()
+    {
+        // Mantém a data de HoraInicio/HoraTermino em dia com a Data de Execução.
+        HoraInicioTime = TimeOnly.FromDateTime(OrdemDeServico.HoraInicio);
+        HoraTerminoTime = TimeOnly.FromDateTime(OrdemDeServico.HoraTermino);
+
+        if (OrdemDeServico.DataExecucao.Date != dataExecucaoOriginal.Date && OrdemDeServico.Status == "Em Aberto")
+        {
+            OrdemDeServico.Status = "Reagendada";
+        }
+    }
+
+    private void OnStatusAlterado()
+    {
+        if (PermiteEditarHoraTermino)
+        {
+            HoraTerminoTime = TimeOnly.FromDateTime(DateTime.Now);
+        }
+    }
+
+    private string GetStatusBadgeClass() => OrdemDeServico.Status switch
+    {
+        "Em Aberto" => "bg-yellow-600 text-white",
+        "Em Andamento" => "bg-blue-600 text-white",
+        "Finalizada" => "bg-green-600 text-white",
+        "Ocorrência" => "bg-purple-600 text-white",
+        "Reagendada" => "bg-orange-600 text-white",
+        "Cancelada" => "bg-red-600 text-white",
+        _ => "bg-slate-600 text-white"
+    };
+
+    // O modal é um componente filho fixo (só fica escondido via CSS), então OnInitialized
+    // roda uma única vez pra sempre. Cada "Nova OS"/"Editar" troca a instância de
+    // OrdemDeServico — é essa troca de referência que dispara a preparação abaixo,
+    // não o ciclo de vida do componente em si.
+    private OrdemDeServico? ordemInicializada;
+
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(ordemInicializada, OrdemDeServico))
+        {
+            return;
+        }
+
+        ordemInicializada = OrdemDeServico;
+
         if (OrdemDeServico.DataExecucao == default)
         {
             OrdemDeServico.DataExecucao = DateTime.Today;
@@ -214,7 +310,20 @@
             OrdemDeServico.Status = "Em Aberto";
         }
 
+        dataExecucaoOriginal = OrdemDeServico.DataExecucao;
         clienteSelecionadoId = ClienteIdDaOS;
+
+        // Abrir uma OS "Em Aberto" para edição (botão "Iniciar") marca o começo do atendimento.
+        if (OrdemDeServico.IDOS > 0 && OrdemDeServico.Status == "Em Aberto")
+        {
+            OrdemDeServico.Status = "Em Andamento";
+            HoraInicioTime = TimeOnly.FromDateTime(DateTime.Now);
+        }
+        else if (OrdemDeServico.IDOS == 0)
+        {
+            HoraInicioTime = TimeOnly.FromDateTime(DateTime.Now);
+            HoraTerminoTime = HoraInicioTime;
+        }
     }
 
     private async Task Close()
@@ -231,4 +340,4 @@
             await Close();
         }
     }
-} 
+}
