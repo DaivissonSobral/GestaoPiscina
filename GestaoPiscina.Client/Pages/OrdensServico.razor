@@ -9,7 +9,7 @@
     <div class="flex justify-between items-center">
         <div class="flex space-x-2">
             <button @onclick="AbrirModalGerarOS" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg text-white transition-colors">
-                <i class="fas fa-magic mr-2"></i>Gerar OS Automáticas
+                <i class="fas fa-magic mr-2"></i>Gerar OS
             </button>
             <button @onclick="AbrirModalNovaOS" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
                 <i class="fas fa-plus mr-2"></i>Nova OS
@@ -18,10 +18,10 @@
         
     </div>
 
-    <div class="flex justify-between items-center mb-4">
-        <div class="flex space-x-2">
-            <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar OS..." class="flex bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-            <select @bind="filtroStatus" @bind:event="onchange" class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+    <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 mb-4">
+        <div class="flex flex-wrap gap-2">
+            <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar OS..." class="flex-1 min-w-[160px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+            <select @bind="filtroStatus" @bind:event="onchange" class="flex-1 min-w-[140px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
                 <option value="">Todos os Status</option>
                 <option value="Em Aberto">Em Aberto</option>
                 <option value="Em Andamento">Em Andamento</option>
@@ -30,7 +30,7 @@
                 <option value="Reagendada">Reagendada</option>
                 <option value="Cancelada">Cancelada</option>
             </select>
-            <select @bind="filtroData" @bind:event="onchange" class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+            <select @bind="filtroData" @bind:event="onchange" class="flex-1 min-w-[140px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
                 <option value="">Todas as Datas</option>
                 <option value="hoje">Hoje</option>
                 <option value="semana">Esta Semana</option>
@@ -42,13 +42,13 @@
             </button>
         </div>
 
-        <div class="flex space-x-2">
-            <button @onclick="SetListView" 
+        <div class="flex space-x-2 justify-end">
+            <button @onclick="SetListView"
                     class="@GetListViewButtonClass()"
                     title="Lista">
                 <i class="fas fa-list"></i>
             </button>
-            <button @onclick="SetCardsView" 
+            <button @onclick="SetCardsView"
                     class="@GetCardsViewButtonClass()"
                     title="Cards por Status">
                 <i class="fas fa-columns"></i>
@@ -138,7 +138,7 @@
                             @coluna.Label
                             <span class="bg-slate-900 text-slate-300 text-xs font-semibold rounded-full px-2 py-0.5">@ordensColuna.Count</span>
                         </h3>
-                        <div class="space-y-2 max-h-[65vh] overflow-y-auto pr-1">
+                        <div class="space-y-2 max-h-[65vh] overflow-y-auto pr-1 kanban-scroll">
                             @foreach (var os in ordensColuna)
                             {
                                 <div @onclick="() => VerDetalhes(os)"
