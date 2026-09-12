@@ -239,18 +239,17 @@
                 <button type="submit" disabled="@EstaFinalizadaOuOcorrencia" class="flex-1 bg-slate-600 hover:bg-slate-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors" title="@(EstaFinalizadaOuOcorrencia ? "OS finalizada ou com ocorrência não pode mais ser salva por aqui" : "")">
                     <i class="fas fa-save mr-2"></i>Salvar
                 </button>
-                @if (EstaFinalizadaOuOcorrencia)
-                {
-                    <button type="button" @onclick="AbrirRelatorio" class="flex-1 bg-teal-600 hover:bg-teal-500 px-4 py-2 rounded-lg text-white transition-colors">
-                        <i class="fas fa-file-alt mr-2"></i>Relatório
-                    </button>
-                }
-                else
-                {
-                    <button type="submit" @onclick="PrepararFinalizar" disabled="@(!PodeFinalizar)" class="flex-1 bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors" title="@(PodeFinalizar ? "" : "Conclua o checklist, os parâmetros da água e as fotos de antes/depois para finalizar")">
-                        <i class="fas fa-check-circle mr-2"></i>Finalizar
-                    </button>
-                }
+                @* Os dois botões ficam sempre montados (só escondidos via CSS, não @if): o clique em
+                   "Finalizar" muda OrdemDeServico.Status pra "Finalizada" em PrepararFinalizar, e se
+                   esse mesmo clique destruísse/trocasse o botão (que é type="submit") por outro
+                   elemento no meio do próprio evento, o Blazor re-renderiza antes do navegador
+                   concluir o envio nativo do formulário — o submit nunca chega a acontecer. *@
+                <button type="button" @onclick="AbrirRelatorio" class="flex-1 bg-teal-600 hover:bg-teal-500 px-4 py-2 rounded-lg text-white transition-colors @(EstaFinalizadaOuOcorrencia ? "" : "hidden")">
+                    <i class="fas fa-file-alt mr-2"></i>Relatório
+                </button>
+                <button type="submit" @onclick="PrepararFinalizar" disabled="@(!PodeFinalizar)" class="flex-1 bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors @(EstaFinalizadaOuOcorrencia ? "hidden" : "")" title="@(PodeFinalizar ? "" : "Conclua o checklist, os parâmetros da água e as fotos de antes/depois para finalizar")">
+                    <i class="fas fa-check-circle mr-2"></i>Finalizar
+                </button>
                 <button type="button" @onclick="Close" class="flex-1 bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-white transition-colors">
                     Cancelar
                 </button>
