@@ -200,7 +200,8 @@
                    Piscinas="piscinas"
                    Tecnicos="tecnicos"
                    Aprovadores="quimicos"
-                   OnSave="SalvarOS" />
+                   OnSave="SalvarOS"
+                   OnFinalizado="AbrirDetalhesAposFinalizar" />
 
 <OrdemServicoDetalhes @bind-IsVisible="modalDetalhesVisible" 
                       OrdemDeServico="osSelecionada"
@@ -483,6 +484,13 @@
     private void VerDetalhes(OrdemDeServico os)
     {
         osSelecionada = os;
+        modalDetalhesVisible = true;
+    }
+
+    // Ao finalizar uma OS pelo modal de edição, abre a Visualização dela em seguida
+    // (osSelecionada já é a mesma instância recém-salva, não precisa recarregar).
+    private void AbrirDetalhesAposFinalizar(OrdemDeServico os)
+    {
         modalDetalhesVisible = true;
     }
 

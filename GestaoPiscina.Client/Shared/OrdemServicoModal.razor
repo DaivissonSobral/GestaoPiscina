@@ -98,37 +98,7 @@
                                 </div>
                             </div>
 
-                            @if (OrdemDeServico.Status == "Ocorrência")
-                            {
-                                <div class="bg-purple-950/30 border border-purple-800 rounded-lg p-4 space-y-4">
-                                    <h4 class="text-sm font-semibold text-purple-300">
-                                        <i class="fas fa-exclamation-triangle mr-1"></i>Ocorrência
-                                    </h4>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-300 mb-2">Aprovador (obrigatório)</label>
-                                        <InputSelect @bind-Value="OrdemDeServico.Aprovador" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-                                            <option value="">Selecione...</option>
-                                            @if (Aprovadores != null)
-                                            {
-                                                @foreach (var aprovador in Aprovadores)
-                                                {
-                                                    <option value="@aprovador.IDUsuario">@aprovador.Nome</option>
-                                                }
-                                            }
-                                        </InputSelect>
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-300 mb-2">Descrição da Ocorrência</label>
-                                        <InputTextArea @bind-Value="OrdemDeServico.Observacoes" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" rows="4" placeholder="Descreva o que aconteceu..." />
-                                        <ValidationMessage For="@(() => OrdemDeServico.Observacoes)" />
-                                    </div>
-
-                                    <UploadFotos Label="Foto da Ocorrência" @bind-Urls="OrdemDeServico.FotosOcorrencias" />
-                                </div>
-                            }
-                            else
+                            @if (OrdemDeServico.Status != "Ocorrência")
                             {
                                 <div>
                                     <label class="block text-sm font-medium text-slate-300 mb-2">Observações</label>
@@ -210,13 +180,52 @@
                         </div>
                     }
                 </div>
+
+                @if (OrdemDeServico.Status == "Ocorrência")
+                {
+                    <div class="border border-purple-800 rounded-lg overflow-hidden">
+                        <button type="button" @onclick="() => secaoOcorrenciaAberta = !secaoOcorrenciaAberta" class="w-full flex justify-between items-center px-4 py-3 bg-purple-950/40 hover:bg-purple-950/60 text-left transition-colors">
+                            <span class="text-sm font-semibold text-purple-300"><i class="fas fa-exclamation-triangle mr-2"></i>Ocorrência</span>
+                            <i class="fas @(secaoOcorrenciaAberta ? "fa-chevron-up" : "fa-chevron-down") text-purple-300"></i>
+                        </button>
+                        @if (secaoOcorrenciaAberta)
+                        {
+                            <div class="p-4 space-y-4 bg-purple-950/20">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">Aprovador (obrigatório)</label>
+                                    <InputSelect @bind-Value="OrdemDeServico.Aprovador" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                                        <option value="">Selecione...</option>
+                                        @if (Aprovadores != null)
+                                        {
+                                            @foreach (var aprovador in Aprovadores)
+                                            {
+                                                <option value="@aprovador.IDUsuario">@aprovador.Nome</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">Descrição da Ocorrência</label>
+                                    <InputTextArea @bind-Value="OrdemDeServico.Observacoes" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" rows="4" placeholder="Descreva o que aconteceu..." />
+                                    <ValidationMessage For="@(() => OrdemDeServico.Observacoes)" />
+                                </div>
+
+                                <UploadFotos Label="Foto da Ocorrência" @bind-Urls="OrdemDeServico.FotosOcorrencias" />
+                            </div>
+                        }
+                    </div>
+                }
             </div>
 
             <div class="flex space-x-3 p-6 pt-4 border-t border-slate-700 shrink-0">
-                <button type="submit" class="flex-1 bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
+                <button type="submit" @onclick="PrepararSalvar" class="flex-1 bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded-lg text-white transition-colors">
                     <i class="fas fa-save mr-2"></i>Salvar
                 </button>
-                <button type="button" @onclick="Close" class="flex-1 bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded-lg text-white transition-colors">
+                <button type="submit" @onclick="PrepararFinalizar" disabled="@(!PodeFinalizar)" class="flex-1 bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors" title="@(PodeFinalizar ? "" : "Conclua o checklist, os parâmetros da água e as fotos de antes/depois para finalizar")">
+                    <i class="fas fa-check-circle mr-2"></i>Finalizar
+                </button>
+                <button type="button" @onclick="Close" class="flex-1 bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-white transition-colors">
                     Cancelar
                 </button>
             </div>
@@ -232,6 +241,7 @@
     [Parameter] public List<Usuario>? Aprovadores { get; set; }
     [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
     [Parameter] public Func<OrdemDeServico, Task<bool>>? OnSave { get; set; }
+    [Parameter] public EventCallback<OrdemDeServico> OnFinalizado { get; set; }
 
     private int ClienteIdDaOS =>
         OrdemDeServico.Piscina?.Cliente?.IDCliente
@@ -247,6 +257,11 @@
     private bool secaoAguaAberta = false;
     private bool secaoDosagemAberta = false;
     private bool secaoFotosAberta = false;
+    private bool secaoOcorrenciaAberta = true;
+
+    // true quando o clique foi no botão "Finalizar" — decide, após o salvamento dar certo,
+    // se avisa o pai pra abrir a tela de Visualização (em vez de só fechar o modal).
+    private bool finalizarAoSalvar;
 
     private IEnumerable<Cliente> ClientesDisponiveis =>
         (Piscinas ?? new List<Piscina>())
@@ -315,6 +330,26 @@
         {
             HoraTerminoTime = TimeOnly.FromDateTime(DateTime.Now);
         }
+
+        if (OrdemDeServico.Status == "Ocorrência")
+        {
+            secaoOcorrenciaAberta = true;
+        }
+    }
+
+    private void PrepararSalvar()
+    {
+        finalizarAoSalvar = false;
+    }
+
+    // Clique em "Finalizar": aplica o status/horário de finalização antes da validação
+    // do próprio submit (roda no @onclick de um botão type="submit", então acontece antes
+    // do EditForm validar e chamar HandleSubmit).
+    private void PrepararFinalizar()
+    {
+        OrdemDeServico.Status = "Finalizada";
+        HoraTerminoTime = TimeOnly.FromDateTime(DateTime.Now);
+        finalizarAoSalvar = true;
     }
 
     private string GetStatusBadgeClass() => OrdemDeServico.Status switch
@@ -348,6 +383,8 @@
         secaoAguaAberta = false;
         secaoDosagemAberta = false;
         secaoFotosAberta = false;
+        secaoOcorrenciaAberta = true;
+        finalizarAoSalvar = false;
 
         if (OrdemDeServico.DataExecucao == default)
         {
@@ -386,6 +423,11 @@
         var sucesso = OnSave == null || await OnSave.Invoke(OrdemDeServico);
         if (sucesso)
         {
+            if (finalizarAoSalvar)
+            {
+                await OnFinalizado.InvokeAsync(OrdemDeServico);
+            }
+
             await Close();
         }
     }
