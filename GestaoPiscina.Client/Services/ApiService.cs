@@ -82,6 +82,15 @@ namespace GestaoPiscina.Client.Services
                 var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "token");
                 if (!string.IsNullOrEmpty(token))
                 {
+                    // AuthService grava o token via ILocalStorageService, que serializa o valor como
+                    // JSON — para uma string isso adiciona aspas literais ao redor (ex.: "\"eyJ...\"").
+                    // Sem isso, o header vira "Bearer \"eyJ...\"", que o servidor rejeita como token
+                    // inválido (nunca percebido antes porque nenhum endpoint validava [Authorize]).
+                    if (token.Length >= 2 && token[0] == '"' && token[^1] == '"')
+                    {
+                        token = JsonSerializer.Deserialize<string>(token) ?? token;
+                    }
+
                     _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                 }
             }
@@ -880,6 +889,54 @@ namespace GestaoPiscina.Client.Services
             catch (Exception ex)
             {
                 throw new Exception($"Erro ao gerar OS automáticas: {ex.Message}");
+            }
+        }
+
+        public async Task<OrdemDeServico?> AprovarOcorrenciaAsync(int idOS)
+        {
+            try
+            {
+                await AddAuthHeaderAsync();
+                var response = await _httpClient.PatchAsync($"{_baseUrl}ordensdeservico/{idOS}/aprovar-ocorrencia", new StringContent(string.Empty));
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+
+                return await response.Content.ReadFromJsonAsync<OrdemDeServico>();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao aprovar ocorrência: {ex.Message}");
+            }
+        }
+
+        // Push Notifications
+        public async Task<string?> GetVapidPublicKeyAsync()
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<string>($"{_baseUrl}pushsubscriptions/vapid-public-key");
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<bool> SubscribePushAsync(PushSubscriptionInfo subscription)
+        {
+            try
+            {
+                await AddAuthHeaderAsync();
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}pushsubscriptions", subscription);
+                return response.IsSuccessStatusCode;
+            }
+            catch
+            {
+                return false;
             }
         }
 

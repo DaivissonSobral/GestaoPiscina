@@ -59,3 +59,17 @@ async function onFetch(event) {
 self.addEventListener('install', event => event.waitUntil(onInstall(event)));
 self.addEventListener('activate', event => event.waitUntil(onActivate(event)));
 self.addEventListener('fetch', event => event.respondWith(onFetch(event)));
+
+self.addEventListener('push', function (event) {
+    const data = event.data ? event.data.json() : {};
+    event.waitUntil(self.registration.showNotification(data.title || 'Gestão de Piscinas', {
+        body: data.body || '',
+        icon: '/icon-192.png',
+        data: { url: data.url || '/' }
+    }));
+});
+
+self.addEventListener('notificationclick', function (event) {
+    event.notification.close();
+    event.waitUntil(clients.openWindow(event.notification.data && event.notification.data.url || '/'));
+});

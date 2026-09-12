@@ -35,6 +35,12 @@ namespace GestaoPiscina.Server.Models
         // Usuário responsável por autorizar a finalização por ocorrência (só se aplica quando Status = "Ocorrência")
         public int? Aprovador { get; set; }
 
+        // Aprovação posterior da ocorrência pelo químico responsável (Aprovador) — separada
+        // do registro inicial, feita depois via endpoint próprio (ver aprovar-ocorrencia).
+        public bool OcorrenciaAprovada { get; set; }
+
+        public DateTime? DataAprovacaoOcorrencia { get; set; }
+
         [Required]
         public int IDUsuario { get; set; } // Técnico responsável
 

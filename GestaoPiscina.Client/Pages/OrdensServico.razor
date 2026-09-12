@@ -288,6 +288,11 @@
     [SupplyParameterFromQuery(Name = "data")]
     public string? DataQuery { get; set; }
 
+    // Usado pelo clique numa notificação push de ocorrência (?os={id}) para abrir a OS
+    // correspondente direto nos Detalhes, sem o usuário precisar procurá-la na lista.
+    [SupplyParameterFromQuery(Name = "os")]
+    public int? OsQuery { get; set; }
+
     private OrdemDeServico? osParaExcluir;
     private bool toastVisible = false;
     private string mensagemToast = "";
@@ -329,6 +334,16 @@
         }
 
         await CarregarDados();
+
+        if (OsQuery.HasValue)
+        {
+            var os = ordensDeServico?.FirstOrDefault(o => o.IDOS == OsQuery.Value)
+                ?? await ApiService.GetOrdemDeServicoAsync(OsQuery.Value);
+            if (os != null)
+            {
+                VerDetalhes(os);
+            }
+        }
     }
 
     private async Task CarregarDados()

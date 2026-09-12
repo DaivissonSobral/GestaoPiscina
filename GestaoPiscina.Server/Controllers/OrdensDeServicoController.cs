@@ -1,7 +1,10 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using GestaoPiscina.Server.Data;
 using GestaoPiscina.Server.Models;
+using GestaoPiscina.Server.Services;
 
 namespace GestaoPiscina.Server.Controllers
 {
@@ -10,10 +13,12 @@ namespace GestaoPiscina.Server.Controllers
     public class OrdensDeServicoController : ControllerBase
     {
         private readonly GestaoPiscinaContext _context;
+        private readonly IPushNotificationService _pushNotificationService;
 
-        public OrdensDeServicoController(GestaoPiscinaContext context)
+        public OrdensDeServicoController(GestaoPiscinaContext context, IPushNotificationService pushNotificationService)
         {
             _context = context;
+            _pushNotificationService = pushNotificationService;
         }
 
         [HttpGet]
@@ -83,6 +88,8 @@ namespace GestaoPiscina.Server.Controllers
                 return BadRequest(new { message = "Não foi possível salvar a Ordem de Serviço. Verifique os dados informados." });
             }
 
+            await NotificarOcorrenciaSeNecessarioAsync(ordemDeServico);
+
             return CreatedAtAction(nameof(GetOrdemDeServico), new { id = ordemDeServico.IDOS }, ordemDeServico);
         }
 
@@ -92,6 +99,24 @@ namespace GestaoPiscina.Server.Controllers
             if (id != ordemDeServico.IDOS)
             {
                 return BadRequest();
+            }
+
+            // Uma OS já persistida com ocorrência não pode mais ser alterada por aqui — a única
+            // mutação permitida depois disso é a aprovação, feita pelo endpoint próprio abaixo.
+            var statusAtual = await _context.OrdensDeServico
+                .AsNoTracking()
+                .Where(o => o.IDOS == id)
+                .Select(o => o.Status)
+                .FirstOrDefaultAsync();
+
+            if (statusAtual == null)
+            {
+                return NotFound();
+            }
+
+            if (statusAtual == "Ocorrência")
+            {
+                return BadRequest(new { message = "Uma OS com ocorrência registrada não pode mais ser alterada." });
             }
 
             var erroValidacao = await ValidarRegrasDeNegocioAsync(ordemDeServico);
@@ -122,7 +147,73 @@ namespace GestaoPiscina.Server.Controllers
                 return BadRequest(new { message = "Não foi possível salvar a Ordem de Serviço. Verifique os dados informados." });
             }
 
+            await NotificarOcorrenciaSeNecessarioAsync(ordemDeServico);
+
             return NoContent();
+        }
+
+        // Notifica o químico responsável (Aprovador) via push quando a OS é salva com uma
+        // ocorrência recém-registrada. Nunca deixa uma falha no envio derrubar o salvamento.
+        private async Task NotificarOcorrenciaSeNecessarioAsync(OrdemDeServico ordemDeServico)
+        {
+            if (ordemDeServico.Status != "Ocorrência" || ordemDeServico.Aprovador == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var piscina = await _context.Piscinas
+                    .Include(p => p.Cliente)
+                    .FirstOrDefaultAsync(p => p.IDPiscina == ordemDeServico.IDPiscina);
+                var nomeCliente = piscina?.Cliente?.Nome ?? "cliente";
+
+                await _pushNotificationService.EnviarParaUsuarioAsync(
+                    ordemDeServico.Aprovador.Value,
+                    "Nova Ocorrência",
+                    $"Uma ocorrência foi registrada para {nomeCliente} e aguarda sua aprovação.",
+                    $"/ordens-servico?os={ordemDeServico.IDOS}");
+            }
+            catch
+            {
+                // Falha no push nunca deve impedir o salvamento da OS, que já aconteceu.
+            }
+        }
+
+        [Authorize]
+        [HttpPatch("{id}/aprovar-ocorrencia")]
+        public async Task<IActionResult> AprovarOcorrencia(int id)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var idUsuarioLogado))
+            {
+                return Unauthorized();
+            }
+
+            var ordemDeServico = await _context.OrdensDeServico.FindAsync(id);
+            if (ordemDeServico == null)
+            {
+                return NotFound();
+            }
+
+            if (ordemDeServico.Status != "Ocorrência")
+            {
+                return BadRequest(new { message = "Só é possível aprovar uma OS com ocorrência registrada." });
+            }
+
+            if (ordemDeServico.Aprovador != idUsuarioLogado)
+            {
+                return Forbid();
+            }
+
+            if (!ordemDeServico.OcorrenciaAprovada)
+            {
+                ordemDeServico.OcorrenciaAprovada = true;
+                ordemDeServico.DataAprovacaoOcorrencia = DateTime.Now;
+                await _context.SaveChangesAsync();
+            }
+
+            return Ok(ordemDeServico);
         }
 
         [HttpDelete("{id}")]

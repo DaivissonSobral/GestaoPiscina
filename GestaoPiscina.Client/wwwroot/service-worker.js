@@ -4,3 +4,17 @@
 // desatualizado). O cache de verdade só existe em service-worker.published.js,
 // usado automaticamente no build de publish (ver .csproj).
 self.addEventListener('fetch', () => { });
+
+self.addEventListener('push', function (event) {
+    const data = event.data ? event.data.json() : {};
+    event.waitUntil(self.registration.showNotification(data.title || 'Gestão de Piscinas', {
+        body: data.body || '',
+        icon: '/icon-192.png',
+        data: { url: data.url || '/' }
+    }));
+});
+
+self.addEventListener('notificationclick', function (event) {
+    event.notification.close();
+    event.waitUntil(clients.openWindow(event.notification.data && event.notification.data.url || '/'));
+});

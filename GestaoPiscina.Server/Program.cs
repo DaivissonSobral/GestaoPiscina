@@ -61,6 +61,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 // Registrar serviços
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<IPushNotificationService, PushNotificationService>();
 
 var app = builder.Build();
 

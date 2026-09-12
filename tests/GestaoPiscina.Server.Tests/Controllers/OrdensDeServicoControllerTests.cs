@@ -11,7 +11,7 @@ namespace GestaoPiscina.Server.Tests.Controllers
     public class OrdensDeServicoControllerValidacaoTests : IDisposable
     {
         private readonly SqliteInMemoryContext _db = new();
-        private OrdensDeServicoController Controller => new(_db.Context);
+        private OrdensDeServicoController Controller => new(_db.Context, new FakePushNotificationService());
 
         private async Task<(Piscina piscina, Usuario tecnico)> CriarPiscinaETecnicoAsync()
         {
@@ -198,7 +198,7 @@ namespace GestaoPiscina.Server.Tests.Controllers
     public class OrdensDeServicoControllerGeracaoAutomaticaTests : IDisposable
     {
         private readonly SqliteInMemoryContext _db = new();
-        private OrdensDeServicoController Controller => new(_db.Context);
+        private OrdensDeServicoController Controller => new(_db.Context, new FakePushNotificationService());
 
         private async Task<Usuario> CriarTecnicoPadraoAsync()
         {

@@ -2,6 +2,7 @@
 @using GestaoPiscina.Client.Services
 @inject ApiService ApiService
 @inject NavigationManager Navigation
+@inject AuthService AuthService
 
 <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 @(IsVisible ? "" : "hidden")">
     <div class="bg-slate-800 rounded-xl w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
@@ -163,10 +164,6 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <UploadFotos Label="Fotos Antes" @bind-Urls="OrdemDeServico.FotosAntes" @bind-Urls:after="AtualizarChecklistConcluido" />
                                 <UploadFotos Label="Fotos Depois" @bind-Urls="OrdemDeServico.FotosDepois" @bind-Urls:after="AtualizarChecklistConcluido" />
-                                @if (OrdemDeServico.Status != "Ocorrência" && !string.IsNullOrEmpty(OrdemDeServico.FotosOcorrencias))
-                                {
-                                    <UploadFotos Label="Fotos da Ocorrência" @bind-Urls="OrdemDeServico.FotosOcorrencias" />
-                                }
                             </div>
                         </div>
                     }
@@ -218,41 +215,43 @@
                     }
                 </div>
 
-                @if (OrdemDeServico.Status == "Ocorrência")
-                {
-                    <div class="border border-purple-800 rounded-lg overflow-hidden">
-                        <button type="button" @onclick="() => secaoOcorrenciaAberta = !secaoOcorrenciaAberta" class="w-full flex justify-between items-center px-4 py-3 bg-purple-950/40 hover:bg-purple-950/60 text-left transition-colors">
+                <div class="border border-purple-800 rounded-lg overflow-hidden">
+                    <div class="w-full flex justify-between items-center px-4 py-3 bg-purple-950/40 hover:bg-purple-950/60 transition-colors gap-3">
+                        <button type="button" @onclick="() => secaoOcorrenciaAberta = !secaoOcorrenciaAberta" class="flex-1 flex items-center justify-between text-left">
                             <span class="text-sm font-semibold text-purple-300"><i class="fas fa-exclamation-triangle mr-2"></i>Ocorrência</span>
-                            <i class="fas @(secaoOcorrenciaAberta ? "fa-chevron-up" : "fa-chevron-down") text-purple-300"></i>
+                            <i class="fas @(secaoOcorrenciaAberta ? "fa-chevron-up" : "fa-chevron-down") text-purple-300 ml-2"></i>
                         </button>
-                        @if (secaoOcorrenciaAberta)
-                        {
-                            <div class="p-4 space-y-4 bg-purple-950/20">
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-300 mb-2">Aprovador (obrigatório)</label>
-                                    <InputSelect @bind-Value="OrdemDeServico.Aprovador" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-                                        <option value="">Selecione...</option>
-                                        @if (Aprovadores != null)
-                                        {
-                                            @foreach (var aprovador in Aprovadores)
-                                            {
-                                                <option value="@aprovador.IDUsuario">@aprovador.Nome</option>
-                                            }
-                                        }
-                                    </InputSelect>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-300 mb-2">Descrição da Ocorrência</label>
-                                    <InputTextArea @bind-Value="OrdemDeServico.Observacoes" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" rows="4" placeholder="Descreva o que aconteceu..." />
-                                    <ValidationMessage For="@(() => OrdemDeServico.Observacoes)" />
-                                </div>
-
-                                <UploadFotos Label="Foto da Ocorrência" @bind-Urls="OrdemDeServico.FotosOcorrencias" />
-                            </div>
-                        }
+                        <button type="button" @onclick="RegistrarOcorrencia" class="shrink-0 bg-purple-700 hover:bg-purple-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
+                            <i class="fas fa-plus mr-1"></i>Registrar Ocorrência
+                        </button>
                     </div>
-                }
+                    @if (secaoOcorrenciaAberta)
+                    {
+                        <div class="p-4 space-y-4 bg-purple-950/20">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-2">Aprovador (obrigatório)</label>
+                                <InputSelect @bind-Value="OrdemDeServico.Aprovador" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                                    <option value="">Selecione...</option>
+                                    @if (Aprovadores != null)
+                                    {
+                                        @foreach (var aprovador in Aprovadores)
+                                        {
+                                            <option value="@aprovador.IDUsuario">@aprovador.Nome</option>
+                                        }
+                                    }
+                                </InputSelect>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-2">Descrição da Ocorrência</label>
+                                <InputTextArea @bind-Value="OrdemDeServico.Observacoes" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" rows="4" placeholder="Descreva o que aconteceu..." />
+                                <ValidationMessage For="@(() => OrdemDeServico.Observacoes)" />
+                            </div>
+
+                            <UploadFotos Label="Foto da Ocorrência" @bind-Urls="OrdemDeServico.FotosOcorrencias" />
+                        </div>
+                    }
+                </div>
             </div>
 
             <div class="flex space-x-3 p-6 pt-4 border-t border-slate-700 shrink-0">
@@ -264,8 +263,15 @@
                    esse mesmo clique destruísse/trocasse o botão (que é type="submit") por outro
                    elemento no meio do próprio evento, o Blazor re-renderiza antes do navegador
                    concluir o envio nativo do formulário — o submit nunca chega a acontecer. *@
-                <button type="button" @onclick="AbrirRelatorio" class="flex-1 bg-teal-600 hover:bg-teal-500 px-4 py-2 rounded-lg text-white transition-colors @(EstaFinalizadaOuOcorrencia ? "" : "hidden")">
+                <button type="button" @onclick="AbrirRelatorio" class="flex-1 bg-teal-600 hover:bg-teal-500 px-4 py-2 rounded-lg text-white transition-colors @(EstaFinalizadaOuOcorrencia && !PodeAprovarOcorrencia ? "" : "hidden")">
                     <i class="fas fa-file-alt mr-2"></i>Relatório
+                </button>
+                @* Some ao "Registrar ocorrência" pra quem já era o Aprovador quando o modal abriu:
+                   troca o lugar do Relatório por "Aprovar" (mesma cor da área de Ocorrência) até a
+                   ocorrência ser aprovada — depois disso PodeAprovarOcorrencia vira falso e o
+                   Relatório acima volta a aparecer sozinho, sem precisar de mais um @if/else. *@
+                <button type="button" @onclick="AprovarOcorrenciaAsync" disabled="@aprovandoOcorrencia" class="flex-1 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 px-4 py-2 rounded-lg text-white transition-colors @(PodeAprovarOcorrencia ? "" : "hidden")">
+                    <i class="fas fa-check mr-2"></i>@(aprovandoOcorrencia ? "Aprovando..." : "Aprovar")
                 </button>
                 <button type="submit" @onclick="PrepararFinalizar" disabled="@(!PodeFinalizar)" class="flex-1 bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors @(EstaFinalizadaOuOcorrencia ? "hidden" : "")" title="@(PodeFinalizar ? "" : "Conclua o checklist, os parâmetros da água e as fotos de antes/depois para finalizar")">
                     <i class="fas fa-check-circle mr-2"></i>Finalizar
@@ -274,6 +280,10 @@
                     Cancelar
                 </button>
             </div>
+            @if (!string.IsNullOrEmpty(erroAprovacaoOcorrencia))
+            {
+                <p class="text-red-400 text-xs px-6 pb-3">@erroAprovacaoOcorrencia</p>
+            }
         </EditForm>
     </div>
 </div>
@@ -316,7 +326,7 @@
     private bool secaoDosagemAberta = false;
     private bool secaoFotosAberta = false;
     private bool secaoChecklistAberta = false;
-    private bool secaoOcorrenciaAberta = true;
+    private bool secaoOcorrenciaAberta = false;
 
     // Dosagens de produtos já salvas nesta OS (reportadas pelo DosagemForm) — usadas para
     // montar o item dinâmico "produtos aplicados" do checklist e para exigir que pelo menos
@@ -418,9 +428,22 @@
 
     private string TextoDosagemAplicada() => ChecklistOS.TextoDosagemAplicada(NomePiscinaAtual(), dosagensAtuais);
 
-    // "Finalizar" deixa de fazer sentido para uma OS já finalizada ou com ocorrência
-    // registrada — nesses casos o botão vira atalho para o Relatório, e Salvar é bloqueado.
-    private bool EstaFinalizadaOuOcorrencia => OrdemDeServico.Status is "Finalizada" or "Ocorrência";
+    // Status já persistido quando o modal foi aberto — usado para travar Salvar só depois
+    // que a ocorrência já foi de fato salva, não assim que o usuário seleciona "Ocorrência"
+    // no dropdown (senão nunca daria pra salvar o registro da ocorrência pela primeira vez).
+    private string? statusOriginal;
+
+    private void RegistrarOcorrencia()
+    {
+        OrdemDeServico.Status = "Ocorrência";
+        OnStatusAlterado();
+        secaoOcorrenciaAberta = true;
+    }
+
+    // "Finalizar" deixa de fazer sentido para uma OS já finalizada, e Salvar é bloqueado
+    // assim que a OS JÁ ESTAVA com ocorrência registrada quando o modal foi aberto (edições
+    // posteriores só acontecem via aprovação, não por aqui).
+    private bool EstaFinalizadaOuOcorrencia => OrdemDeServico.Status == "Finalizada" || statusOriginal == "Ocorrência";
 
     private void AbrirRelatorio()
     {
@@ -430,6 +453,36 @@
     // ChecklistConcluido já engloba parâmetros da água e fotos (ver AtualizarChecklistConcluido),
     // então não precisa repetir essas condições aqui.
     private bool PodeFinalizar => OrdemDeServico.ChecklistConcluido;
+
+    private int? currentUserId;
+    private bool aprovandoOcorrencia;
+    private string? erroAprovacaoOcorrencia;
+
+    // Só o próprio químico responsável (Aprovador desta OS) vê o botão "Aprovar" no lugar do
+    // Relatório, e só enquanto a ocorrência ainda não tiver sido aprovada.
+    private bool PodeAprovarOcorrencia =>
+        statusOriginal == "Ocorrência" && !OrdemDeServico.OcorrenciaAprovada
+        && currentUserId.HasValue && currentUserId == OrdemDeServico.Aprovador;
+
+    private async Task AprovarOcorrenciaAsync()
+    {
+        aprovandoOcorrencia = true;
+        erroAprovacaoOcorrencia = null;
+        try
+        {
+            var atualizada = await ApiService.AprovarOcorrenciaAsync(OrdemDeServico.IDOS);
+            OrdemDeServico.OcorrenciaAprovada = atualizada?.OcorrenciaAprovada ?? true;
+            OrdemDeServico.DataAprovacaoOcorrencia = atualizada?.DataAprovacaoOcorrencia ?? DateTime.Now;
+        }
+        catch (Exception ex)
+        {
+            erroAprovacaoOcorrencia = ex.Message;
+        }
+        finally
+        {
+            aprovandoOcorrencia = false;
+        }
+    }
 
     private void OnDataExecucaoAlterada()
     {
@@ -497,8 +550,13 @@
         secaoDosagemAberta = false;
         secaoFotosAberta = false;
         secaoChecklistAberta = false;
-        secaoOcorrenciaAberta = true;
+        secaoOcorrenciaAberta = OrdemDeServico.Status == "Ocorrência";
         dosagensAtuais = new List<DosagemProduto>();
+
+        statusOriginal = OrdemDeServico.IDOS > 0 ? OrdemDeServico.Status : null;
+        erroAprovacaoOcorrencia = null;
+        var usuarioLogado = await AuthService.GetCurrentUserAsync();
+        currentUserId = usuarioLogado?.IDUsuario;
 
         if (OrdemDeServico.DataExecucao == default)
         {

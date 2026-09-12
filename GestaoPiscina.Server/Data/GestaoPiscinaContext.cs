@@ -23,6 +23,7 @@ namespace GestaoPiscina.Server.Data
         public DbSet<DosagemProduto> DosagensProdutos { get; set; }
         public DbSet<MovimentacaoEstoque> MovimentacoesEstoque { get; set; }
         public DbSet<ChecklistItem> ChecklistItens { get; set; }
+        public DbSet<PushSubscriptionRegistro> PushSubscriptionRegistros { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -210,6 +211,19 @@ namespace GestaoPiscina.Server.Data
                 entity.Property(e => e.TiposClienteObrigatorio).HasMaxLength(100);
                 entity.Property(e => e.TiposPiscinaObrigatorio).HasMaxLength(100);
                 entity.HasIndex(e => e.Chave).IsUnique();
+            });
+
+            modelBuilder.Entity<PushSubscriptionRegistro>(entity =>
+            {
+                entity.HasKey(e => e.IDPushSubscriptionRegistro);
+                entity.Property(e => e.Endpoint).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.P256dh).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.Auth).IsRequired().HasMaxLength(255);
+                entity.HasIndex(e => e.Endpoint).IsUnique();
+                entity.HasOne(e => e.Usuario)
+                    .WithMany()
+                    .HasForeignKey(e => e.IDUsuario)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

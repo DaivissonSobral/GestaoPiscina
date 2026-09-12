@@ -1,7 +1,10 @@
 ﻿@inherits LayoutComponentBase
 @using GestaoPiscina.Client.Shared
 @using GestaoPiscina.Client.Services
+@using GestaoPiscina.Client.Models
 @inject AuthService AuthService
+@inject ApiService ApiService
+@inject IJSRuntime JSRuntime
 
 <CascadingValue Value="this">
     <div class="bg-slate-900 text-slate-100 flex min-h-screen">
@@ -34,6 +37,47 @@
         if (!isAuthenticated)
         {
             NavigationManager.NavigateTo("/login");
+            return;
+        }
+
+        // Não aguarda: a inscrição em push (que pode pedir permissão ao navegador) não deve
+        // atrasar o carregamento normal da tela.
+        _ = IniciarPushSeQuimicoAsync();
+    }
+
+    // Só usuários com perfil "Química" recebem push (são os únicos que precisam ser avisados
+    // de uma nova ocorrência) — evita pedir permissão de notificação de todo mundo à toa.
+    private async Task IniciarPushSeQuimicoAsync()
+    {
+        try
+        {
+            var usuario = await AuthService.GetCurrentUserAsync();
+            if (usuario?.NomePerfil != "Química")
+            {
+                return;
+            }
+
+            var suportado = await JSRuntime.InvokeAsync<bool>("gestaoPiscinaPush.isSupported");
+            if (!suportado)
+            {
+                return;
+            }
+
+            var vapidPublicKey = await ApiService.GetVapidPublicKeyAsync();
+            if (string.IsNullOrEmpty(vapidPublicKey))
+            {
+                return;
+            }
+
+            var subscription = await JSRuntime.InvokeAsync<PushSubscriptionInfo?>("gestaoPiscinaPush.subscribe", vapidPublicKey);
+            if (subscription != null)
+            {
+                await ApiService.SubscribePushAsync(subscription);
+            }
+        }
+        catch
+        {
+            // Notificação push é um extra — nunca deve interromper o carregamento do app.
         }
     }
 
