@@ -45,7 +45,8 @@
         else
         {
         <div class="bg-slate-800 rounded-xl overflow-hidden">
-            <div class="overflow-x-auto">
+            <!-- Desktop: tabela tradicional (>= sm) -->
+            <div class="hidden sm:block overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-slate-700">
                         <tr>
@@ -60,7 +61,7 @@
                     <tbody class="divide-y divide-slate-700">
                         @foreach (var gestor in gestores)
                         {
-                            <tr class="hover:bg-slate-700">
+                            <tr @onclick="() => AbrirModalEditar(gestor)" class="hover:bg-slate-700 cursor-pointer">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-100">@gestor.Nome</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@gestor.Telefone</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@gestor.Email</td>
@@ -72,7 +73,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
                                     @(gestor.GestorClientes.Count) cliente(s)
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" @onclick:stopPropagation="true">
                                     <button @onclick="() => ToggleVinculos(gestor)" class="text-blue-400 hover:text-blue-300 mr-3" title="Gerenciar clientes vinculados">
                                         <i class="fas fa-link"></i>
                                     </button>
@@ -88,49 +89,51 @@
                             {
                                 <tr class="bg-slate-900">
                                     <td colspan="6" class="px-6 py-4">
-                                        <div class="space-y-3">
-                                            <h5 class="text-sm font-semibold text-slate-200">Clientes vinculados a @gestor.Nome</h5>
-                                            @if (gestor.GestorClientes.Any())
-                                            {
-                                                <ul class="space-y-1">
-                                                    @foreach (var vinculo in gestor.GestorClientes)
-                                                    {
-                                                        <li class="flex justify-between items-center bg-slate-800 rounded-lg px-3 py-2">
-                                                            <span class="text-sm text-slate-200">@vinculo.Cliente?.Nome</span>
-                                                            <button @onclick="() => DesvincularCliente(gestor, vinculo)" class="text-red-400 hover:text-red-300 text-sm">
-                                                                <i class="fas fa-unlink mr-1"></i>Desvincular
-                                                            </button>
-                                                        </li>
-                                                    }
-                                                </ul>
-                                            }
-                                            else
-                                            {
-                                                <p class="text-sm text-slate-400">Nenhum cliente vinculado.</p>
-                                            }
-
-                                            <div class="flex space-x-2 pt-2">
-                                                <select @bind="clienteParaVincularId" class="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-                                                    <option value="0">Selecione um cliente para vincular...</option>
-                                                    @if (clientes != null)
-                                                    {
-                                                        @foreach (var cliente in clientes.Where(c => gestor.GestorClientes.All(gc => gc.IDCliente != c.IDCliente)))
-                                                        {
-                                                            <option value="@cliente.IDCliente">@cliente.Nome</option>
-                                                        }
-                                                    }
-                                                </select>
-                                                <button @onclick="() => VincularCliente(gestor)" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
-                                                    Vincular
-                                                </button>
-                                            </div>
-                                        </div>
+                                        @RenderVinculos(gestor)
                                     </td>
                                 </tr>
                             }
                         }
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Celular: cards com a coluna de ações sempre visível à direita, separada do
+                 conteúdo por espaçamento e uma borda -->
+            <div class="sm:hidden divide-y divide-slate-700">
+                @foreach (var gestor in gestores)
+                {
+                    <div @onclick="() => AbrirModalEditar(gestor)" class="flex gap-4 p-4 hover:bg-slate-700/50 cursor-pointer">
+                        <div class="flex-1 min-w-0 space-y-1">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="text-sm font-medium text-slate-100 truncate">@gestor.Nome</div>
+                                <span class="@(gestor.Ativo ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-800") px-2 py-0.5 text-xs font-semibold rounded-full shrink-0">
+                                    @(gestor.Ativo ? "Ativo" : "Inativo")
+                                </span>
+                            </div>
+                            <div class="text-xs text-slate-400 truncate">@gestor.Telefone</div>
+                            <div class="text-xs text-slate-400 truncate">@gestor.Email</div>
+                            <div class="text-xs text-slate-500">@(gestor.GestorClientes.Count) cliente(s) vinculado(s)</div>
+                        </div>
+                        <div class="flex flex-col gap-3 items-center shrink-0 pt-1 pl-3 border-l border-slate-700" @onclick:stopPropagation="true">
+                            <button @onclick="() => ToggleVinculos(gestor)" class="text-blue-400 hover:text-blue-300" title="Gerenciar clientes vinculados">
+                                <i class="fas fa-link"></i>
+                            </button>
+                            <button @onclick="() => AbrirModalEditar(gestor)" class="text-cyan-400 hover:text-cyan-300" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button @onclick="() => ExcluirGestor(gestor)" class="text-red-400 hover:text-red-300" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    @if (gestorExpandidoId == gestor.IDGestor)
+                    {
+                        <div class="bg-slate-900 p-4" @onclick:stopPropagation="true">
+                            @RenderVinculos(gestor)
+                        </div>
+                    }
+                }
             </div>
         </div>
         }
@@ -199,6 +202,46 @@
     {
         await DesvincularCliente(args.Gestor, args.Vinculo);
     }
+
+    // Painel de "clientes vinculados" da visão em Lista — usado tanto na linha expandida da
+    // tabela (desktop) quanto no card expandido (celular), para não duplicar o markup.
+    private RenderFragment RenderVinculos(Gestor gestor) => @<div class="space-y-3">
+        <h5 class="text-sm font-semibold text-slate-200">Clientes vinculados a @gestor.Nome</h5>
+        @if (gestor.GestorClientes.Any())
+        {
+            <ul class="space-y-1">
+                @foreach (var vinculo in gestor.GestorClientes)
+                {
+                    <li class="flex justify-between items-center bg-slate-800 rounded-lg px-3 py-2">
+                        <span class="text-sm text-slate-200">@vinculo.Cliente?.Nome</span>
+                        <button @onclick="() => DesvincularCliente(gestor, vinculo)" class="text-red-400 hover:text-red-300 text-sm">
+                            <i class="fas fa-unlink mr-1"></i>Desvincular
+                        </button>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="text-sm text-slate-400">Nenhum cliente vinculado.</p>
+        }
+
+        <div class="flex flex-col sm:flex-row gap-2 pt-2">
+            <select @bind="clienteParaVincularId" class="flex-1 min-w-0 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                <option value="0">Selecione um cliente para vincular...</option>
+                @if (clientes != null)
+                {
+                    @foreach (var cliente in clientes.Where(c => gestor.GestorClientes.All(gc => gc.IDCliente != c.IDCliente)))
+                    {
+                        <option value="@cliente.IDCliente">@cliente.Nome</option>
+                    }
+                }
+            </select>
+            <button @onclick="() => VincularCliente(gestor)" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
+                Vincular
+            </button>
+        </div>
+    </div>;
 
     protected override async Task OnInitializedAsync()
     {
