@@ -71,11 +71,11 @@
                         <label class="block text-sm font-medium text-slate-300 mb-2">Aprovador (obrigatório para Ocorrência)</label>
                         <InputSelect @bind-Value="OrdemDeServico.Aprovador" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
                             <option value="">Selecione...</option>
-                            @if (Usuarios != null)
+                            @if (Aprovadores != null)
                             {
-                                @foreach (var usuario in Usuarios)
+                                @foreach (var aprovador in Aprovadores)
                                 {
-                                    <option value="@usuario.IDUsuario">@usuario.Nome</option>
+                                    <option value="@aprovador.IDUsuario">@aprovador.Nome</option>
                                 }
                             }
                         </InputSelect>
@@ -163,7 +163,7 @@
     [Parameter] public OrdemDeServico OrdemDeServico { get; set; } = new OrdemDeServico();
     [Parameter] public List<Piscina>? Piscinas { get; set; }
     [Parameter] public List<Usuario>? Tecnicos { get; set; }
-    [Parameter] public List<Usuario>? Usuarios { get; set; }
+    [Parameter] public List<Usuario>? Aprovadores { get; set; }
     [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
     [Parameter] public Func<OrdemDeServico, Task<bool>>? OnSave { get; set; }
 

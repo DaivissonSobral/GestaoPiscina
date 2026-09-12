@@ -27,7 +27,8 @@ namespace GestaoPiscina.Server.Controllers
 
             if (!string.IsNullOrWhiteSpace(perfil))
             {
-                query = query.Where(u => u.Perfil.Nome == perfil);
+                var perfis = perfil.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                query = query.Where(u => perfis.Contains(u.Perfil.Nome));
             }
 
             var usuarios = await query

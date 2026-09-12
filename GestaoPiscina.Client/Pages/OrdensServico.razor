@@ -199,7 +199,7 @@
                    OrdemDeServico="osSelecionada"
                    Piscinas="piscinas"
                    Tecnicos="tecnicos"
-                   Usuarios="usuarios"
+                   Aprovadores="quimicos"
                    OnSave="SalvarOS" />
 
 <OrdemServicoDetalhes @bind-IsVisible="modalDetalhesVisible" 
@@ -225,7 +225,7 @@
     private List<OrdemDeServico>? ordensFiltradas;
     private List<Piscina>? piscinas;
     private List<Usuario>? tecnicos;
-    private List<Usuario>? usuarios;
+    private List<Usuario>? quimicos;
     private OrdemDeServico osSelecionada = new OrdemDeServico();
     private bool modalOSVisible = false;
     private bool modalDetalhesVisible = false;
@@ -299,7 +299,7 @@
         new("Cancelada", "Cancelada", "border-red-500", "text-red-400"),
     };
 
-    private string? NomeTecnico(OrdemDeServico os) => usuarios?.FirstOrDefault(u => u.IDUsuario == os.IDUsuario)?.Nome;
+    private string? NomeTecnico(OrdemDeServico os) => tecnicos?.FirstOrDefault(u => u.IDUsuario == os.IDUsuario)?.Nome;
 
     private bool EstaAtrasada(OrdemDeServico os) => os.Status == "Em Aberto" && os.DataExecucao.Date < DateTime.Today;
 
@@ -336,8 +336,8 @@
             {
                 ApiService.GetOrdensDeServicoAsync(),
                 ApiService.GetPiscinasAsync(),
-                ApiService.GetUsuariosAsync("Técnico"),
-                ApiService.GetUsuariosAsync()
+                ApiService.GetUsuariosAsync("Técnico,Supervisor"),
+                ApiService.GetUsuariosAsync("Química")
             };
 
             await Task.WhenAll(tasks);
@@ -345,7 +345,7 @@
             ordensDeServico = ((Task<List<OrdemDeServico>>)tasks[0]).Result;
             piscinas = ((Task<List<Piscina>>)tasks[1]).Result;
             tecnicos = ((Task<List<Usuario>>)tasks[2]).Result;
-            usuarios = ((Task<List<Usuario>>)tasks[3]).Result;
+            quimicos = ((Task<List<Usuario>>)tasks[3]).Result;
             // Reaplica os filtros ativos em vez de simplesmente mostrar a lista inteira —
             // sem isso, qualquer recarga (salvar/excluir uma OS, por exemplo) descartava
             // silenciosamente os filtros que o usuário tinha escolhido.
@@ -357,7 +357,7 @@
             ordensDeServico = new List<OrdemDeServico>();
             piscinas = new List<Piscina>();
             tecnicos = new List<Usuario>();
-            usuarios = new List<Usuario>();
+            quimicos = new List<Usuario>();
             ordensFiltradas = new List<OrdemDeServico>();
         }
         finally
