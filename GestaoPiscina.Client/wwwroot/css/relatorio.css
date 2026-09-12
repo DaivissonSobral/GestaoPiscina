@@ -623,6 +623,28 @@
     margin-top: 2px;
 }
 
+/* ---------- CHECKLIST REALIZADO (relatório individual) ---------- */
+.relatorio-page .checklist-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.relatorio-page .checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 14px;
+    color: #0E3B4D;
+    line-height: 1.5;
+}
+
+.relatorio-page .checklist-item i {
+    color: #0B8A5A;
+    margin-top: 3px;
+    flex: none;
+}
+
 /* ---------- REGISTRO FOTOGRÁFICO (relatório individual) ---------- */
 .relatorio-page .photo-block + .photo-block {
     margin-top: 28px;

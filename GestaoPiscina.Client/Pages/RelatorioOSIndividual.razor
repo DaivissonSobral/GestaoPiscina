@@ -169,6 +169,29 @@
                     }
                 </section>
 
+                <section>
+                    <div class="section-head">
+                        <h3>Checklist Realizado</h3>
+                        <p>Itens de checklist confirmados pelo técnico durante a visita.</p>
+                    </div>
+                    @if (ChecklistItensMarcados.Any())
+                    {
+                        <div class="checklist-list">
+                            @foreach (var item in ChecklistItensMarcados)
+                            {
+                                <div class="checklist-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>@item.Texto</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-sm" style="color:#5C7A80;">Nenhum item de checklist foi marcado nesta visita.</p>
+                    }
+                </section>
+
                 @if (TemFotos())
                 {
                     <section>
@@ -266,6 +289,7 @@
     private OrdemDeServico? os;
     private List<Usuario> usuarios = new();
     private List<DosagemProduto> dosagens = new();
+    private List<ChecklistItemDefinicao> checklistItens = new();
     private bool carregando = true;
     private string? erro;
 
@@ -278,11 +302,13 @@
             var tarefaOS = ApiService.GetOrdemDeServicoAsync(IdOS);
             var tarefaUsuarios = ApiService.GetUsuariosAsync();
             var tarefaDosagens = ApiService.GetDosagensPorOSAsync(IdOS);
-            await Task.WhenAll(tarefaOS, tarefaUsuarios, tarefaDosagens);
+            var tarefaChecklistItens = ApiService.GetChecklistItensAsync();
+            await Task.WhenAll(tarefaOS, tarefaUsuarios, tarefaDosagens, tarefaChecklistItens);
 
             os = await tarefaOS;
             usuarios = await tarefaUsuarios;
             dosagens = await tarefaDosagens;
+            checklistItens = await tarefaChecklistItens;
 
             if (os == null)
             {
@@ -296,6 +322,21 @@
         finally
         {
             carregando = false;
+        }
+    }
+
+    // Só os itens de checklist marcados pelo técnico entram no relatório — os indicadores
+    // automáticos (parâmetros da água, dosagem, fotos) já têm suas próprias seções acima,
+    // então repeti-los aqui como "itens de checklist" seria redundante.
+    private List<ChecklistItemDefinicao> ChecklistItensMarcados
+    {
+        get
+        {
+            var marcados = ChecklistOS.ItensMarcados(os?.ChecklistItens);
+            return checklistItens
+                .Where(i => marcados.Contains(i.Chave))
+                .OrderBy(i => i.Ordem)
+                .ToList();
         }
     }
 
