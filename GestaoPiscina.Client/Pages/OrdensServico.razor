@@ -486,7 +486,7 @@
         modalDetalhesVisible = true;
     }
 
-    private async Task SalvarOS(OrdemDeServico os)
+    private async Task<bool> SalvarOS(OrdemDeServico os)
     {
         try
         {
@@ -502,10 +502,12 @@
             }
 
             await CarregarDados();
+            return true;
         }
         catch (Exception ex)
         {
             MostrarNotificacao("Erro", $"Erro ao salvar OS: {ex.Message}", "error");
+            return false;
         }
     }
 

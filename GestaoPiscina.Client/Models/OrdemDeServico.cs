@@ -2,11 +2,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace GestaoPiscina.Client.Models
 {
-    public class OrdemDeServico
+    public class OrdemDeServico : IValidatableObject
     {
         public int IDOS { get; set; }
-        
+
         [Required(ErrorMessage = "Piscina é obrigatória")]
+        [Range(1, int.MaxValue, ErrorMessage = "Selecione uma piscina")]
         public int IDPiscina { get; set; }
         
         [Required(ErrorMessage = "Data de execução é obrigatória")]
@@ -35,6 +36,7 @@ namespace GestaoPiscina.Client.Models
         public int? Aprovador { get; set; }
 
         [Required(ErrorMessage = "Técnico responsável é obrigatório")]
+        [Range(1, int.MaxValue, ErrorMessage = "Selecione um técnico")]
         public int IDUsuario { get; set; }
 
         [Required(ErrorMessage = "pH é obrigatório")]
@@ -60,5 +62,15 @@ namespace GestaoPiscina.Client.Models
         public DateTime HoraTermino { get; set; }
 
         public Piscina Piscina { get; set; } = null!;
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (HoraTermino < HoraInicio)
+            {
+                yield return new ValidationResult(
+                    "O horário de término não pode ser anterior ao horário de início.",
+                    new[] { nameof(HoraTermino) });
+            }
+        }
     }
 } 

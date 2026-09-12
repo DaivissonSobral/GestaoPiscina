@@ -66,14 +66,22 @@ namespace GestaoPiscina.Server.Controllers
         [HttpPost]
         public async Task<ActionResult<OrdemDeServico>> PostOrdemDeServico(OrdemDeServico ordemDeServico)
         {
-            var erroValidacao = ValidarRegrasDeNegocio(ordemDeServico);
+            var erroValidacao = await ValidarRegrasDeNegocioAsync(ordemDeServico);
             if (erroValidacao != null)
             {
                 return BadRequest(new { message = erroValidacao });
             }
 
             _context.OrdensDeServico.Add(ordemDeServico);
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                return BadRequest(new { message = "Não foi possível salvar a Ordem de Serviço. Verifique os dados informados." });
+            }
 
             return CreatedAtAction(nameof(GetOrdemDeServico), new { id = ordemDeServico.IDOS }, ordemDeServico);
         }
@@ -86,7 +94,7 @@ namespace GestaoPiscina.Server.Controllers
                 return BadRequest();
             }
 
-            var erroValidacao = ValidarRegrasDeNegocio(ordemDeServico);
+            var erroValidacao = await ValidarRegrasDeNegocioAsync(ordemDeServico);
             if (erroValidacao != null)
             {
                 return BadRequest(new { message = erroValidacao });
@@ -108,6 +116,10 @@ namespace GestaoPiscina.Server.Controllers
                 {
                     throw;
                 }
+            }
+            catch (DbUpdateException)
+            {
+                return BadRequest(new { message = "Não foi possível salvar a Ordem de Serviço. Verifique os dados informados." });
             }
 
             return NoContent();
@@ -299,9 +311,10 @@ namespace GestaoPiscina.Server.Controllers
             _ => string.Empty
         };
 
-        // Validações leves de negócio (RN01 e regra de aprovador para Ocorrência).
-        // Não substitui um motor de regras completo — cobre só o mínimo para não persistir dados inconsistentes.
-        private static string? ValidarRegrasDeNegocio(OrdemDeServico ordemDeServico)
+        // Validações leves de negócio (RN01, regra de aprovador para Ocorrência, e
+        // integridade referencial/temporal mínima para não persistir dados inconsistentes).
+        // Não substitui um motor de regras completo.
+        private async Task<string?> ValidarRegrasDeNegocioAsync(OrdemDeServico ordemDeServico)
         {
             if (ordemDeServico.Status == "Finalizada" && !ordemDeServico.ChecklistConcluido)
             {
@@ -311,6 +324,27 @@ namespace GestaoPiscina.Server.Controllers
             if (ordemDeServico.Status == "Ocorrência" && ordemDeServico.Aprovador == null)
             {
                 return "É necessário informar o aprovador responsável para finalizar uma OS com ocorrência.";
+            }
+
+            if (ordemDeServico.HoraTermino < ordemDeServico.HoraInicio)
+            {
+                return "O horário de término não pode ser anterior ao horário de início.";
+            }
+
+            if (!await _context.Piscinas.AnyAsync(p => p.IDPiscina == ordemDeServico.IDPiscina))
+            {
+                return "Selecione uma piscina válida.";
+            }
+
+            if (!await _context.Usuarios.AnyAsync(u => u.IDUsuario == ordemDeServico.IDUsuario))
+            {
+                return "Selecione um técnico válido.";
+            }
+
+            if (ordemDeServico.Aprovador.HasValue
+                && !await _context.Usuarios.AnyAsync(u => u.IDUsuario == ordemDeServico.Aprovador.Value))
+            {
+                return "Selecione um aprovador válido.";
             }
 
             return null;

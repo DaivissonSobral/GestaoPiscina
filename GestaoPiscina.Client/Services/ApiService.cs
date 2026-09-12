@@ -18,7 +18,10 @@ namespace GestaoPiscina.Client.Services
             _jsRuntime = jsRuntime;
         }
 
-        // Métodos auxiliares para tratamento de erros
+        // Métodos auxiliares para tratamento de erros.
+        // Nunca repassa o corpo bruto da resposta ao usuário: se o servidor devolver algo
+        // que não seja o formato esperado (ex.: uma página de exceção com stack trace),
+        // cai numa mensagem genérica em vez de vazar detalhes internos.
         private async Task<string> GetErrorMessageAsync(HttpResponseMessage response)
         {
             try
@@ -29,15 +32,37 @@ namespace GestaoPiscina.Client.Services
                     try
                     {
                         var errorResponse = JsonSerializer.Deserialize<Dictionary<string, object>>(content);
-                        if (errorResponse != null && errorResponse.ContainsKey("message"))
+                        if (errorResponse != null)
                         {
-                            return errorResponse["message"].ToString() ?? "Erro desconhecido";
+                            if (errorResponse.TryGetValue("message", out var mensagem) && mensagem is not null)
+                            {
+                                return mensagem.ToString() ?? "Erro desconhecido";
+                            }
+
+                            if (errorResponse.TryGetValue("errors", out var errosObj)
+                                && errosObj is JsonElement errosElement
+                                && errosElement.ValueKind == JsonValueKind.Object)
+                            {
+                                var primeiraMensagem = errosElement.EnumerateObject()
+                                    .SelectMany(campo => campo.Value.EnumerateArray())
+                                    .Select(valor => valor.GetString())
+                                    .FirstOrDefault(m => !string.IsNullOrEmpty(m));
+
+                                if (!string.IsNullOrEmpty(primeiraMensagem))
+                                {
+                                    return primeiraMensagem!;
+                                }
+                            }
+
+                            if (errorResponse.TryGetValue("title", out var titulo) && titulo is not null)
+                            {
+                                return titulo.ToString() ?? "Erro desconhecido";
+                            }
                         }
                     }
                     catch
                     {
-                        // Se não conseguir deserializar como JSON, retorna o conteúdo como string
-                        return content;
+                        // Conteúdo não é um JSON no formato esperado — ignora e cai no fallback genérico abaixo.
                     }
                 }
             }
@@ -45,8 +70,8 @@ namespace GestaoPiscina.Client.Services
             {
                 // Ignora erros de leitura do conteúdo
             }
-            
-            return response.ReasonPhrase ?? "Erro desconhecido";
+
+            return $"Erro ao processar a solicitação (HTTP {(int)response.StatusCode}).";
         }
 
         // Método para adicionar token de autenticação

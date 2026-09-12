@@ -90,6 +90,7 @@
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-2">Horário de Término</label>
                     <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="OrdemDeServico.HoraTermino" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+                    <ValidationMessage For="@(() => OrdemDeServico.HoraTermino)" />
                 </div>
 
                 <CampoNumerico Label="pH" @bind-Value="OrdemDeServico.pH" Step="0.1m" Min="0m" Max="14m" />
@@ -164,7 +165,7 @@
     [Parameter] public List<Usuario>? Tecnicos { get; set; }
     [Parameter] public List<Usuario>? Usuarios { get; set; }
     [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
-    [Parameter] public EventCallback<OrdemDeServico> OnSave { get; set; }
+    [Parameter] public Func<OrdemDeServico, Task<bool>>? OnSave { get; set; }
 
     private int ClienteIdDaOS =>
         OrdemDeServico.Piscina?.Cliente?.IDCliente
@@ -192,7 +193,10 @@
 
     private async Task HandleSubmit()
     {
-        await OnSave.InvokeAsync(OrdemDeServico);
-        await Close();
+        var sucesso = OnSave == null || await OnSave.Invoke(OrdemDeServico);
+        if (sucesso)
+        {
+            await Close();
+        }
     }
 } 
