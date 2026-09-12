@@ -26,7 +26,8 @@
     else if (equipamentosFiltrados.Any())
     {
         <div class="bg-slate-800 rounded-xl overflow-hidden">
-            <div class="overflow-x-auto">
+            <!-- Desktop: tabela tradicional (>= sm) -->
+            <div class="hidden sm:block overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-slate-700">
                         <tr>
@@ -40,7 +41,7 @@
                     <tbody class="divide-y divide-slate-700">
                         @foreach (var equipamento in equipamentosFiltrados)
                         {
-                            <tr class="hover:bg-slate-700">
+                            <tr @onclick="() => AbrirModalEditar(equipamento)" class="hover:bg-slate-700 cursor-pointer">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-slate-100">@equipamento.Cliente?.Nome</div>
                                     <div class="text-sm text-slate-400">@equipamento.Cliente?.Tipo</div>
@@ -48,7 +49,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@equipamento.Descricao</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@equipamento.NumeroSerie</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@(equipamento.UltimaCalibragem?.ToString("dd/MM/yyyy") ?? "-")</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" @onclick:stopPropagation="true">
                                     <button @onclick="() => AbrirModalEditar(equipamento)" class="text-cyan-400 hover:text-cyan-300 mr-3" title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </button>
@@ -60,6 +61,33 @@
                         }
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Celular: cards com a coluna de ações sempre visível à direita, separada do
+                 conteúdo por espaçamento e uma borda para não ficar "colada" no texto -->
+            <div class="sm:hidden divide-y divide-slate-700">
+                @foreach (var equipamento in equipamentosFiltrados)
+                {
+                    <div @onclick="() => AbrirModalEditar(equipamento)" class="flex gap-4 p-4 hover:bg-slate-700/50 cursor-pointer">
+                        <div class="flex-1 min-w-0 space-y-1">
+                            <div class="text-sm font-medium text-slate-100 truncate">@equipamento.Cliente?.Nome</div>
+                            <div class="text-xs text-slate-400 truncate">@equipamento.Cliente?.Tipo</div>
+                            <div class="text-sm text-slate-300">@equipamento.Descricao</div>
+                            <div class="grid grid-cols-2 gap-x-3 text-xs text-slate-400">
+                                <div class="truncate">Nº série: @equipamento.NumeroSerie</div>
+                                <div class="text-right truncate">Calibragem: @(equipamento.UltimaCalibragem?.ToString("dd/MM/yyyy") ?? "-")</div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-3 items-center shrink-0 pt-1 pl-3 border-l border-slate-700" @onclick:stopPropagation="true">
+                            <button @onclick="() => AbrirModalEditar(equipamento)" class="text-cyan-400 hover:text-cyan-300" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button @onclick="() => ExcluirEquipamento(equipamento)" class="text-red-400 hover:text-red-300" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     }

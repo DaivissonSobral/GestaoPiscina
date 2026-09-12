@@ -76,7 +76,7 @@
             <div class="sm:hidden divide-y divide-slate-700">
                 @foreach (var piscina in piscinasFiltradas)
                 {
-                    <div @onclick="() => AbrirModalEditar(piscina)" class="flex gap-3 p-4 hover:bg-slate-700/50 cursor-pointer">
+                    <div @onclick="() => AbrirModalEditar(piscina)" class="flex gap-4 p-4 hover:bg-slate-700/50 cursor-pointer">
                         <div class="flex-1 min-w-0 space-y-1">
                             <div class="flex items-start justify-between gap-2">
                                 <div class="min-w-0">
@@ -93,7 +93,7 @@
                             </div>
                             <div class="text-xs text-slate-400">@(DescricaoRecorrencia(piscina) ?? "Não se repete")</div>
                         </div>
-                        <div class="flex flex-col gap-3 items-center shrink-0 pt-1" @onclick:stopPropagation="true">
+                        <div class="flex flex-col gap-3 items-center shrink-0 pt-1 pl-3 border-l border-slate-700" @onclick:stopPropagation="true">
                             <button @onclick="() => AbrirModalEditar(piscina)" class="text-cyan-400 hover:text-cyan-300" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </button>
