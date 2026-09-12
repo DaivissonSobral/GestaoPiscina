@@ -6,7 +6,49 @@
 
 <section class="p-4 space-y-6">
     <div class="bg-slate-800 rounded-xl p-4 space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        @if (clienteSelecionadoId > 0)
+        {
+            <button @onclick="() => AbrirNovaMovimentacao(null)" class="sm:hidden w-full bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors whitespace-nowrap">
+                <i class="fas fa-plus mr-2"></i>Nova Movimentação
+            </button>
+        }
+
+        <!-- Celular: só 2 linhas — Cliente + Nível na primeira; Buscar (flexível) + as duas
+             datas (largura mínima, lado a lado) na segunda -->
+        <div class="sm:hidden space-y-2">
+            <div class="grid grid-cols-2 gap-2">
+                <div class="space-y-1">
+                    <label class="block text-sm font-medium text-slate-300">Cliente</label>
+                    <select @bind="clienteSelecionadoId" @bind:after="CarregarEstoque" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-2 py-2 text-slate-100">
+                        <option value="0">Todos os clientes</option>
+                        @if (clientes != null)
+                        {
+                            @foreach (var cliente in clientes)
+                            {
+                                <option value="@cliente.IDCliente">@cliente.Nome</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-sm font-medium text-slate-300">Nível de estoque</label>
+                    <select @bind="filtroNivel" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-2 py-2 text-slate-100">
+                        <option value="">Todos os níveis</option>
+                        <option value="baixo">Abaixo do mínimo</option>
+                        <option value="ok">Acima do mínimo</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar produto ou cliente..." class="flex-1 min-w-0 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                <input type="date" @bind="filtroDataDe" title="Última movimentação de" class="w-36 shrink-0 bg-slate-700 border border-slate-600 rounded-lg px-2 py-2 text-slate-100" />
+                <input type="date" @bind="filtroDataAte" title="Última movimentação até" class="w-36 shrink-0 bg-slate-700 border border-slate-600 rounded-lg px-2 py-2 text-slate-100" />
+            </div>
+        </div>
+
+        <!-- Tablet/desktop: layout original, com os campos se redistribuindo em 1/2/4
+             colunas conforme a largura disponível -->
+        <div class="hidden sm:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="space-y-1">
                 <label class="block text-sm font-medium text-slate-300">Cliente</label>
                 <select @bind="clienteSelecionadoId" @bind:after="CarregarEstoque" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
@@ -41,7 +83,7 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-4">
+        <div class="hidden sm:flex items-center gap-4">
             @if (clienteSelecionadoId > 0)
             {
                 <button @onclick="() => AbrirNovaMovimentacao(null)" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors whitespace-nowrap">
