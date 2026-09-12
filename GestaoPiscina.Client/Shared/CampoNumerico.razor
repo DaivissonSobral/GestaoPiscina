@@ -3,25 +3,14 @@
 <div>
     <div class="flex items-center justify-between mb-2">
         <label class="text-sm font-medium text-slate-300">@Label</label>
-        <div class="flex items-center gap-3">
-            @if (!string.IsNullOrEmpty(Info))
-            {
-                <span class="text-xs text-slate-400">@Info</span>
-            }
-            <button type="button" @onclick="AlternarModo" class="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1">
-                <i class="fas @(editandoManualmente ? "fa-sliders-h" : "fa-keyboard")"></i>
-                @(editandoManualmente ? "Usar controle deslizante" : "Digitar valor")
-            </button>
-        </div>
+        @if (!string.IsNullOrEmpty(Info))
+        {
+            <span class="text-xs text-slate-400">@Info</span>
+        }
     </div>
 
     <div class="bg-slate-700 border border-slate-600 rounded-lg px-4 py-3">
-        <div class="text-center text-3xl font-bold text-slate-100">
-            @Value.ToString("0.##", CultureInfo.InvariantCulture)@(string.IsNullOrEmpty(Unidade) ? "" : " " + Unidade)
-        </div>
-
-        @if (editandoManualmente)
-        {
+        <div class="flex items-center gap-3">
             <input type="number"
                    inputmode="decimal"
                    step="@Step.ToString(CultureInfo.InvariantCulture)"
@@ -29,22 +18,23 @@
                    max="@Max.ToString(CultureInfo.InvariantCulture)"
                    value="@Value.ToString(CultureInfo.InvariantCulture)"
                    @onchange="OnAlterado"
-                   class="campo-numerico-input w-full appearance-none text-center text-lg bg-slate-800 border border-slate-600 rounded-md py-2 text-slate-100 mt-3 focus:outline-none focus:border-cyan-500" />
-        }
-        else
-        {
+                   class="campo-numerico-input w-20 shrink-0 appearance-none text-center text-base font-semibold bg-slate-800 border border-slate-600 rounded-md py-1.5 text-slate-100 focus:outline-none focus:border-cyan-500" />
+            @if (!string.IsNullOrEmpty(Unidade))
+            {
+                <span class="text-sm text-slate-400 shrink-0">@Unidade</span>
+            }
             <input type="range"
                    min="@Min.ToString(CultureInfo.InvariantCulture)"
                    max="@Max.ToString(CultureInfo.InvariantCulture)"
                    step="@Step.ToString(CultureInfo.InvariantCulture)"
                    value="@Value.ToString(CultureInfo.InvariantCulture)"
                    @oninput="OnAlterado"
-                   class="campo-numerico-slider w-full mt-3" />
-            <div class="flex justify-between text-[11px] text-slate-500 mt-1">
-                <span>@Min.ToString("0.##", CultureInfo.InvariantCulture)</span>
-                <span>@Max.ToString("0.##", CultureInfo.InvariantCulture)</span>
-            </div>
-        }
+                   class="campo-numerico-slider flex-1" />
+        </div>
+        <div class="flex justify-between text-[11px] text-slate-500 mt-1">
+            <span>@Min.ToString("0.##", CultureInfo.InvariantCulture)</span>
+            <span>@Max.ToString("0.##", CultureInfo.InvariantCulture)</span>
+        </div>
     </div>
 </div>
 
@@ -57,13 +47,6 @@
     [Parameter] public decimal Max { get; set; } = 100m;
     [Parameter] public string? Unidade { get; set; }
     [Parameter] public string? Info { get; set; }
-
-    private bool editandoManualmente;
-
-    private void AlternarModo()
-    {
-        editandoManualmente = !editandoManualmente;
-    }
 
     private Task OnAlterado(ChangeEventArgs e)
     {
