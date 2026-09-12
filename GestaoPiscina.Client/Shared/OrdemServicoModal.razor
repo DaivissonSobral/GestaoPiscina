@@ -1,8 +1,8 @@
 @using GestaoPiscina.Client.Models
 
 <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 @(IsVisible ? "" : "hidden")">
-    <div class="bg-slate-800 rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-4 gap-3">
+    <div class="bg-slate-800 rounded-xl w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
+        <div class="flex justify-between items-center p-6 pb-4 gap-3 shrink-0">
             <h3 class="text-lg font-semibold text-slate-100">
                 @(OrdemDeServico.IDOS > 0 ? "Editar Ordem de Serviço" : "Nova Ordem de Serviço")
             </h3>
@@ -21,162 +21,198 @@
             </div>
         </div>
 
-        <EditForm Model="OrdemDeServico" OnValidSubmit="HandleSubmit">
+        <EditForm Model="OrdemDeServico" OnValidSubmit="HandleSubmit" OnInvalidSubmit="HandleInvalidSubmit" class="flex flex-col flex-1 min-h-0">
             <DataAnnotationsValidator />
-            <ValidationMessage For="@(() => OrdemDeServico.Status)" />
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Cliente</label>
-                    <select value="@clienteSelecionadoId" @onchange="OnClienteMudou" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-                        <option value="0">Selecione um cliente...</option>
-                        @foreach (var cliente in ClientesDisponiveis)
-                        {
-                            <option value="@cliente.IDCliente">@cliente.Nome</option>
-                        }
-                    </select>
-                </div>
+            <div class="flex-1 overflow-y-auto px-6 space-y-3">
+                <ValidationMessage For="@(() => OrdemDeServico.Status)" />
 
-                <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Piscina</label>
-                    <InputSelect @bind-Value="OrdemDeServico.IDPiscina" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-                        <option value="0">Selecione uma piscina...</option>
-                        @foreach (var piscina in PiscinasDoCliente)
-                        {
-                            <option value="@piscina.IDPiscina">@piscina.Tipo (@piscina.VolumeLitros L)</option>
-                        }
-                    </InputSelect>
-                    <ValidationMessage For="@(() => OrdemDeServico.IDPiscina)" />
-                </div>
+                <div class="border border-slate-700 rounded-lg overflow-hidden">
+                    <button type="button" @onclick="() => secaoDadosAberta = !secaoDadosAberta" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
+                        <span class="text-sm font-semibold text-slate-200"><i class="fas fa-clipboard-list mr-2 text-cyan-400"></i>Dados Gerais</span>
+                        <i class="fas @(secaoDadosAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                    </button>
+                    @if (secaoDadosAberta)
+                    {
+                        <div class="p-4 space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">Cliente</label>
+                                    <select value="@clienteSelecionadoId" @onchange="OnClienteMudou" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                                        <option value="0">Selecione um cliente...</option>
+                                        @foreach (var cliente in ClientesDisponiveis)
+                                        {
+                                            <option value="@cliente.IDCliente">@cliente.Nome</option>
+                                        }
+                                    </select>
+                                </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Data de Execução</label>
-                    <InputDate @bind-Value="OrdemDeServico.DataExecucao" @bind-Value:after="OnDataExecucaoAlterada" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
-                    <ValidationMessage For="@(() => OrdemDeServico.DataExecucao)" />
-                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">Piscina</label>
+                                    <InputSelect @bind-Value="OrdemDeServico.IDPiscina" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                                        <option value="0">Selecione uma piscina...</option>
+                                        @foreach (var piscina in PiscinasDoCliente)
+                                        {
+                                            <option value="@piscina.IDPiscina">@piscina.Tipo (@piscina.VolumeLitros L)</option>
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => OrdemDeServico.IDPiscina)" />
+                                </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Técnico Responsável</label>
-                    <InputSelect @bind-Value="OrdemDeServico.IDUsuario" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-                        <option value="0">Selecione...</option>
-                        @if (Tecnicos != null)
-                        {
-                            @foreach (var tecnico in Tecnicos)
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">Data de Execução</label>
+                                    <InputDate @bind-Value="OrdemDeServico.DataExecucao" @bind-Value:after="OnDataExecucaoAlterada" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+                                    <ValidationMessage For="@(() => OrdemDeServico.DataExecucao)" />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">Técnico Responsável</label>
+                                    <InputSelect @bind-Value="OrdemDeServico.IDUsuario" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                                        <option value="0">Selecione...</option>
+                                        @if (Tecnicos != null)
+                                        {
+                                            @foreach (var tecnico in Tecnicos)
+                                            {
+                                                <option value="@tecnico.IDUsuario">@tecnico.Nome</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => OrdemDeServico.IDUsuario)" />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">Horário de Início</label>
+                                    <InputDate Type="InputDateType.Time" @bind-Value="HoraInicioTime" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">
+                                        Horário de Término
+                                        @if (!PermiteEditarHoraTermino)
+                                        {
+                                            <span class="text-xs text-slate-500 font-normal">(preenchido ao finalizar ou registrar ocorrência)</span>
+                                        }
+                                    </label>
+                                    <InputDate Type="InputDateType.Time" @bind-Value="HoraTerminoTime" disabled="@(!PermiteEditarHoraTermino)" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 disabled:opacity-50" />
+                                    <ValidationMessage For="@(() => OrdemDeServico.HoraTermino)" />
+                                </div>
+                            </div>
+
+                            @if (OrdemDeServico.Status == "Ocorrência")
                             {
-                                <option value="@tecnico.IDUsuario">@tecnico.Nome</option>
+                                <div class="bg-purple-950/30 border border-purple-800 rounded-lg p-4 space-y-4">
+                                    <h4 class="text-sm font-semibold text-purple-300">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i>Ocorrência
+                                    </h4>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-300 mb-2">Aprovador (obrigatório)</label>
+                                        <InputSelect @bind-Value="OrdemDeServico.Aprovador" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                                            <option value="">Selecione...</option>
+                                            @if (Aprovadores != null)
+                                            {
+                                                @foreach (var aprovador in Aprovadores)
+                                                {
+                                                    <option value="@aprovador.IDUsuario">@aprovador.Nome</option>
+                                                }
+                                            }
+                                        </InputSelect>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-300 mb-2">Descrição da Ocorrência</label>
+                                        <InputTextArea @bind-Value="OrdemDeServico.Observacoes" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" rows="4" placeholder="Descreva o que aconteceu..." />
+                                        <ValidationMessage For="@(() => OrdemDeServico.Observacoes)" />
+                                    </div>
+
+                                    <UploadFotos Label="Foto da Ocorrência" @bind-Urls="OrdemDeServico.FotosOcorrencias" />
+                                </div>
                             }
-                        }
-                    </InputSelect>
-                    <ValidationMessage For="@(() => OrdemDeServico.IDUsuario)" />
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Horário de Início</label>
-                    <InputDate Type="InputDateType.Time" @bind-Value="HoraInicioTime" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">
-                        Horário de Término
-                        @if (!PermiteEditarHoraTermino)
-                        {
-                            <span class="text-xs text-slate-500 font-normal">(preenchido ao finalizar ou registrar ocorrência)</span>
-                        }
-                    </label>
-                    <InputDate Type="InputDateType.Time" @bind-Value="HoraTerminoTime" disabled="@(!PermiteEditarHoraTermino)" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 disabled:opacity-50" />
-                    <ValidationMessage For="@(() => OrdemDeServico.HoraTermino)" />
-                </div>
-
-                <CampoNumerico Label="pH" @bind-Value="OrdemDeServico.pH" Step="0.1m" Min="0m" Max="14m" />
-
-                <CampoNumerico Label="Alcalinidade" Unidade="ppm" @bind-Value="OrdemDeServico.Alcalinidade" Step="10m" Min="0m" Max="300m" />
-
-                <CampoNumerico Label="Cloro Livre" Unidade="ppm" @bind-Value="OrdemDeServico.CloroLivre" Step="0.5m" Min="0m" Max="10m" />
-
-                <CampoNumerico Label="Dureza Cálcica" Unidade="ppm" @bind-Value="OrdemDeServico.DurezaCalcica" Step="10m" Min="0m" Max="800m" />
-
-                <div class="flex items-center space-x-4">
-                    <div class="flex items-center">
-                        <InputCheckbox @bind-Value="OrdemDeServico.ChecklistConcluido" class="mr-2" />
-                        <label class="text-sm font-medium text-slate-300">Checklist Concluído</label>
-                    </div>
-                    <div class="flex items-center">
-                        <InputCheckbox @bind-Value="OrdemDeServico.RelatorioGerado" class="mr-2" />
-                        <label class="text-sm font-medium text-slate-300">Relatório Gerado</label>
-                    </div>
-                </div>
-            </div>
-
-            @if (OrdemDeServico.Status == "Ocorrência")
-            {
-                <div class="mt-4 bg-purple-950/30 border border-purple-800 rounded-lg p-4 space-y-4">
-                    <h4 class="text-sm font-semibold text-purple-300">
-                        <i class="fas fa-exclamation-triangle mr-1"></i>Ocorrência
-                    </h4>
-
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Aprovador (obrigatório)</label>
-                        <InputSelect @bind-Value="OrdemDeServico.Aprovador" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-                            <option value="">Selecione...</option>
-                            @if (Aprovadores != null)
+                            else
                             {
-                                @foreach (var aprovador in Aprovadores)
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">Observações</label>
+                                    <InputTextArea @bind-Value="OrdemDeServico.Observacoes" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" rows="4" placeholder="Descreva detalhes da ordem de serviço..." />
+                                    <ValidationMessage For="@(() => OrdemDeServico.Observacoes)" />
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="border border-slate-700 rounded-lg overflow-hidden">
+                    <button type="button" @onclick="() => secaoAguaAberta = !secaoAguaAberta" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
+                        <span class="text-sm font-semibold text-slate-200"><i class="fas fa-tint mr-2 text-cyan-400"></i>Parâmetros da Água</span>
+                        <i class="fas @(secaoAguaAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                    </button>
+                    @if (secaoAguaAberta)
+                    {
+                        <div class="p-4 space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <CampoNumerico Label="pH" @bind-Value="OrdemDeServico.pH" Step="0.1m" Min="0m" Max="14m" />
+                                <CampoNumerico Label="Alcalinidade" Unidade="ppm" @bind-Value="OrdemDeServico.Alcalinidade" Step="10m" Min="0m" Max="300m" />
+                                <CampoNumerico Label="Cloro Livre" Unidade="ppm" @bind-Value="OrdemDeServico.CloroLivre" Step="0.5m" Min="0m" Max="10m" />
+                                <CampoNumerico Label="Dureza Cálcica" Unidade="ppm" @bind-Value="OrdemDeServico.DurezaCalcica" Step="10m" Min="0m" Max="800m" />
+                            </div>
+
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center">
+                                    <InputCheckbox @bind-Value="OrdemDeServico.ChecklistConcluido" class="mr-2" />
+                                    <label class="text-sm font-medium text-slate-300">Checklist Concluído</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <InputCheckbox @bind-Value="OrdemDeServico.RelatorioGerado" class="mr-2" />
+                                    <label class="text-sm font-medium text-slate-300">Relatório Gerado</label>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="border border-slate-700 rounded-lg overflow-hidden">
+                    <button type="button" @onclick="() => secaoDosagemAberta = !secaoDosagemAberta" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
+                        <span class="text-sm font-semibold text-slate-200"><i class="fas fa-flask mr-2 text-cyan-400"></i>Dosagem de Produtos</span>
+                        <i class="fas @(secaoDosagemAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                    </button>
+                    @if (secaoDosagemAberta)
+                    {
+                        <div class="p-4">
+                            @if (OrdemDeServico.IDOS > 0)
+                            {
+                                <DosagemForm OsId="OrdemDeServico.IDOS" ClienteId="ClienteIdDaOS" />
+                            }
+                            else
+                            {
+                                <p class="text-sm text-amber-400">
+                                    <i class="fas fa-info-circle mr-1"></i>Salve a OS com os parâmetros da água primeiro para registrar a dosagem de produtos.
+                                </p>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="border border-slate-700 rounded-lg overflow-hidden">
+                    <button type="button" @onclick="() => secaoFotosAberta = !secaoFotosAberta" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
+                        <span class="text-sm font-semibold text-slate-200"><i class="fas fa-camera mr-2 text-cyan-400"></i>Fotos</span>
+                        <i class="fas @(secaoFotosAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                    </button>
+                    @if (secaoFotosAberta)
+                    {
+                        <div class="p-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <UploadFotos Label="Fotos Antes" @bind-Urls="OrdemDeServico.FotosAntes" />
+                                <UploadFotos Label="Fotos Depois" @bind-Urls="OrdemDeServico.FotosDepois" />
+                                @if (OrdemDeServico.Status != "Ocorrência" && !string.IsNullOrEmpty(OrdemDeServico.FotosOcorrencias))
                                 {
-                                    <option value="@aprovador.IDUsuario">@aprovador.Nome</option>
+                                    <UploadFotos Label="Fotos da Ocorrência" @bind-Urls="OrdemDeServico.FotosOcorrencias" />
                                 }
-                            }
-                        </InputSelect>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Descrição da Ocorrência</label>
-                        <InputTextArea @bind-Value="OrdemDeServico.Observacoes" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" rows="4" placeholder="Descreva o que aconteceu..." />
-                        <ValidationMessage For="@(() => OrdemDeServico.Observacoes)" />
-                    </div>
-
-                    <UploadFotos Label="Foto da Ocorrência" @bind-Urls="OrdemDeServico.FotosOcorrencias" />
+                            </div>
+                        </div>
+                    }
                 </div>
-            }
-            else
-            {
-                <div class="mt-4">
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Observações</label>
-                    <InputTextArea @bind-Value="OrdemDeServico.Observacoes" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" rows="4" placeholder="Descreva detalhes da ordem de serviço..." />
-                    <ValidationMessage For="@(() => OrdemDeServico.Observacoes)" />
-                </div>
-            }
-
-            <div class="mt-6">
-                @if (OrdemDeServico.IDOS > 0)
-                {
-                    <DosagemForm OsId="OrdemDeServico.IDOS" ClienteId="ClienteIdDaOS" />
-                }
-                else
-                {
-                    <p class="text-sm text-amber-400">
-                        <i class="fas fa-info-circle mr-1"></i>Salve a OS com os parâmetros da água primeiro para registrar a dosagem de produtos.
-                    </p>
-                }
             </div>
 
-            <hr class="border-slate-700 my-6" />
-
-            <div class="mt-4">
-                <UploadFotos Label="Fotos Antes" @bind-Urls="OrdemDeServico.FotosAntes" />
-            </div>
-
-            <div class="mt-4">
-                <UploadFotos Label="Fotos Depois" @bind-Urls="OrdemDeServico.FotosDepois" />
-            </div>
-
-            @if (OrdemDeServico.Status != "Ocorrência" && !string.IsNullOrEmpty(OrdemDeServico.FotosOcorrencias))
-            {
-                <div class="mt-4">
-                    <UploadFotos Label="Fotos da Ocorrência" @bind-Urls="OrdemDeServico.FotosOcorrencias" />
-                </div>
-            }
-
-            <div class="flex space-x-3 mt-6">
+            <div class="flex space-x-3 p-6 pt-4 border-t border-slate-700 shrink-0">
                 <button type="submit" class="flex-1 bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
                     <i class="fas fa-save mr-2"></i>Salvar
                 </button>
@@ -204,6 +240,13 @@
 
     private int clienteSelecionadoId;
     private DateTime dataExecucaoOriginal;
+
+    // Seções do acordeão — "Dados Gerais" começa aberta (é onde ficam quase todos os
+    // campos obrigatórios); as demais começam fechadas para reduzir a rolagem inicial.
+    private bool secaoDadosAberta = true;
+    private bool secaoAguaAberta = false;
+    private bool secaoDosagemAberta = false;
+    private bool secaoFotosAberta = false;
 
     private IEnumerable<Cliente> ClientesDisponiveis =>
         (Piscinas ?? new List<Piscina>())
@@ -300,6 +343,12 @@
 
         ordemInicializada = OrdemDeServico;
 
+        // Toda OS aberta começa só com "Dados Gerais" expandida.
+        secaoDadosAberta = true;
+        secaoAguaAberta = false;
+        secaoDosagemAberta = false;
+        secaoFotosAberta = false;
+
         if (OrdemDeServico.DataExecucao == default)
         {
             OrdemDeServico.DataExecucao = DateTime.Today;
@@ -339,5 +388,13 @@
         {
             await Close();
         }
+    }
+
+    // A maioria dos campos com validação (Piscina, Técnico, Status/Observações, horários)
+    // mora em "Dados Gerais" — se o Salvar falhar por validação, garante que essa seção
+    // esteja visível para o usuário ver a mensagem, mesmo se ele tiver fechado o acordeão.
+    private void HandleInvalidSubmit()
+    {
+        secaoDadosAberta = true;
     }
 }
