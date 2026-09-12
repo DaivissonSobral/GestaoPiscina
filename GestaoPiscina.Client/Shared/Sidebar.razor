@@ -6,7 +6,7 @@
     <div class="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden" @onclick="() => MainLayout.CloseMobileMenu()"></div>
 }
 
-<aside class="w-64 bg-slate-900 p-6 flex-col min-h-screen border-r border-slate-800 fixed md:static inset-y-0 left-0 z-40 overflow-y-auto md:flex @(MainLayout?.MobileMenuOpen == true ? "flex" : "hidden")">
+<aside class="w-64 shrink-0 bg-slate-900 p-6 flex-col min-h-screen border-r border-slate-800 fixed md:static inset-y-0 left-0 z-40 overflow-y-auto md:flex @(MainLayout?.MobileMenuOpen == true ? "flex" : "hidden")">
     <div class="flex items-center justify-center mb-10">
         <img src="images/logo-fort-piscina.png" alt="Fort Piscina" class="max-w-full h-auto" />
     </div>
