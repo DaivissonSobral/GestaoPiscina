@@ -121,7 +121,11 @@
                 <div class="bg-slate-700 rounded-lg p-4">
                     <h4 class="text-md font-semibold text-slate-200 mb-3">Checklist</h4>
                     <div class="space-y-2">
-                        @foreach (var item in ChecklistOS.ItensFixos)
+                        @if (!ChecklistItensAplicaveis.Any())
+                        {
+                            <p class="text-sm text-slate-500">Nenhum item de checklist obrigatório para este tipo de cliente/piscina.</p>
+                        }
+                        @foreach (var item in ChecklistItensAplicaveis)
                         {
                             var marcado = ChecklistMarcados.Contains(item.Chave);
                             <div class="flex items-start space-x-2">
@@ -236,6 +240,7 @@
     [Parameter] public bool IsVisible { get; set; }
     [Parameter] public OrdemDeServico OrdemDeServico { get; set; } = new OrdemDeServico();
     [Parameter] public List<Usuario>? Aprovadores { get; set; }
+    [Parameter] public List<ChecklistItemDefinicao>? ChecklistItensDisponiveis { get; set; }
     [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
     [Parameter] public EventCallback<OrdemDeServico> OnEdit { get; set; }
 
@@ -243,6 +248,13 @@
     private bool eraVisivel;
 
     private HashSet<string> ChecklistMarcados => ChecklistOS.ItensMarcados(OrdemDeServico.ChecklistItens);
+
+    // Mesma regra do formulário de edição: só mostra os itens que se aplicam ao tipo
+    // de cliente/piscina desta OS específica.
+    private IEnumerable<ChecklistItemDefinicao> ChecklistItensAplicaveis =>
+        (ChecklistItensDisponiveis ?? new List<ChecklistItemDefinicao>())
+            .Where(i => i.Ativo && i.AplicaSe(OrdemDeServico.Piscina?.Cliente?.Tipo, OrdemDeServico.Piscina?.Tipo))
+            .OrderBy(i => i.Ordem);
 
     private string TextoDosagemAplicada =>
         ChecklistOS.TextoDosagemAplicada(ChecklistOS.NomePiscina(OrdemDeServico.Piscina?.Tipo), dosagensAtuais);

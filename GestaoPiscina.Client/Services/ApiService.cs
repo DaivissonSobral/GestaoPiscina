@@ -482,6 +482,76 @@ namespace GestaoPiscina.Client.Services
             }
         }
 
+        // Itens de Checklist
+        public async Task<List<ChecklistItemDefinicao>> GetChecklistItensAsync()
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<List<ChecklistItemDefinicao>>($"{_baseUrl}checklistitens") ?? new List<ChecklistItemDefinicao>();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao buscar itens de checklist: {ex.Message}");
+            }
+        }
+
+        public async Task<ChecklistItemDefinicao> CreateChecklistItemAsync(ChecklistItemDefinicao item)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}checklistitens", item);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+
+                var criado = await response.Content.ReadFromJsonAsync<ChecklistItemDefinicao>();
+                return criado ?? item;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao criar item de checklist: {ex.Message}");
+            }
+        }
+
+        public async Task UpdateChecklistItemAsync(ChecklistItemDefinicao item)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}checklistitens/{item.IDChecklistItem}", item);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao atualizar item de checklist: {ex.Message}");
+            }
+        }
+
+        public async Task DeleteChecklistItemAsync(int id)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{_baseUrl}checklistitens/{id}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao excluir item de checklist: {ex.Message}");
+            }
+        }
+
         // Estoque
         public async Task<List<EstoqueCliente>> GetEstoqueAsync()
         {

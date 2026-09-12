@@ -1,0 +1,250 @@
+@page "/checklist-itens"
+@using GestaoPiscina.Client.Services
+@using GestaoPiscina.Client.Models
+@using GestaoPiscina.Client.Shared
+@inject ApiService ApiService
+
+<section class="p-4 space-y-6">
+    <div>
+        <button @onclick="AbrirModalNovo" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
+            <i class="fas fa-plus mr-2"></i>Novo Item
+        </button>
+    </div>
+
+    <div class="flex space-x-2">
+        <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar itens..." class="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+    </div>
+
+    @if (carregando)
+    {
+        <LoadingSpinner IsVisible="true" Message="Carregando itens de checklist..." />
+    }
+    else if (itensFiltrados.Any())
+    {
+        <div class="bg-slate-800 rounded-xl overflow-hidden">
+            <!-- Desktop: tabela tradicional (>= sm) -->
+            <div class="hidden sm:block overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-slate-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Texto</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Obrigatório para</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700">
+                        @foreach (var item in itensFiltrados)
+                        {
+                            <tr @onclick="() => AbrirModalEditar(item)" class="hover:bg-slate-700 cursor-pointer">
+                                <td class="px-6 py-4 text-sm font-medium text-slate-100 max-w-md">@item.Texto</td>
+                                <td class="px-6 py-4 text-sm text-slate-300">@TextoObrigatoriedade(item)</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="@(item.Ativo ? "bg-green-100 text-green-800" : "bg-slate-600 text-slate-300") px-2 py-1 text-xs font-semibold rounded-full">
+                                        @(item.Ativo ? "Ativo" : "Inativo")
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" @onclick:stopPropagation="true">
+                                    <button @onclick="() => AbrirModalEditar(item)" class="text-cyan-400 hover:text-cyan-300 mr-3" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button @onclick="() => ExcluirItem(item)" class="text-red-400 hover:text-red-300" title="Excluir">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Celular: cards com a coluna de ações sempre visível à direita -->
+            <div class="sm:hidden divide-y divide-slate-700">
+                @foreach (var item in itensFiltrados)
+                {
+                    <div @onclick="() => AbrirModalEditar(item)" class="flex gap-4 p-4 hover:bg-slate-700/50 cursor-pointer">
+                        <div class="flex-1 min-w-0 space-y-1">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="text-sm font-medium text-slate-100">@item.Texto</div>
+                                <span class="@(item.Ativo ? "bg-green-100 text-green-800" : "bg-slate-600 text-slate-300") px-2 py-0.5 text-xs font-semibold rounded-full shrink-0">
+                                    @(item.Ativo ? "Ativo" : "Inativo")
+                                </span>
+                            </div>
+                            <div class="text-xs text-slate-400">@TextoObrigatoriedade(item)</div>
+                        </div>
+                        <div class="flex flex-col gap-3 items-center shrink-0 pt-1 pl-3 border-l border-slate-700" @onclick:stopPropagation="true">
+                            <button @onclick="() => AbrirModalEditar(item)" class="text-cyan-400 hover:text-cyan-300" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button @onclick="() => ExcluirItem(item)" class="text-red-400 hover:text-red-300" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="bg-slate-800 rounded-xl p-8 text-center">
+            <i class="fas fa-clipboard-check text-4xl text-slate-600 mb-4"></i>
+            <h4 class="text-lg font-medium text-slate-300 mb-2">Nenhum item de checklist cadastrado</h4>
+            <p class="text-slate-400">Clique em "Novo Item" para adicionar.</p>
+        </div>
+    }
+</section>
+
+<ChecklistItemModal @bind-IsVisible="modalVisible"
+                     Item="itemSelecionado"
+                     OnSave="SalvarItem" />
+
+<ConfirmDialog @bind-IsVisible="confirmacaoExclusaoVisible"
+               Title="Confirmar Exclusão"
+               Message="Tem certeza que deseja excluir este item de checklist?"
+               ConfirmText="Excluir"
+               OnConfirm="ConfirmarExclusao" />
+
+<Toast @bind-IsVisible="toastVisible"
+       Title="Notificação"
+       Message="@mensagemToast"
+       Type="@tipoToast" />
+
+@code {
+    private List<ChecklistItemDefinicao>? itens;
+    private ChecklistItemDefinicao itemSelecionado = new ChecklistItemDefinicao();
+    private ChecklistItemDefinicao? itemParaExcluir;
+    private bool modalVisible = false;
+    private bool confirmacaoExclusaoVisible = false;
+    private bool carregando = true;
+    private string termoBusca = "";
+    private bool toastVisible = false;
+    private string mensagemToast = "";
+    private string tipoToast = "success";
+
+    private static readonly Dictionary<string, string> RotulosTipoPiscina = new()
+    {
+        ["adulto"] = "Adulto",
+        ["infantil"] = "Infantil",
+        ["espelho"] = "Espelho d'água"
+    };
+
+    private IEnumerable<ChecklistItemDefinicao> itensFiltrados => itens?.Where(i =>
+        string.IsNullOrEmpty(termoBusca) || i.Texto.Contains(termoBusca, StringComparison.OrdinalIgnoreCase)
+    ) ?? Enumerable.Empty<ChecklistItemDefinicao>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarDados();
+    }
+
+    private async Task CarregarDados()
+    {
+        try
+        {
+            carregando = true;
+            itens = await ApiService.GetChecklistItensAsync();
+        }
+        catch (Exception ex)
+        {
+            MostrarNotificacao("Erro", $"Erro ao carregar itens de checklist: {ex.Message}", "error");
+            itens = new List<ChecklistItemDefinicao>();
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    private string TextoObrigatoriedade(ChecklistItemDefinicao item)
+    {
+        var partes = new List<string>();
+        if (item.TiposClienteList.Any())
+        {
+            partes.Add(string.Join(", ", item.TiposClienteList));
+        }
+        if (item.TiposPiscinaList.Any())
+        {
+            partes.Add(string.Join(", ", item.TiposPiscinaList.Select(t => RotulosTipoPiscina.GetValueOrDefault(t, t))));
+        }
+        return partes.Any() ? string.Join(" · ", partes) : "Nunca obrigatório";
+    }
+
+    private void AbrirModalNovo()
+    {
+        itemSelecionado = new ChecklistItemDefinicao { Ativo = true };
+        modalVisible = true;
+    }
+
+    private void AbrirModalEditar(ChecklistItemDefinicao item)
+    {
+        itemSelecionado = new ChecklistItemDefinicao
+        {
+            IDChecklistItem = item.IDChecklistItem,
+            Chave = item.Chave,
+            Texto = item.Texto,
+            Ordem = item.Ordem,
+            Ativo = item.Ativo,
+            TiposClienteObrigatorio = item.TiposClienteObrigatorio,
+            TiposPiscinaObrigatorio = item.TiposPiscinaObrigatorio
+        };
+        modalVisible = true;
+    }
+
+    private async Task SalvarItem(ChecklistItemDefinicao item)
+    {
+        try
+        {
+            if (item.IDChecklistItem == 0)
+            {
+                await ApiService.CreateChecklistItemAsync(item);
+                MostrarNotificacao("Sucesso", "Item de checklist criado com sucesso!", "success");
+            }
+            else
+            {
+                await ApiService.UpdateChecklistItemAsync(item);
+                MostrarNotificacao("Sucesso", "Item de checklist atualizado com sucesso!", "success");
+            }
+
+            await CarregarDados();
+        }
+        catch (Exception ex)
+        {
+            MostrarNotificacao("Erro", $"Erro ao salvar item de checklist: {ex.Message}", "error");
+        }
+    }
+
+    private void ExcluirItem(ChecklistItemDefinicao item)
+    {
+        itemParaExcluir = item;
+        confirmacaoExclusaoVisible = true;
+    }
+
+    private async Task ConfirmarExclusao()
+    {
+        if (itemParaExcluir != null)
+        {
+            try
+            {
+                await ApiService.DeleteChecklistItemAsync(itemParaExcluir.IDChecklistItem);
+                MostrarNotificacao("Sucesso", "Item de checklist excluído com sucesso!", "success");
+                await CarregarDados();
+            }
+            catch (Exception ex)
+            {
+                MostrarNotificacao("Erro", $"Erro ao excluir item de checklist: {ex.Message}", "error");
+            }
+            finally
+            {
+                itemParaExcluir = null;
+            }
+        }
+    }
+
+    private void MostrarNotificacao(string titulo, string mensagem, string tipo)
+    {
+        mensagemToast = mensagem;
+        tipoToast = tipo;
+        toastVisible = true;
+    }
+}

@@ -201,12 +201,14 @@
                    Piscinas="piscinas"
                    Tecnicos="tecnicos"
                    Aprovadores="quimicos"
+                   ChecklistItensDisponiveis="checklistItens"
                    OnSave="SalvarOS"
                    OnSalvo="AbrirDetalhesAposSalvar" />
 
 <OrdemServicoDetalhes @bind-IsVisible="modalDetalhesVisible"
                       OrdemDeServico="osSelecionada"
                       Aprovadores="quimicos"
+                      ChecklistItensDisponiveis="checklistItens"
                       OnEdit="EditarOS" />
 
 <GerarOSModal @bind-IsVisible="modalGerarOSVisible"
@@ -229,6 +231,7 @@
     private List<Piscina>? piscinas;
     private List<Usuario>? tecnicos;
     private List<Usuario>? quimicos;
+    private List<ChecklistItemDefinicao>? checklistItens;
     private OrdemDeServico osSelecionada = new OrdemDeServico();
     private bool modalOSVisible = false;
     private bool modalDetalhesVisible = false;
@@ -340,7 +343,8 @@
                 ApiService.GetOrdensDeServicoAsync(),
                 ApiService.GetPiscinasAsync(),
                 ApiService.GetUsuariosAsync("Técnico,Supervisor"),
-                ApiService.GetUsuariosAsync("Química")
+                ApiService.GetUsuariosAsync("Química"),
+                ApiService.GetChecklistItensAsync()
             };
 
             await Task.WhenAll(tasks);
@@ -349,6 +353,7 @@
             piscinas = ((Task<List<Piscina>>)tasks[1]).Result;
             tecnicos = ((Task<List<Usuario>>)tasks[2]).Result;
             quimicos = ((Task<List<Usuario>>)tasks[3]).Result;
+            checklistItens = ((Task<List<ChecklistItemDefinicao>>)tasks[4]).Result;
             // Reaplica os filtros ativos em vez de simplesmente mostrar a lista inteira —
             // sem isso, qualquer recarga (salvar/excluir uma OS, por exemplo) descartava
             // silenciosamente os filtros que o usuário tinha escolhido.
@@ -361,6 +366,7 @@
             piscinas = new List<Piscina>();
             tecnicos = new List<Usuario>();
             quimicos = new List<Usuario>();
+            checklistItens = new List<ChecklistItemDefinicao>();
             ordensFiltradas = new List<OrdemDeServico>();
         }
         finally

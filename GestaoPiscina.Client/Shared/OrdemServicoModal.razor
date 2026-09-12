@@ -52,7 +52,7 @@
 
                                 <div>
                                     <label class="block text-sm font-medium text-slate-300 mb-2">Piscina</label>
-                                    <InputSelect @bind-Value="OrdemDeServico.IDPiscina" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                                    <InputSelect @bind-Value="OrdemDeServico.IDPiscina" @bind-Value:after="AtualizarChecklistConcluido" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
                                         <option value="0">Selecione uma piscina...</option>
                                         @foreach (var piscina in PiscinasDoCliente)
                                         {
@@ -180,7 +180,13 @@
                     @if (secaoChecklistAberta)
                     {
                         <div class="p-4 space-y-3">
-                            @foreach (var item in ChecklistOS.ItensFixos)
+                            @if (!ChecklistItensAplicaveis.Any())
+                            {
+                                <p class="text-sm text-amber-400">
+                                    <i class="fas fa-info-circle mr-1"></i>Nenhum item de checklist obrigatório para este tipo de cliente/piscina.
+                                </p>
+                            }
+                            @foreach (var item in ChecklistItensAplicaveis)
                             {
                                 <div class="flex items-start">
                                     <input type="checkbox" checked="@ItemChecklistMarcado(item.Chave)" @onchange="@(e => AlternarItemChecklist(item.Chave, e))" class="mr-2 mt-1 shrink-0" />
@@ -264,6 +270,7 @@
     [Parameter] public List<Piscina>? Piscinas { get; set; }
     [Parameter] public List<Usuario>? Tecnicos { get; set; }
     [Parameter] public List<Usuario>? Aprovadores { get; set; }
+    [Parameter] public List<ChecklistItemDefinicao>? ChecklistItensDisponiveis { get; set; }
     [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
     [Parameter] public Func<OrdemDeServico, Task<bool>>? OnSave { get; set; }
     [Parameter] public EventCallback<OrdemDeServico> OnSalvo { get; set; }
@@ -272,6 +279,18 @@
         OrdemDeServico.Piscina?.Cliente?.IDCliente
         ?? Piscinas?.FirstOrDefault(p => p.IDPiscina == OrdemDeServico.IDPiscina)?.Cliente?.IDCliente
         ?? 0;
+
+    private Piscina? PiscinaAtual =>
+        OrdemDeServico.Piscina
+        ?? Piscinas?.FirstOrDefault(p => p.IDPiscina == OrdemDeServico.IDPiscina);
+
+    // Só os itens que se aplicam ao tipo de cliente/piscina desta OS específica são
+    // exibidos e exigidos — um item cadastrado para "Uso Coletivo" nunca aparece numa
+    // OS de cliente "Residencial Privativa", por exemplo.
+    private IEnumerable<ChecklistItemDefinicao> ChecklistItensAplicaveis =>
+        (ChecklistItensDisponiveis ?? new List<ChecklistItemDefinicao>())
+            .Where(i => i.Ativo && i.AplicaSe(PiscinaAtual?.Cliente?.Tipo, PiscinaAtual?.Tipo))
+            .OrderBy(i => i.Ordem);
 
     private int clienteSelecionadoId;
     private DateTime dataExecucaoOriginal;
@@ -308,6 +327,7 @@
         {
             clienteSelecionadoId = id;
             OrdemDeServico.IDPiscina = 0;
+            AtualizarChecklistConcluido();
         }
     }
 
@@ -360,7 +380,7 @@
     private void AtualizarChecklistConcluido()
     {
         OrdemDeServico.ChecklistConcluido =
-            ChecklistOS.ItensFixos.All(item => ItemChecklistMarcado(item.Chave)) && dosagensAtuais.Any();
+            ChecklistItensAplicaveis.All(item => ItemChecklistMarcado(item.Chave)) && dosagensAtuais.Any();
     }
 
     private string NomePiscinaAtual()

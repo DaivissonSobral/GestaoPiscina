@@ -22,6 +22,7 @@ namespace GestaoPiscina.Server.Data
         public DbSet<GestorCliente> GestorClientes { get; set; }
         public DbSet<DosagemProduto> DosagensProdutos { get; set; }
         public DbSet<MovimentacaoEstoque> MovimentacoesEstoque { get; set; }
+        public DbSet<ChecklistItem> ChecklistItens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -199,6 +200,16 @@ namespace GestaoPiscina.Server.Data
                     .WithMany(c => c.GestorClientes)
                     .HasForeignKey(e => e.IDCliente)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ChecklistItem>(entity =>
+            {
+                entity.HasKey(e => e.IDChecklistItem);
+                entity.Property(e => e.Chave).IsRequired().HasMaxLength(60);
+                entity.Property(e => e.Texto).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.TiposClienteObrigatorio).HasMaxLength(100);
+                entity.Property(e => e.TiposPiscinaObrigatorio).HasMaxLength(100);
+                entity.HasIndex(e => e.Chave).IsUnique();
             });
         }
     }
