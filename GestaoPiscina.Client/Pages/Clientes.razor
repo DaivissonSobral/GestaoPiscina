@@ -17,23 +17,23 @@
             </button>
         </div>
 
-        <div class="flex justify-between items-center mb-4">
-            <div class="flex space-x-2">
-                <input type="text" @bind="StateService.SearchTerm" @bind:event="oninput" placeholder="Buscar clientes..." class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-                <select @bind="StateService.SelectedType" class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+        <div class="flex justify-between items-start gap-3 mb-4">
+            <div class="grid grid-cols-2 gap-2 w-full sm:flex sm:flex-wrap sm:w-auto min-w-0">
+                <input type="text" @bind="StateService.SearchTerm" @bind:event="oninput" placeholder="Buscar clientes..." class="w-full sm:w-auto sm:flex-1 sm:min-w-[160px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                <select @bind="StateService.SelectedType" class="w-full sm:flex-1 sm:min-w-[160px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
                     <option value="">Todos os Tipos</option>
                     <option value="Residencial Privativa">Residencial Privativa</option>
                     <option value="Uso Coletivo">Uso Coletivo</option>
                 </select>
             </div>
-            
-            <div class="flex space-x-2">
-                <button @onclick="SetListView" 
+
+            <div class="hidden sm:flex space-x-2 shrink-0">
+                <button @onclick="SetListView"
                         class="@GetListViewButtonClass()"
                         title="Lista">
                     <i class="fas fa-list"></i>
                 </button>
-                <button @onclick="SetCardsView" 
+                <button @onclick="SetCardsView"
                         class="@GetCardsViewButtonClass()"
                         title="Cards">
                     <i class="fas fa-th-large"></i>
@@ -92,9 +92,41 @@
         StateService.StateChanged += StateHasChanged;
     }
 
+    // No celular os botões Lista/Cards ficam escondidos (ver classe "hidden sm:flex" no
+    // cabeçalho), então força a visualização em Cards nessa faixa — sem isso o usuário podia
+    // ficar preso na tabela (modo Lista) sem nenhum jeito de trocar de volta pela UI.
+    private DotNetObjectReference<Clientes>? viewportRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            viewportRef = DotNetObjectReference.Create(this);
+            var isMobile = await JSRuntime.InvokeAsync<bool>("gestaoPiscinaViewport.isMobile");
+            if (isMobile && StateService.ViewMode != "cards")
+            {
+                StateService.ViewMode = "cards";
+                StateHasChanged();
+            }
+
+            await JSRuntime.InvokeVoidAsync("gestaoPiscinaViewport.registerMobileChange", viewportRef);
+        }
+    }
+
+    [JSInvokable]
+    public void OnMobileViewportChanged(bool isMobile)
+    {
+        if (isMobile && StateService.ViewMode != "cards")
+        {
+            StateService.ViewMode = "cards";
+            StateHasChanged();
+        }
+    }
+
     public void Dispose()
     {
         StateService.StateChanged -= StateHasChanged;
+        viewportRef?.Dispose();
     }
 
     // Métodos de carregamento de dados
