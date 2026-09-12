@@ -2,6 +2,7 @@
 @using GestaoPiscina.Client.Services
 @using GestaoPiscina.Client.Models
 @using GestaoPiscina.Client.Shared
+@implements IAsyncDisposable
 @inject ApiService ApiService
 @inject IJSRuntime JSRuntime
 
@@ -19,9 +20,9 @@
     </div>
 
     <div class="flex justify-between items-start gap-3 mb-4">
-        <div class="flex flex-wrap gap-2 min-w-0">
-            <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar OS..." class="w-28 sm:w-auto flex-1 sm:min-w-[160px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-            <select @bind="filtroStatus" @bind:event="onchange" class="flex-1 min-w-[120px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+        <div class="grid grid-cols-3 gap-2 w-full sm:flex sm:flex-wrap sm:w-auto min-w-0">
+            <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar OS..." class="w-full sm:w-auto sm:flex-1 sm:min-w-[160px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+            <select @bind="filtroStatus" @bind:event="onchange" class="w-full sm:flex-1 sm:min-w-[120px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
                 <option value="">Todos os Status</option>
                 <option value="Em Aberto">Em Aberto</option>
                 <option value="Em Andamento">Em Andamento</option>
@@ -30,7 +31,7 @@
                 <option value="Reagendada">Reagendada</option>
                 <option value="Cancelada">Cancelada</option>
             </select>
-            <select @bind="filtroData" @bind:event="onchange" class="flex-1 min-w-[120px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+            <select @bind="filtroData" @bind:event="onchange" class="w-full sm:flex-1 sm:min-w-[120px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
                 <option value="">Todas as Datas</option>
                 <option value="hoje">Hoje</option>
                 <option value="semana">Esta Semana</option>
@@ -39,7 +40,7 @@
             </select>
         </div>
 
-        <div class="flex space-x-2 shrink-0">
+        <div class="hidden sm:flex space-x-2 shrink-0">
             <button @onclick="SetListView"
                     class="@GetListViewButtonClass()"
                     title="Lista">
@@ -437,9 +438,46 @@
 
     private string GetCardsViewButtonClass()
     {
-        return viewMode == "cards" 
-            ? "px-3 py-2 rounded-lg transition-colors bg-cyan-600 text-white" 
+        return viewMode == "cards"
+            ? "px-3 py-2 rounded-lg transition-colors bg-cyan-600 text-white"
             : "px-3 py-2 rounded-lg transition-colors bg-slate-700 text-slate-300 hover:bg-slate-600";
+    }
+
+    // No celular os botões Lista/Kanban ficam escondidos (ver classe "hidden sm:flex" no
+    // cabeçalho), então força a visualização em Kanban nessa faixa — sem isso o usuário podia
+    // ficar preso na tabela (modo Lista) sem nenhum jeito de trocar de volta pela UI.
+    private DotNetObjectReference<OrdensServico>? viewportRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            viewportRef = DotNetObjectReference.Create(this);
+            var isMobile = await JSRuntime.InvokeAsync<bool>("gestaoPiscinaViewport.isMobile");
+            if (isMobile && viewMode != "cards")
+            {
+                viewMode = "cards";
+                StateHasChanged();
+            }
+
+            await JSRuntime.InvokeVoidAsync("gestaoPiscinaViewport.registerMobileChange", viewportRef);
+        }
+    }
+
+    [JSInvokable]
+    public void OnMobileViewportChanged(bool isMobile)
+    {
+        if (isMobile && viewMode != "cards")
+        {
+            viewMode = "cards";
+            StateHasChanged();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        viewportRef?.Dispose();
+        await Task.CompletedTask;
     }
 
     private void AbrirModalNovaOS()
