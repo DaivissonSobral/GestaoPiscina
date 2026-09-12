@@ -15,7 +15,7 @@
             <tbody class="divide-y divide-slate-700">
                 @foreach (var cliente in Clientes)
                 {
-                    <tr class="group hover:bg-slate-700">
+                    <tr @onclick="() => OnEdit.InvokeAsync(cliente)" class="group hover:bg-slate-700 cursor-pointer">
                         <td class="px-3 md:px-4 py-3 md:py-4">
                             <div class="flex-1">
                                 <h4 class="text-sm font-medium text-slate-100">@cliente.Nome</h4>
@@ -36,7 +36,7 @@
                         <td class="hidden lg:table-cell px-4 py-4">
                             <div class="text-sm text-slate-300">@cliente.Piscinas.Count piscina(s)</div>
                         </td>
-                        <td class="px-3 md:px-4 py-3 md:py-4 text-sm font-medium sticky right-0 bg-slate-800 group-hover:bg-slate-700 z-10">
+                        <td class="px-3 md:px-4 py-3 md:py-4 text-sm font-medium sticky right-0 bg-slate-800 group-hover:bg-slate-700 z-10" @onclick:stopPropagation="true">
                             <div class="flex space-x-2 md:space-x-3 justify-center">
                                 <button @onclick="() => OnEdit.InvokeAsync(cliente)" class="text-cyan-400 hover:text-cyan-300 p-2 rounded transition-colors" title="Editar">
                                     <i class="fas fa-edit"></i>

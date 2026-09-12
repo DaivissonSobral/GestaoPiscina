@@ -3,14 +3,14 @@
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
     @foreach (var cliente in Clientes)
     {
-        <div class="bg-slate-800 rounded-xl p-4 space-y-3">
+        <div @onclick="() => OnEdit.InvokeAsync(cliente)" class="bg-slate-800 rounded-xl p-4 space-y-3 cursor-pointer hover:bg-slate-700/50 transition-colors">
             <div class="flex justify-between items-start">
                 <div class="flex-1">
                     <h4 class="text-sm font-medium text-slate-100">@cliente.Nome</h4>
                     <span class="text-sm text-slate-400">@cliente.Telefone</span>
                     <span class="text-sm text-slate-400">@cliente.Email</span>
                 </div>
-                <div class="flex space-x-3 ml-4">
+                <div class="flex space-x-3 ml-4" @onclick:stopPropagation="true">
                     <button @onclick="() => OnEdit.InvokeAsync(cliente)" class="text-cyan-400 hover:text-cyan-300 p-2 rounded transition-colors" title="Editar">
                         <i class="fas fa-edit"></i>
                     </button>
