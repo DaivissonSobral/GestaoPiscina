@@ -22,7 +22,8 @@
     else if (produtosFiltrados.Any())
     {
         <div class="bg-slate-800 rounded-xl overflow-hidden">
-            <div class="overflow-x-auto">
+            <!-- Desktop: tabela tradicional (>= sm) -->
+            <div class="hidden sm:block overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-slate-700">
                         <tr>
@@ -35,13 +36,13 @@
                     <tbody class="divide-y divide-slate-700">
                         @foreach (var produto in produtosFiltrados)
                         {
-                            <tr class="hover:bg-slate-700">
+                            <tr @onclick="() => AbrirModalEditar(produto)" class="hover:bg-slate-700 cursor-pointer">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-100">@produto.Nome</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
                                     @(produto.Concentracao.HasValue ? $"{produto.Concentracao}%" : "-")
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">@produto.Unidade</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" @onclick:stopPropagation="true">
                                     <button @onclick="() => AbrirModalEditar(produto)" class="text-cyan-400 hover:text-cyan-300 mr-3" title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </button>
@@ -53,6 +54,31 @@
                         }
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Celular: cards com a coluna de ações sempre visível à direita, em vez de
+                 rolar horizontalmente até sumir como aconteceria numa tabela estreita -->
+            <div class="sm:hidden divide-y divide-slate-700">
+                @foreach (var produto in produtosFiltrados)
+                {
+                    <div @onclick="() => AbrirModalEditar(produto)" class="flex gap-3 p-4 hover:bg-slate-700/50 cursor-pointer">
+                        <div class="flex-1 min-w-0 space-y-1">
+                            <div class="text-sm font-medium text-slate-100 truncate">@produto.Nome</div>
+                            <div class="grid grid-cols-2 gap-x-3 text-sm text-slate-300">
+                                <div>@(produto.Concentracao.HasValue ? $"{produto.Concentracao}%" : "-")</div>
+                                <div class="text-right text-slate-400">@produto.Unidade</div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-3 items-center shrink-0 pt-1" @onclick:stopPropagation="true">
+                            <button @onclick="() => AbrirModalEditar(produto)" class="text-cyan-400 hover:text-cyan-300" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button @onclick="() => ExcluirProduto(produto)" class="text-red-400 hover:text-red-300" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     }
