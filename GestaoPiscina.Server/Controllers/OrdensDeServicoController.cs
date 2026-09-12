@@ -331,7 +331,9 @@ namespace GestaoPiscina.Server.Controllers
                 return "Observações são obrigatórias para cancelar a OS.";
             }
 
-            if (ordemDeServico.HoraTermino < ordemDeServico.HoraInicio)
+            // Fora de Finalizada/Ocorrência, o horário de término não é editável no formulário
+            // e pode carregar um valor antigo (ex.: meia-noite) — não validar contra ele aqui.
+            if (ordemDeServico.Status is "Finalizada" or "Ocorrência" && ordemDeServico.HoraTermino < ordemDeServico.HoraInicio)
             {
                 return "O horário de término não pode ser anterior ao horário de início.";
             }

@@ -65,7 +65,11 @@ namespace GestaoPiscina.Client.Models
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            if (HoraTermino < HoraInicio)
+            // Enquanto a OS não é finalizada (ou tem uma ocorrência registrada), o campo
+            // Horário de Término fica desabilitado e mantém o valor antigo (ex.: meia-noite,
+            // de quando a OS foi gerada) — não faz sentido validar esse valor "morto" contra
+            // um Horário de Início que acabou de ser atualizado para agora ao clicar "Iniciar".
+            if (Status is "Finalizada" or "Ocorrência" && HoraTermino < HoraInicio)
             {
                 yield return new ValidationResult(
                     "O horário de término não pode ser anterior ao horário de início.",
