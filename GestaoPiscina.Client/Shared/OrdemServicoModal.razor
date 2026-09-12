@@ -136,21 +136,20 @@
                         <span class="text-sm font-semibold text-slate-200"><i class="fas fa-flask mr-2 text-cyan-400"></i>Dosagem de Produtos</span>
                         <i class="fas @(secaoDosagemAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
                     </button>
-                    @if (secaoDosagemAberta)
-                    {
-                        <div class="p-4">
-                            @if (ClienteIdDaOS > 0)
-                            {
-                                <DosagemForm @ref="dosagemFormRef" OsId="OrdemDeServico.IDOS" ClienteId="ClienteIdDaOS" OnDosagensAtualizadas="AoAtualizarDosagens" />
-                            }
-                            else
-                            {
-                                <p class="text-sm text-amber-400">
-                                    <i class="fas fa-info-circle mr-1"></i>Selecione o cliente e a piscina para ver os produtos disponíveis.
-                                </p>
-                            }
-                        </div>
-                    }
+                    @* Fica sempre montado (só escondido via CSS, não @if) para que a dosagem seja
+                       carregada e conte para o checklist mesmo sem o usuário abrir esta seção. *@
+                    <div class="p-4 @(secaoDosagemAberta ? "" : "hidden")">
+                        @if (ClienteIdDaOS > 0)
+                        {
+                            <DosagemForm @ref="dosagemFormRef" OsId="OrdemDeServico.IDOS" ClienteId="ClienteIdDaOS" OnDosagensAtualizadas="AoAtualizarDosagens" />
+                        }
+                        else
+                        {
+                            <p class="text-sm text-amber-400">
+                                <i class="fas fa-info-circle mr-1"></i>Selecione o cliente e a piscina para ver os produtos disponíveis.
+                            </p>
+                        }
+                    </div>
                 </div>
 
                 <div class="border border-slate-700 rounded-lg overflow-hidden">
@@ -384,14 +383,14 @@
     }
 
     // Aproximação do que dá para checar sem sair do formulário: checklist concluído (itens +
-    // dosagem de produtos), os 4 parâmetros da água informados (diferentes de zero) e as fotos
-    // de antes/depois anexadas.
+    // dosagem de produtos), pH/Alcalinidade/Cloro Livre informados (diferentes de zero) e as
+    // fotos de antes/depois anexadas. Dureza Cálcica fica de fora: nem sempre é medida em campo,
+    // então exigi-la travava o Finalizar de OSs com tudo mais completo.
     private bool PodeFinalizar =>
         OrdemDeServico.ChecklistConcluido
         && OrdemDeServico.pH > 0
         && OrdemDeServico.Alcalinidade > 0
         && OrdemDeServico.CloroLivre > 0
-        && OrdemDeServico.DurezaCalcica > 0
         && !string.IsNullOrWhiteSpace(OrdemDeServico.FotosAntes)
         && !string.IsNullOrWhiteSpace(OrdemDeServico.FotosDepois);
 
