@@ -3,17 +3,9 @@
 @inject ApiService ApiService
 
 <div class="space-y-4">
-    <div class="flex items-center justify-between">
-        <h5 class="text-lg font-semibold text-slate-200 flex items-center">
-            <i class="fas fa-flask text-cyan-400 mr-2"></i>Dosagem de Produtos
-        </h5>
-        @if (produtos.Any())
-        {
-            <button type="button" @onclick="Salvar" disabled="@salvando" class="bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 px-3 py-2 rounded-lg text-white text-sm transition-colors">
-                <i class="fas fa-save mr-1"></i>@(salvando ? "Salvando..." : "Salvar Dosagem")
-            </button>
-        }
-    </div>
+    <h5 class="text-lg font-semibold text-slate-200 flex items-center">
+        <i class="fas fa-flask text-cyan-400 mr-2"></i>Dosagem de Produtos
+    </h5>
 
     @if (carregando)
     {
@@ -27,7 +19,7 @@
     }
     else
     {
-        <p class="text-xs text-slate-400">Ajuste a quantidade de cada produto utilizado nesta OS. Os que ficarem em 0 não são registrados como usados.</p>
+        <p class="text-xs text-slate-400">Ajuste a quantidade de cada produto utilizado nesta OS. É salvo junto com o Salvar/Finalizar da OS — os que ficarem em 0 não são registrados como usados.</p>
 
         <div class="space-y-4">
             @foreach (var produto in produtos)
@@ -36,7 +28,7 @@
                                Info="@($"Estoque atual: {estoqueAtual.GetValueOrDefault(produto.IDProduto).ToString("0.##")} {produto.Unidade}")"
                                Unidade="@produto.Unidade"
                                Value="@valores.GetValueOrDefault(produto.IDProduto)"
-                               ValueChanged="@(v => valores[produto.IDProduto] = v)"
+                               ValueChanged="@(v => AoMudarValor(produto.IDProduto, v))"
                                Step="@PassoPara(produto)"
                                Min="0m"
                                Max="@maximos.GetValueOrDefault(produto.IDProduto, 10m)" />
@@ -47,10 +39,6 @@
         {
             <p class="text-red-400 text-sm"><i class="fas fa-exclamation-circle mr-1"></i>@erro</p>
         }
-        @if (!string.IsNullOrEmpty(sucesso))
-        {
-            <p class="text-green-400 text-sm"><i class="fas fa-check-circle mr-1"></i>@sucesso</p>
-        }
     }
 </div>
 
@@ -60,23 +48,20 @@
     [Parameter] public EventCallback<List<DosagemProduto>> OnDosagensAtualizadas { get; set; }
 
     private List<Produto> produtos = new();
-    private List<DosagemProduto> dosagensAtuais = new();
     private Dictionary<int, decimal> valorInicial = new();
     private Dictionary<int, decimal> valores = new();
     private Dictionary<int, decimal> maximos = new();
     private Dictionary<int, decimal> estoqueAtual = new();
     private Dictionary<int, int?> dosagemIdExistente = new();
     private bool carregando = true;
-    private bool salvando;
     private string? erro;
-    private string? sucesso;
-    private int osIdCarregado = -1;
+    private int clienteIdCarregado = -1;
 
     protected override async Task OnParametersSetAsync()
     {
-        if (OsId > 0 && OsId != osIdCarregado)
+        if (ClienteId > 0 && ClienteId != clienteIdCarregado)
         {
-            osIdCarregado = OsId;
+            clienteIdCarregado = ClienteId;
             await CarregarDados();
         }
     }
@@ -85,17 +70,13 @@
     {
         carregando = true;
         erro = null;
-        sucesso = null;
         try
         {
             var tarefaEstoque = ApiService.GetEstoqueByClienteAsync(ClienteId);
-            var tarefaDosagens = ApiService.GetDosagensPorOSAsync(OsId);
+            var tarefaDosagens = OsId > 0 ? ApiService.GetDosagensPorOSAsync(OsId) : Task.FromResult(new List<DosagemProduto>());
             await Task.WhenAll(tarefaEstoque, tarefaDosagens);
             var estoque = await tarefaEstoque;
             var dosagens = await tarefaDosagens;
-
-            dosagensAtuais = dosagens.Where(d => d.Quantidade > 0).ToList();
-            await OnDosagensAtualizadas.InvokeAsync(dosagensAtuais);
 
             produtos = estoque.Select(e => e.Produto).OrderBy(p => p.Nome).ToList();
             valores.Clear();
@@ -117,6 +98,8 @@
                 maximos[item.IDProduto] = item.QuantidadeAtual + quantidadeJaDosada;
                 dosagemIdExistente[item.IDProduto] = dosagemAtual?.IDDosagem;
             }
+
+            NotificarDosagensPendentes();
         }
         catch (Exception ex)
         {
@@ -146,13 +129,38 @@
         return 5m;
     }
 
-    private async Task Salvar()
+    private void AoMudarValor(int idProduto, decimal novoValor)
     {
-        salvando = true;
-        erro = null;
-        sucesso = null;
-        var alteracoes = 0;
+        valores[idProduto] = novoValor;
+        NotificarDosagensPendentes();
+    }
 
+    // Avisa o pai (OrdemServicoModal) do estado atual — ainda não salvo — das dosagens, pra
+    // ele saber "pelo menos um produto foi dosado" no checklist mesmo antes de o usuário
+    // clicar em Salvar/Finalizar (que é quando isso realmente vira registro no banco).
+    private void NotificarDosagensPendentes()
+    {
+        var pendentes = produtos
+            .Where(p => valores.GetValueOrDefault(p.IDProduto) > 0)
+            .Select(p => new DosagemProduto
+            {
+                IDDosagem = dosagemIdExistente.GetValueOrDefault(p.IDProduto) ?? 0,
+                IDProduto = p.IDProduto,
+                Produto = p,
+                Quantidade = valores[p.IDProduto]
+            })
+            .ToList();
+
+        OnDosagensAtualizadas.InvokeAsync(pendentes);
+    }
+
+    // Chamado pelo OrdemServicoModal (via @ref) depois que a OS em si já foi salva — só então
+    // existe um IDOS válido pra vincular uma dosagem nova. Grava só o que mudou desde o
+    // carregamento (diff contra valorInicial), igual à lógica que antes rodava no botão
+    // "Salvar Dosagem" removido.
+    public async Task<bool> SalvarPendentesAsync(int osIdReal)
+    {
+        erro = null;
         try
         {
             foreach (var produto in produtos)
@@ -173,26 +181,21 @@
                 }
                 else if (novoValor > 0m && !idExistente.HasValue)
                 {
-                    await ApiService.CreateDosagemAsync(new DosagemProduto { IDOS = OsId, IDProduto = produto.IDProduto, Quantidade = novoValor });
+                    await ApiService.CreateDosagemAsync(new DosagemProduto { IDOS = osIdReal, IDProduto = produto.IDProduto, Quantidade = novoValor });
                 }
                 else if (novoValor > 0m && idExistente.HasValue)
                 {
-                    await ApiService.UpdateDosagemAsync(new DosagemProduto { IDDosagem = idExistente.Value, IDOS = OsId, IDProduto = produto.IDProduto, Quantidade = novoValor });
+                    await ApiService.UpdateDosagemAsync(new DosagemProduto { IDDosagem = idExistente.Value, IDOS = osIdReal, IDProduto = produto.IDProduto, Quantidade = novoValor });
                 }
-
-                alteracoes++;
             }
 
-            sucesso = alteracoes > 0 ? "Dosagem salva com sucesso!" : "Nenhuma alteração para salvar.";
-            await CarregarDados();
+            return true;
         }
         catch (Exception ex)
         {
             erro = ex.Message;
-        }
-        finally
-        {
-            salvando = false;
+            StateHasChanged();
+            return false;
         }
     }
 }

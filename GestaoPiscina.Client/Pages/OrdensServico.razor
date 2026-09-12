@@ -514,7 +514,10 @@
         {
             if (os.IDOS == 0)
             {
-                await ApiService.CreateOrdemDeServicoAsync(os);
+                var criada = await ApiService.CreateOrdemDeServicoAsync(os);
+                // O modal precisa do ID real pra poder salvar a dosagem de produtos logo em
+                // seguida, na mesma submissão — sem isso `os.IDOS` continuaria 0 depois de criar.
+                os.IDOS = criada.IDOS;
                 MostrarNotificacao("Sucesso", "Ordem de Serviço criada com sucesso!", "success");
             }
             else

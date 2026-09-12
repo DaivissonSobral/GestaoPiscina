@@ -139,14 +139,14 @@
                     @if (secaoDosagemAberta)
                     {
                         <div class="p-4">
-                            @if (OrdemDeServico.IDOS > 0)
+                            @if (ClienteIdDaOS > 0)
                             {
-                                <DosagemForm OsId="OrdemDeServico.IDOS" ClienteId="ClienteIdDaOS" OnDosagensAtualizadas="AoAtualizarDosagens" />
+                                <DosagemForm @ref="dosagemFormRef" OsId="OrdemDeServico.IDOS" ClienteId="ClienteIdDaOS" OnDosagensAtualizadas="AoAtualizarDosagens" />
                             }
                             else
                             {
                                 <p class="text-sm text-amber-400">
-                                    <i class="fas fa-info-circle mr-1"></i>Salve a OS com os parâmetros da água primeiro para registrar a dosagem de produtos.
+                                    <i class="fas fa-info-circle mr-1"></i>Selecione o cliente e a piscina para ver os produtos disponíveis.
                                 </p>
                             }
                         </div>
@@ -291,6 +291,7 @@
     // montar o item dinâmico "produtos aplicados" do checklist e para exigir que pelo menos
     // um produto tenha sido dosado antes de considerar o checklist concluído.
     private List<DosagemProduto> dosagensAtuais = new();
+    private DosagemForm? dosagemFormRef;
 
     private IEnumerable<Cliente> ClientesDisponiveis =>
         (Piscinas ?? new List<Piscina>())
@@ -513,11 +514,26 @@
     private async Task HandleSubmit()
     {
         var sucesso = OnSave == null || await OnSave.Invoke(OrdemDeServico);
-        if (sucesso)
+        if (!sucesso)
         {
-            await OnSalvo.InvokeAsync(OrdemDeServico);
-            await Close();
+            return;
         }
+
+        // A dosagem só pode ser gravada depois da OS existir de verdade (precisa de um IDOS
+        // válido) — por isso roda aqui, logo após o OnSave acima, na mesma submissão do
+        // Salvar/Finalizar, em vez de exigir um botão de salvar dosagem à parte.
+        if (dosagemFormRef != null)
+        {
+            var dosagemOk = await dosagemFormRef.SalvarPendentesAsync(OrdemDeServico.IDOS);
+            if (!dosagemOk)
+            {
+                secaoDosagemAberta = true;
+                return;
+            }
+        }
+
+        await OnSalvo.InvokeAsync(OrdemDeServico);
+        await Close();
     }
 
     // A maioria dos campos com validação (Piscina, Técnico, Status/Observações, horários)
