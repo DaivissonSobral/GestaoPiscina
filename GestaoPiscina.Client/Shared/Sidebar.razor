@@ -1,3 +1,6 @@
+@implements IDisposable
+@inject NavigationManager NavigationManager
+
 @if (MainLayout?.MobileMenuOpen == true)
 {
     <div class="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden" @onclick="() => MainLayout.CloseMobileMenu()"></div>
@@ -7,20 +10,52 @@
     <div class="flex items-center justify-center mb-10">
         <img src="images/logo-fort-piscina.png" alt="Fort Piscina" class="max-w-full h-auto" />
     </div>
-    <nav class="flex flex-col gap-1" @onclick="() => MainLayout?.CloseMobileMenu()">
+    <nav class="flex flex-col gap-1">
         @foreach (var item in menuItems.Where(i => !i.Hidden))
         {
-            @if (item.RequiredPermission == null)
-            {
-                @RenderLink(item)
-            }
-            else
-            {
-                <AuthorizeView Permission="@item.RequiredPermission" NotAuthorized="">
+            <div @onclick="() => MainLayout?.CloseMobileMenu()">
+                @if (item.RequiredPermission == null)
+                {
                     @RenderLink(item)
-                </AuthorizeView>
-            }
+                }
+                else
+                {
+                    <AuthorizeView Permission="@item.RequiredPermission" NotAuthorized="">
+                        @RenderLink(item)
+                    </AuthorizeView>
+                }
+            </div>
         }
+
+        <div>
+            <button type="button" @onclick="ToggleConfiguracoes" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150 font-medium text-base">
+                <span class="flex items-center">
+                    <i class="fas @grupoConfiguracoes.Icon text-lg mr-2"></i><span>@grupoConfiguracoes.Label</span>
+                </span>
+                <i class="fas @(configuracoesExpandido ? "fa-chevron-up" : "fa-chevron-down") text-sm text-slate-500"></i>
+            </button>
+
+            @if (configuracoesExpandido)
+            {
+                <div class="flex flex-col gap-1 mt-1 ml-4 pl-3 border-l border-slate-700">
+                    @foreach (var item in grupoConfiguracoes.Itens)
+                    {
+                        <div @onclick="() => MainLayout?.CloseMobileMenu()">
+                            @if (item.RequiredPermission == null)
+                            {
+                                @RenderLink(item)
+                            }
+                            else
+                            {
+                                <AuthorizeView Permission="@item.RequiredPermission" NotAuthorized="">
+                                    @RenderLink(item)
+                                </AuthorizeView>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
     </nav>
 </aside>
 
@@ -28,6 +63,7 @@
     [CascadingParameter] public MainLayout? MainLayout { get; set; }
 
     private record MenuItem(string Href, string Icon, string Label, string? RequiredPermission = null, bool Hidden = false);
+    private record GrupoMenu(string Icon, string Label, List<MenuItem> Itens);
 
     private List<MenuItem> menuItems = new()
     {
@@ -43,14 +79,53 @@
         new("relatorios","fa-chart-line","Relatórios"),
         new("supervisao","fa-star","Supervisão", Hidden: true),
         new("estoque","fa-warehouse","Estoque"),
+    };
+
+    // Checklist e Usuários vivem dentro do grupo Configurações, como um treeview —
+    // em vez de itens soltos no nível principal do menu.
+    private readonly GrupoMenu grupoConfiguracoes = new("fa-cogs", "Configurações", new List<MenuItem>
+    {
+        new("configuracoes","fa-sliders-h","Geral"),
         new("checklist-itens","fa-clipboard-check","Checklist"),
         new("usuarios","fa-users-cog","Usuários","PodeGerenciarUsuarios"),
-        new("configuracoes","fa-cogs","Configurações"),
-    };
+    });
+
+    private bool configuracoesExpandido;
+
+    protected override void OnInitialized()
+    {
+        AtualizarExpansaoConfiguracoes();
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        AtualizarExpansaoConfiguracoes();
+        InvokeAsync(StateHasChanged);
+    }
+
+    // Abre o grupo automaticamente quando a navegação (ex.: um link direto, ou "Voltar"
+    // do navegador) cai numa das páginas filhas — sem isso o usuário podia ficar numa
+    // tela de Configurações com o próprio item do menu escondido dentro do grupo fechado.
+    private void AtualizarExpansaoConfiguracoes()
+    {
+        var caminhoAtual = new Uri(NavigationManager.Uri).AbsolutePath.Trim('/');
+        if (grupoConfiguracoes.Itens.Any(i => caminhoAtual.StartsWith(i.Href, StringComparison.OrdinalIgnoreCase)))
+        {
+            configuracoesExpandido = true;
+        }
+    }
+
+    private void ToggleConfiguracoes() => configuracoesExpandido = !configuracoesExpandido;
 
     private RenderFragment RenderLink(MenuItem item) => @<NavLink href="@item.Href" class="flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150 font-medium text-base"
                 ActiveClass="bg-cyan-600 text-white font-semibold shadow-lg"
                 Match="@(item.Href == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)">
         <i class="fas @item.Icon text-lg mr-2"></i><span>@item.Label</span>
     </NavLink>;
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
 }
