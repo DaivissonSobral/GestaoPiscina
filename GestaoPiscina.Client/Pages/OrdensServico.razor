@@ -18,10 +18,10 @@
         
     </div>
 
-    <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 mb-4">
-        <div class="flex flex-wrap gap-2">
-            <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar OS..." class="flex-1 min-w-[160px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-            <select @bind="filtroStatus" @bind:event="onchange" class="flex-1 min-w-[140px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+    <div class="flex justify-between items-start gap-3 mb-4">
+        <div class="flex flex-wrap gap-2 min-w-0">
+            <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar OS..." class="w-28 sm:w-auto flex-1 sm:min-w-[160px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+            <select @bind="filtroStatus" @bind:event="onchange" class="flex-1 min-w-[120px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
                 <option value="">Todos os Status</option>
                 <option value="Em Aberto">Em Aberto</option>
                 <option value="Em Andamento">Em Andamento</option>
@@ -30,7 +30,7 @@
                 <option value="Reagendada">Reagendada</option>
                 <option value="Cancelada">Cancelada</option>
             </select>
-            <select @bind="filtroData" @bind:event="onchange" class="flex-1 min-w-[140px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+            <select @bind="filtroData" @bind:event="onchange" class="flex-1 min-w-[120px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
                 <option value="">Todas as Datas</option>
                 <option value="hoje">Hoje</option>
                 <option value="semana">Esta Semana</option>
@@ -39,7 +39,7 @@
             </select>
         </div>
 
-        <div class="flex space-x-2 justify-end">
+        <div class="flex space-x-2 shrink-0">
             <button @onclick="SetListView"
                     class="@GetListViewButtonClass()"
                     title="Lista">
