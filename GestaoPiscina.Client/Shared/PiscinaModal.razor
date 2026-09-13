@@ -1,8 +1,8 @@
 @using GestaoPiscina.Client.Models
 
-<div class="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 pt-8 @(IsVisible ? "" : "hidden")">
-    <div class="bg-slate-800 rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-4">
+<div class="fixed inset-0 bg-black bg-opacity-50 flex sm:items-start justify-center z-50 sm:pt-8 @(IsVisible ? "" : "hidden")">
+    <div class="bg-slate-800 w-full h-full sm:h-auto sm:rounded-xl sm:max-w-2xl sm:mx-4 sm:max-h-[90vh] flex flex-col">
+        <div class="flex justify-between items-center p-6 pb-4 shrink-0">
             <h3 class="text-lg font-semibold text-slate-100">
                 @(Piscina.IDPiscina > 0 ? "Editar Piscina" : "Nova Piscina")
             </h3>
@@ -11,9 +11,10 @@
             </button>
         </div>
 
-        <EditForm Model="Piscina" OnValidSubmit="HandleSubmit">
+        <EditForm Model="Piscina" OnValidSubmit="HandleSubmit" class="flex flex-col flex-1 min-h-0">
             <DataAnnotationsValidator />
 
+            <div class="flex-1 overflow-y-auto px-6 pb-4 space-y-4 scroll-tema">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 @if (ClienteId <= 0)
                 {
@@ -152,8 +153,9 @@
             {
                 <p class="text-red-500 text-sm mt-4"><i class="fas fa-exclamation-circle mr-1"></i>@erro</p>
             }
+            </div>
 
-            <div class="flex space-x-3 mt-6">
+            <div class="flex space-x-3 p-6 pt-4 border-t border-slate-700 shrink-0">
                 <button type="submit" class="flex-1 bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
                     <i class="fas fa-save mr-2"></i>Salvar
                 </button>
