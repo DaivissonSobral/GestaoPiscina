@@ -4,6 +4,7 @@
 @using GestaoPiscina.Client.Shared
 @implements IAsyncDisposable
 @inject ApiService ApiService
+@inject AuthService AuthService
 @inject IJSRuntime JSRuntime
 
 <section class="p-4 space-y-6">
@@ -20,8 +21,15 @@
     </div>
 
     <div class="flex justify-between items-start gap-3 mb-4">
-        <div class="grid grid-cols-3 gap-2 w-full sm:flex sm:flex-wrap sm:w-auto min-w-0">
-            <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar OS..." class="w-full sm:w-auto sm:flex-1 sm:min-w-[160px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+        <div class="grid grid-cols-2 gap-2 w-full sm:flex sm:flex-wrap sm:w-auto min-w-0">
+            <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar OS..." class="col-span-2 w-full sm:w-auto sm:flex-1 sm:min-w-[160px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+            <select @bind="filtroData" @bind:event="onchange" class="w-full sm:flex-1 sm:min-w-[120px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                <option value="">Todas as Datas</option>
+                <option value="hoje">Hoje</option>
+                <option value="semana">Esta Semana</option>
+                <option value="mes">Este Mês</option>
+                <option value="atrasada">Atrasadas</option>
+            </select>
             <select @bind="filtroStatus" @bind:event="onchange" class="w-full sm:flex-1 sm:min-w-[120px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
                 <option value="">Todos os Status</option>
                 <option value="Em Aberto">Em Aberto</option>
@@ -31,13 +39,17 @@
                 <option value="Reagendada">Reagendada</option>
                 <option value="Cancelada">Cancelada</option>
             </select>
-            <select @bind="filtroData" @bind:event="onchange" class="w-full sm:flex-1 sm:min-w-[120px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-                <option value="">Todas as Datas</option>
-                <option value="hoje">Hoje</option>
-                <option value="semana">Esta Semana</option>
-                <option value="mes">Este Mês</option>
-                <option value="atrasada">Atrasadas</option>
-            </select>
+            @if (filtroStatus == "Ocorrência")
+            {
+                <select @bind="filtroOcorrenciaStatus" @bind:event="onchange" class="w-full sm:flex-1 sm:min-w-[120px] bg-purple-700 hover:bg-purple-600 border border-purple-600 rounded-lg px-3 py-2 text-white transition-colors">
+                    <option value="">Todas as Ocorrências</option>
+                    <option value="Pendente">Pendente</option>
+                    <option value="Aprovado">Aprovado</option>
+                </select>
+            }
+            <button @onclick="ToggleMinhasOS" class="@GetMinhasOSButtonClass()">
+                <i class="fas fa-user mr-2"></i>Minhas OSs
+            </button>
         </div>
 
         <div class="hidden sm:flex space-x-2 shrink-0">
@@ -241,6 +253,9 @@
     private string _termoBusca = "";
     private string _filtroStatus = "";
     private string _filtroData = "";
+    private string _filtroOcorrenciaStatus = "";
+    private bool filtroMinhasOS = false;
+    private int? currentUserId;
     private string viewMode = "cards"; // "lista" ou "cards" — abre em Kanban por padrão
 
     // Propriedades para detectar mudanças nos filtros
@@ -265,6 +280,10 @@
             if (_filtroStatus != value)
             {
                 _filtroStatus = value;
+                // O sub-filtro Pendente/Aprovado só faz sentido com Status == "Ocorrência" —
+                // limpa aqui pra não ficar um filtro escondido aplicado quando o usuário volta
+                // pra esse status depois de já ter trocado pra outro.
+                _filtroOcorrenciaStatus = "";
                 FiltrarOS();
             }
         }
@@ -278,6 +297,19 @@
             if (_filtroData != value)
             {
                 _filtroData = value;
+                FiltrarOS();
+            }
+        }
+    }
+
+    public string filtroOcorrenciaStatus
+    {
+        get => _filtroOcorrenciaStatus;
+        set
+        {
+            if (_filtroOcorrenciaStatus != value)
+            {
+                _filtroOcorrenciaStatus = value;
                 FiltrarOS();
             }
         }
@@ -332,6 +364,9 @@
         {
             _filtroData = DataQuery;
         }
+
+        var usuarioLogado = await AuthService.GetCurrentUserAsync();
+        currentUserId = usuarioLogado?.IDUsuario;
 
         await CarregarDados();
 
@@ -412,6 +447,17 @@
             ordensFiltradas = ordensFiltradas.Where(os => os.Status == filtroStatus).ToList();
         }
 
+        if (filtroStatus == "Ocorrência" && !string.IsNullOrEmpty(filtroOcorrenciaStatus))
+        {
+            var aprovada = filtroOcorrenciaStatus == "Aprovado";
+            ordensFiltradas = ordensFiltradas.Where(os => os.OcorrenciaAprovada == aprovada).ToList();
+        }
+
+        if (filtroMinhasOS && currentUserId.HasValue)
+        {
+            ordensFiltradas = ordensFiltradas.Where(os => os.IDUsuario == currentUserId || os.Aprovador == currentUserId).ToList();
+        }
+
         if (!string.IsNullOrEmpty(filtroData))
         {
             var hoje = DateTime.Today;
@@ -462,6 +508,20 @@
         return viewMode == "cards"
             ? "px-3 py-2 rounded-lg transition-colors bg-cyan-600 text-white"
             : "px-3 py-2 rounded-lg transition-colors bg-slate-700 text-slate-300 hover:bg-slate-600";
+    }
+
+    private void ToggleMinhasOS()
+    {
+        filtroMinhasOS = !filtroMinhasOS;
+        FiltrarOS();
+    }
+
+    private string GetMinhasOSButtonClass()
+    {
+        var baseClass = "w-full sm:w-auto px-3 py-2 rounded-lg text-sm font-medium transition-colors";
+        return filtroMinhasOS
+            ? $"{baseClass} bg-cyan-600 text-white"
+            : $"{baseClass} bg-slate-700 text-slate-300 hover:bg-slate-600";
     }
 
     // No celular os botões Lista/Kanban ficam escondidos (ver classe "hidden sm:flex" no
