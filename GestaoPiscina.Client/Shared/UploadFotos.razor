@@ -25,10 +25,27 @@
             }
             else
             {
-                <i class="fas fa-camera text-xl"></i>
-                <span class="text-[10px] mt-1">Adicionar</span>
+                <i class="fas fa-images text-xl"></i>
+                <span class="text-[10px] mt-1">Galeria</span>
             }
             <InputFile OnChange="OnArquivosSelecionados" accept="image/*" multiple class="hidden" disabled="@enviando" />
+        </label>
+
+        @* Botão dedicado pra câmera: quando o input aceita "multiple", vários navegadores
+           (Chrome/Android e Safari/iOS) escondem a opção de câmera do seletor nativo e só
+           mostram galeria/arquivos — "capture" força abrir a câmera direto, então precisa
+           ser um input separado (sem "multiple", já que a câmera só captura uma foto por vez). *@
+        <label class="w-20 h-20 rounded-lg border-2 border-dashed border-slate-500 hover:border-cyan-500 flex flex-col items-center justify-center cursor-pointer text-slate-400 hover:text-cyan-400 transition-colors">
+            @if (enviando)
+            {
+                <i class="fas fa-spinner fa-spin text-xl"></i>
+            }
+            else
+            {
+                <i class="fas fa-camera text-xl"></i>
+                <span class="text-[10px] mt-1">Câmera</span>
+            }
+            <InputFile OnChange="OnArquivosSelecionados" accept="image/*" capture="environment" class="hidden" disabled="@enviando" />
         </label>
     </div>
 
