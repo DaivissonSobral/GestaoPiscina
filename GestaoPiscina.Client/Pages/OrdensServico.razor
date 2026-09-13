@@ -33,7 +33,7 @@
 
     <div class="flex justify-between items-start gap-3 mb-4">
         <div class="grid grid-cols-2 gap-2 w-full sm:flex sm:flex-wrap sm:w-auto min-w-0">
-            <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar OS..." class="col-span-2 w-full sm:w-auto sm:flex-1 sm:min-w-[160px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+            <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar OS..." class="w-full sm:w-auto sm:flex-1 sm:min-w-[160px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
             <select @bind="filtroData" @bind:event="onchange" class="w-full sm:flex-1 sm:min-w-[120px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
                 <option value="">Todas as Datas</option>
                 <option value="hoje">Hoje</option>
