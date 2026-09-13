@@ -22,9 +22,8 @@
         }
         else if (usuariosFiltrados.Any())
         {
-            <div class="bg-slate-800 rounded-xl overflow-hidden">
-                <!-- Desktop: tabela tradicional (>= sm) -->
-                <div class="hidden sm:block overflow-x-auto">
+            <!-- Desktop: tabela tradicional (>= sm) -->
+                <div class="hidden sm:block bg-slate-800 rounded-xl overflow-hidden overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-slate-700">
                             <tr>
@@ -76,12 +75,13 @@
                     </table>
                 </div>
 
-                <!-- Celular: cards com a coluna de ações sempre visível à direita, separada do
+                <!-- Celular: cards soltos na página (sem painel externo envolvendo, como em
+                     Clientes), com a coluna de ações sempre visível à direita, separada do
                      conteúdo por espaçamento e uma borda -->
-                <div class="sm:hidden divide-y divide-slate-700">
+                <div class="sm:hidden space-y-2">
                     @foreach (var usuario in usuariosFiltrados)
                     {
-                        <div @onclick="() => AbrirModalEditar(usuario)" class="flex gap-4 p-4 hover:bg-slate-700/50 cursor-pointer">
+                        <div @onclick="() => AbrirModalEditar(usuario)" class="flex gap-4 p-4 rounded-xl bg-slate-700/40 hover:bg-slate-700/60 transition-colors cursor-pointer">
                             <div class="flex-1 min-w-0 space-y-1">
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="text-sm font-medium text-slate-100 truncate">@usuario.Nome</div>
@@ -116,7 +116,6 @@
                         </div>
                     }
                 </div>
-            </div>
         }
         else
         {
