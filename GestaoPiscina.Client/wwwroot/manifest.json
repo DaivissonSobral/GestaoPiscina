@@ -1,6 +1,6 @@
 {
-  "name": "Sistema de Gestão de Piscinas",
-  "short_name": "PiscinaGestão",
+  "name": "BLUP Inteligência Aquática",
+  "short_name": "BLUP",
   "description": "Sistema de Gestão de Serviços de Manutenção de Piscinas",
   "start_url": "/",
   "display": "standalone",

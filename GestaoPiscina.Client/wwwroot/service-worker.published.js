@@ -62,7 +62,7 @@ self.addEventListener('fetch', event => event.respondWith(onFetch(event)));
 
 self.addEventListener('push', function (event) {
     const data = event.data ? event.data.json() : {};
-    event.waitUntil(self.registration.showNotification(data.title || 'Gestão de Piscinas', {
+    event.waitUntil(self.registration.showNotification(data.title || 'BLUP Inteligência Aquática', {
         body: data.body || '',
         icon: '/icon-192.png',
         data: { url: data.url || '/' }

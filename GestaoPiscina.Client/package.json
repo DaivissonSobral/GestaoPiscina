@@ -1,7 +1,7 @@
 {
   "name": "gestao-piscina-client",
   "version": "1.0.0",
-  "description": "Sistema de Gestão de Piscinas - Frontend",
+  "description": "BLUP Inteligência Aquática - Frontend",
   "scripts": {
     "build:css": "tailwindcss -i ./wwwroot/css/app.css -o ./wwwroot/css/app.min.css --watch"
   },
