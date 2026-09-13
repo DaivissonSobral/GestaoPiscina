@@ -1,4 +1,7 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using GestaoPiscina.Server.Controllers;
 using GestaoPiscina.Server.Models;
 using GestaoPiscina.Server.Tests.TestSupport;
@@ -421,6 +424,273 @@ namespace GestaoPiscina.Server.Tests.Controllers
                 new DateTime(2024, 1, 2),
                 new DateTime(2024, 1, 3)
             }, datasGeradas);
+        }
+
+        public void Dispose() => _db.Dispose();
+    }
+
+    // Tratamento de Ocorrências: trava de edição depois de já persistida (ver
+    // PutOrdemDeServico), notificação push ao Aprovador na primeira vez que a OS é salva
+    // com essa condição, e aprovação posterior pelo químico responsável (AprovarOcorrencia).
+    public class OrdensDeServicoControllerOcorrenciaTests : IDisposable
+    {
+        private readonly SqliteInMemoryContext _db = new();
+        private OrdensDeServicoController Controller => new(_db.Context, new FakePushNotificationService());
+
+        private async Task<(Piscina piscina, Usuario tecnico, Usuario aprovador)> CriarCenarioAsync()
+        {
+            var perfilTecnico = Fabrica.Perfil("Técnico");
+            var tecnico = Fabrica.Usuario(perfilTecnico, login: "tecnico1");
+            var perfilQuimica = Fabrica.Perfil("Química");
+            var aprovador = Fabrica.Usuario(perfilQuimica, login: "quimica1", nome: "Química Um");
+            var cliente = Fabrica.Cliente();
+            var piscina = Fabrica.Piscina(cliente);
+            _db.Context.AddRange(perfilTecnico, tecnico, perfilQuimica, aprovador, cliente, piscina);
+            await _db.Context.SaveChangesAsync();
+            return (piscina, tecnico, aprovador);
+        }
+
+        // Cria (via Post) e desanexa a OS resultante do change tracker — sem isso, o PUT de
+        // um teste que reaproveitasse essa OS falharia ("already tracked"), já que o contexto
+        // é compartilhado dentro do teste.
+        private async Task<int> CriarOSAsync(OrdensDeServicoController controller, OrdemDeServico os)
+        {
+            var resultado = await controller.PostOrdemDeServico(os);
+            var criada = (OrdemDeServico)((CreatedAtActionResult)resultado.Result!).Value!;
+            _db.Context.Entry(criada).State = EntityState.Detached;
+            return criada.IDOS;
+        }
+
+        private async Task<(int idOS, Usuario aprovador, Usuario tecnico)> CriarOSComOcorrenciaAsync()
+        {
+            var (piscina, tecnico, aprovador) = await CriarCenarioAsync();
+            var os = Fabrica.OrdemDeServicoValida(piscina, tecnico);
+            os.Status = "Ocorrência";
+            os.Aprovador = aprovador.IDUsuario;
+
+            var idOS = await CriarOSAsync(Controller, os);
+            return (idOS, aprovador, tecnico);
+        }
+
+        // Clona os campos escalares de uma OS já salva para montar o corpo de um PUT, sem
+        // reutilizar a instância rastreada (mesmo motivo do Detached acima).
+        private static OrdemDeServico ClonarParaEdicao(OrdemDeServico original, Action<OrdemDeServico>? ajustar = null)
+        {
+            var clone = new OrdemDeServico
+            {
+                IDOS = original.IDOS,
+                IDPiscina = original.IDPiscina,
+                IDUsuario = original.IDUsuario,
+                DataExecucao = original.DataExecucao,
+                Status = original.Status,
+                ChecklistConcluido = original.ChecklistConcluido,
+                ChecklistItens = original.ChecklistItens,
+                Observacoes = original.Observacoes,
+                FotosAntes = original.FotosAntes,
+                FotosDepois = original.FotosDepois,
+                FotosOcorrencias = original.FotosOcorrencias,
+                RelatorioGerado = original.RelatorioGerado,
+                Aprovador = original.Aprovador,
+                OcorrenciaAprovada = original.OcorrenciaAprovada,
+                DataAprovacaoOcorrencia = original.DataAprovacaoOcorrencia,
+                pH = original.pH,
+                Alcalinidade = original.Alcalinidade,
+                CloroLivre = original.CloroLivre,
+                DurezaCalcica = original.DurezaCalcica,
+                HoraInicio = original.HoraInicio,
+                HoraTermino = original.HoraTermino
+            };
+            ajustar?.Invoke(clone);
+            return clone;
+        }
+
+        private OrdensDeServicoController ControllerAutenticadoComo(int idUsuario)
+        {
+            var controller = Controller;
+            var claims = new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, idUsuario.ToString()) });
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(claims) }
+            };
+            return controller;
+        }
+
+        [Fact]
+        public async Task PutOrdemDeServico_QuandoStatusJaEraOcorrencia_RetornaBadRequestSemAlterarNada()
+        {
+            var (idOS, _, _) = await CriarOSComOcorrenciaAsync();
+            var salvaAntes = await _db.Context.OrdensDeServico.AsNoTracking().FirstAsync(o => o.IDOS == idOS);
+            var tentativa = ClonarParaEdicao(salvaAntes, o => o.Observacoes = "Tentando editar depois de registrada a ocorrência.");
+
+            var resultado = await Controller.PutOrdemDeServico(idOS, tentativa);
+
+            Assert.IsType<BadRequestObjectResult>(resultado);
+            var salvaDepois = await _db.Context.OrdensDeServico.AsNoTracking().FirstAsync(o => o.IDOS == idOS);
+            Assert.Null(salvaDepois.Observacoes);
+        }
+
+        [Fact]
+        public async Task PutOrdemDeServico_ComIdInexistente_RetornaNotFound()
+        {
+            var (piscina, tecnico, _) = await CriarCenarioAsync();
+            var os = Fabrica.OrdemDeServicoValida(piscina, tecnico);
+            os.IDOS = 999999;
+
+            var resultado = await Controller.PutOrdemDeServico(999999, os);
+
+            Assert.IsType<NotFoundResult>(resultado);
+        }
+
+        [Fact]
+        public async Task PutOrdemDeServico_TransicaoParaOcorrenciaPelaPrimeiraVez_Salva()
+        {
+            var (piscina, tecnico, aprovador) = await CriarCenarioAsync();
+            var os = Fabrica.OrdemDeServicoValida(piscina, tecnico); // Status = "Em Aberto"
+            var idOS = await CriarOSAsync(Controller, os);
+            var salva = await _db.Context.OrdensDeServico.AsNoTracking().FirstAsync(o => o.IDOS == idOS);
+
+            var edicao = ClonarParaEdicao(salva, o =>
+            {
+                o.Status = "Ocorrência";
+                o.Aprovador = aprovador.IDUsuario;
+                o.Observacoes = "Vazamento identificado na tubulação de retorno.";
+            });
+
+            var resultado = await Controller.PutOrdemDeServico(idOS, edicao);
+
+            Assert.IsType<NoContentResult>(resultado);
+            var salvaDepois = await _db.Context.OrdensDeServico.AsNoTracking().FirstAsync(o => o.IDOS == idOS);
+            Assert.Equal("Ocorrência", salvaDepois.Status);
+        }
+
+        [Fact]
+        public async Task PostOrdemDeServico_ComOcorrencia_NotificaOAprovador()
+        {
+            var (piscina, tecnico, aprovador) = await CriarCenarioAsync();
+            var push = new FakePushNotificationService();
+            var controller = new OrdensDeServicoController(_db.Context, push);
+            var os = Fabrica.OrdemDeServicoValida(piscina, tecnico);
+            os.Status = "Ocorrência";
+            os.Aprovador = aprovador.IDUsuario;
+
+            await controller.PostOrdemDeServico(os);
+
+            var chamada = Assert.Single(push.Chamadas);
+            Assert.Equal(aprovador.IDUsuario, chamada.IdUsuario);
+        }
+
+        [Fact]
+        public async Task PutOrdemDeServico_TransicaoParaOcorrencia_NotificaOAprovador()
+        {
+            var (piscina, tecnico, aprovador) = await CriarCenarioAsync();
+            var push = new FakePushNotificationService();
+            var controller = new OrdensDeServicoController(_db.Context, push);
+            var os = Fabrica.OrdemDeServicoValida(piscina, tecnico); // Status = "Em Aberto"
+            var idOS = await CriarOSAsync(controller, os);
+            Assert.Empty(push.Chamadas); // Criar como "Em Aberto" não notifica ninguém.
+            var salva = await _db.Context.OrdensDeServico.AsNoTracking().FirstAsync(o => o.IDOS == idOS);
+
+            var edicao = ClonarParaEdicao(salva, o =>
+            {
+                o.Status = "Ocorrência";
+                o.Aprovador = aprovador.IDUsuario;
+                o.Observacoes = "Vazamento identificado.";
+            });
+            await controller.PutOrdemDeServico(idOS, edicao);
+
+            var chamada = Assert.Single(push.Chamadas);
+            Assert.Equal(aprovador.IDUsuario, chamada.IdUsuario);
+        }
+
+        [Fact]
+        public async Task PutOrdemDeServico_TransicaoParaOutroStatus_NaoNotificaNinguem()
+        {
+            var (piscina, tecnico, _) = await CriarCenarioAsync();
+            var push = new FakePushNotificationService();
+            var controller = new OrdensDeServicoController(_db.Context, push);
+            var os = Fabrica.OrdemDeServicoValida(piscina, tecnico); // Status = "Em Aberto"
+            var idOS = await CriarOSAsync(controller, os);
+            var salva = await _db.Context.OrdensDeServico.AsNoTracking().FirstAsync(o => o.IDOS == idOS);
+
+            var edicao = ClonarParaEdicao(salva, o => o.Status = "Em Andamento");
+            await controller.PutOrdemDeServico(idOS, edicao);
+
+            Assert.Empty(push.Chamadas);
+        }
+
+        [Fact]
+        public async Task AprovarOcorrencia_ComUsuarioAprovadorCorreto_MarcaComoAprovada()
+        {
+            var (idOS, aprovador, _) = await CriarOSComOcorrenciaAsync();
+
+            var resultado = await ControllerAutenticadoComo(aprovador.IDUsuario).AprovarOcorrencia(idOS);
+
+            var ok = Assert.IsType<OkObjectResult>(resultado);
+            var os = Assert.IsType<OrdemDeServico>(ok.Value);
+            Assert.True(os.OcorrenciaAprovada);
+            Assert.NotNull(os.DataAprovacaoOcorrencia);
+        }
+
+        [Fact]
+        public async Task AprovarOcorrencia_ComUsuarioDiferenteDoAprovador_RetornaForbidSemAlterarNada()
+        {
+            var (idOS, _, tecnico) = await CriarOSComOcorrenciaAsync();
+
+            var resultado = await ControllerAutenticadoComo(tecnico.IDUsuario).AprovarOcorrencia(idOS);
+
+            Assert.IsType<ForbidResult>(resultado);
+            var salva = await _db.Context.OrdensDeServico.AsNoTracking().FirstAsync(o => o.IDOS == idOS);
+            Assert.False(salva.OcorrenciaAprovada);
+        }
+
+        [Fact]
+        public async Task AprovarOcorrencia_SemClaimDeUsuario_RetornaUnauthorized()
+        {
+            var (idOS, _, _) = await CriarOSComOcorrenciaAsync();
+            var controller = Controller;
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity()) }
+            };
+
+            var resultado = await controller.AprovarOcorrencia(idOS);
+
+            Assert.IsType<UnauthorizedResult>(resultado);
+        }
+
+        [Fact]
+        public async Task AprovarOcorrencia_QuandoStatusNaoEOcorrencia_RetornaBadRequest()
+        {
+            var (piscina, tecnico, aprovador) = await CriarCenarioAsync();
+            var os = Fabrica.OrdemDeServicoValida(piscina, tecnico); // Status = "Em Aberto"
+            var idOS = await CriarOSAsync(Controller, os);
+
+            var resultado = await ControllerAutenticadoComo(aprovador.IDUsuario).AprovarOcorrencia(idOS);
+
+            Assert.IsType<BadRequestObjectResult>(resultado);
+        }
+
+        [Fact]
+        public async Task AprovarOcorrencia_ComIdInexistente_RetornaNotFound()
+        {
+            var resultado = await ControllerAutenticadoComo(1).AprovarOcorrencia(999999);
+
+            Assert.IsType<NotFoundResult>(resultado);
+        }
+
+        [Fact]
+        public async Task AprovarOcorrencia_QuandoJaAprovada_MantemADataDaPrimeiraAprovacao()
+        {
+            var (idOS, aprovador, _) = await CriarOSComOcorrenciaAsync();
+            var primeiraChamada = await ControllerAutenticadoComo(aprovador.IDUsuario).AprovarOcorrencia(idOS);
+            var dataPrimeiraAprovacao = ((OrdemDeServico)((OkObjectResult)primeiraChamada).Value!).DataAprovacaoOcorrencia;
+
+            var segundaChamada = await ControllerAutenticadoComo(aprovador.IDUsuario).AprovarOcorrencia(idOS);
+
+            var ok = Assert.IsType<OkObjectResult>(segundaChamada);
+            var os = Assert.IsType<OrdemDeServico>(ok.Value);
+            Assert.True(os.OcorrenciaAprovada);
+            Assert.Equal(dataPrimeiraAprovacao, os.DataAprovacaoOcorrencia);
         }
 
         public void Dispose() => _db.Dispose();
