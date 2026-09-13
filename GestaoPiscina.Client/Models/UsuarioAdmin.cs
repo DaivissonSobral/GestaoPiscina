@@ -33,6 +33,9 @@ namespace GestaoPiscina.Client.Models
 
         public DateTime? UltimoAcesso { get; set; }
 
+        [StringLength(500)]
+        public string? FotoUrl { get; set; }
+
         // Sem [StringLength(MinimumLength=...)] aqui de propósito: em modo de edição este
         // campo fica vazio (não é usado) e MinimumLength validaria a string vazia como
         // inválida mesmo sem [Required], bloqueando o submit do formulário de edição sem

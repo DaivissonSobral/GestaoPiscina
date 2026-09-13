@@ -1,8 +1,11 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using GestaoPiscina.Server.Data;
 using GestaoPiscina.Server.Models;
+using GestaoPiscina.Server.Models.DTOs;
 using GestaoPiscina.Server.Services;
 
 namespace GestaoPiscina.Server.Controllers
@@ -12,10 +15,12 @@ namespace GestaoPiscina.Server.Controllers
     public class UsuariosController : ControllerBase
     {
         private readonly GestaoPiscinaContext _context;
+        private readonly JwtService _jwtService;
 
-        public UsuariosController(GestaoPiscinaContext context)
+        public UsuariosController(GestaoPiscinaContext context, JwtService jwtService)
         {
             _context = context;
+            _jwtService = jwtService;
         }
 
         // Somente leitura, usado para popular seletores de usuário (ex: técnico/aprovador
@@ -86,7 +91,8 @@ namespace GestaoPiscina.Server.Controllers
                     Perfil = u.Perfil.Nome,
                     Ativo = u.Ativo,
                     DataCriacao = u.DataCriacao,
-                    UltimoAcesso = u.UltimoAcesso
+                    UltimoAcesso = u.UltimoAcesso,
+                    FotoUrl = u.FotoUrl
                 })
                 .ToListAsync();
 
@@ -125,7 +131,8 @@ namespace GestaoPiscina.Server.Controllers
                 SenhaHash = PasswordHasher.Hash(dto.SenhaInicial),
                 IDPerfil = dto.IDPerfil,
                 Ativo = true,
-                DataCriacao = DateTime.Now
+                DataCriacao = DateTime.Now,
+                FotoUrl = dto.FotoUrl
             };
 
             _context.Usuarios.Add(usuario);
@@ -141,7 +148,8 @@ namespace GestaoPiscina.Server.Controllers
                 Perfil = perfil.Nome,
                 Ativo = usuario.Ativo,
                 DataCriacao = usuario.DataCriacao,
-                UltimoAcesso = usuario.UltimoAcesso
+                UltimoAcesso = usuario.UltimoAcesso,
+                FotoUrl = usuario.FotoUrl
             });
         }
 
@@ -179,10 +187,71 @@ namespace GestaoPiscina.Server.Controllers
             usuario.Login = dto.Login;
             usuario.IDPerfil = dto.IDPerfil;
             usuario.Ativo = dto.Ativo;
+            usuario.FotoUrl = dto.FotoUrl;
 
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        // Autoatendimento: o próprio usuário logado edita seu perfil. Foto sempre pode ser
+        // trocada; Nome/E-mail/Login/Perfil só são aplicados se o usuário já tiver permissão
+        // de gerenciar usuários (ex.: Gestor) — verificado aqui no servidor, não confia em
+        // nenhum controle de UI, já que os demais controllers deste projeto não usam [Authorize]
+        // nem barram edição por permissão.
+        [Authorize]
+        [HttpPut("meu-perfil")]
+        public async Task<ActionResult<UsuarioInfo>> AtualizarMeuPerfil(AtualizarMeuPerfilDTO dto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var idUsuarioLogado))
+            {
+                return Unauthorized();
+            }
+
+            var usuario = await _context.Usuarios
+                .Include(u => u.Perfil)
+                .FirstOrDefaultAsync(u => u.IDUsuario == idUsuarioLogado);
+            if (usuario == null)
+            {
+                return Unauthorized();
+            }
+
+            if (dto.FotoUrl != null)
+            {
+                usuario.FotoUrl = dto.FotoUrl;
+            }
+
+            if (usuario.Perfil.PodeGerenciarUsuarios)
+            {
+                if (!string.IsNullOrWhiteSpace(dto.Nome))
+                {
+                    usuario.Nome = dto.Nome;
+                }
+
+                if (!string.IsNullOrWhiteSpace(dto.Email))
+                {
+                    usuario.Email = dto.Email;
+                }
+
+                if (!string.IsNullOrWhiteSpace(dto.Login))
+                {
+                    usuario.Login = dto.Login;
+                }
+
+                if (dto.IDPerfil.HasValue && await _context.Perfis.AnyAsync(p => p.IDPerfil == dto.IDPerfil.Value))
+                {
+                    usuario.IDPerfil = dto.IDPerfil.Value;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Recarrega o Perfil caso o IDPerfil tenha mudado acima, para o token/UsuarioInfo
+            // retornado refletir o perfil novo (CreateUsuarioInfo lê usuario.Perfil.Nome).
+            await _context.Entry(usuario).Reference(u => u.Perfil).LoadAsync();
+
+            return _jwtService.CreateUsuarioInfo(usuario);
         }
 
         [HttpPost("{id}/resetar-senha")]
@@ -225,6 +294,7 @@ namespace GestaoPiscina.Server.Controllers
         public bool Ativo { get; set; }
         public DateTime DataCriacao { get; set; }
         public DateTime? UltimoAcesso { get; set; }
+        public string? FotoUrl { get; set; }
     }
 
     public class CriarUsuarioDTO
@@ -234,6 +304,7 @@ namespace GestaoPiscina.Server.Controllers
         [Required] [StringLength(20)] public string Login { get; set; } = string.Empty;
         [Required] [MinLength(6, ErrorMessage = "A senha deve ter no mínimo 6 caracteres.")] public string SenhaInicial { get; set; } = string.Empty;
         [Required] public int IDPerfil { get; set; }
+        [StringLength(500)] public string? FotoUrl { get; set; }
     }
 
     public class AtualizarUsuarioDTO
@@ -243,6 +314,19 @@ namespace GestaoPiscina.Server.Controllers
         [Required] [StringLength(20)] public string Login { get; set; } = string.Empty;
         [Required] public int IDPerfil { get; set; }
         public bool Ativo { get; set; } = true;
+        [StringLength(500)] public string? FotoUrl { get; set; }
+    }
+
+    // Autoatendimento (ver AtualizarMeuPerfil): todos os campos são opcionais — Nome/Email/
+    // Login/IDPerfil são simplesmente ignorados no servidor se o usuário não tiver permissão
+    // de gerenciar usuários, em vez de exigir que o cliente monte um payload diferente por caso.
+    public class AtualizarMeuPerfilDTO
+    {
+        [StringLength(150)] public string? Nome { get; set; }
+        [StringLength(100)] [EmailAddress] public string? Email { get; set; }
+        [StringLength(20)] public string? Login { get; set; }
+        public int? IDPerfil { get; set; }
+        [StringLength(500)] public string? FotoUrl { get; set; }
     }
 
     public class ResetarSenhaDTO

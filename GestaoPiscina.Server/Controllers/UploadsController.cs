@@ -8,6 +8,7 @@ namespace GestaoPiscina.Server.Controllers
     {
         private readonly IWebHostEnvironment _env;
         private static readonly string[] ExtensoesPermitidas = { ".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif" };
+        private static readonly string[] PastasPermitidas = { "os", "usuarios" };
         private const long TamanhoMaximoBytes = 10 * 1024 * 1024; // 10MB
 
         public UploadsController(IWebHostEnvironment env)
@@ -17,7 +18,7 @@ namespace GestaoPiscina.Server.Controllers
 
         [HttpPost("foto")]
         [RequestSizeLimit(TamanhoMaximoBytes)]
-        public async Task<ActionResult<object>> UploadFoto(IFormFile arquivo)
+        public async Task<ActionResult<object>> UploadFoto(IFormFile arquivo, [FromQuery] string pasta = "os")
         {
             if (arquivo == null || arquivo.Length == 0)
             {
@@ -35,7 +36,12 @@ namespace GestaoPiscina.Server.Controllers
                 return BadRequest(new { message = "Formato de imagem não suportado. Envie JPG, PNG, WEBP ou HEIC." });
             }
 
-            var pastaUploads = Path.Combine(_env.WebRootPath, "uploads", "os");
+            if (!PastasPermitidas.Contains(pasta))
+            {
+                return BadRequest(new { message = "Destino de upload inválido." });
+            }
+
+            var pastaUploads = Path.Combine(_env.WebRootPath, "uploads", pasta);
             Directory.CreateDirectory(pastaUploads);
 
             var nomeArquivo = $"{Guid.NewGuid():N}{extensao}";
@@ -46,7 +52,7 @@ namespace GestaoPiscina.Server.Controllers
                 await arquivo.CopyToAsync(stream);
             }
 
-            var urlAbsoluta = $"{Request.Scheme}://{Request.Host}/uploads/os/{nomeArquivo}";
+            var urlAbsoluta = $"{Request.Scheme}://{Request.Host}/uploads/{pasta}/{nomeArquivo}";
             return Ok(new { url = urlAbsoluta });
         }
     }

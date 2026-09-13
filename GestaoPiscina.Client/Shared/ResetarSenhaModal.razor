@@ -1,28 +1,50 @@
 @using GestaoPiscina.Client.Models
+@using GestaoPiscina.Client.Services
+@inject ApiService ApiService
 
 <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 @(IsVisible ? "" : "hidden")">
     <div class="bg-slate-800 rounded-xl p-6 w-full max-w-sm mx-4">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-semibold text-slate-100">Resetar Senha</h3>
+            <h3 class="text-lg font-semibold text-slate-100">@(ModoAutoServico ? "Trocar Minha Senha" : "Resetar Senha")</h3>
             <button @onclick="Close" class="text-slate-400 hover:text-slate-200">
                 <i class="fas fa-times"></i>
             </button>
         </div>
 
-        <p class="text-sm text-slate-400 mb-4">Nova senha para <strong class="text-slate-200">@Usuario.Nome</strong>.</p>
+        @if (!ModoAutoServico)
+        {
+            <p class="text-sm text-slate-400 mb-4">Nova senha para <strong class="text-slate-200">@Usuario.Nome</strong>.</p>
+        }
+
+        @if (ModoAutoServico)
+        {
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Senha Atual *</label>
+                <input type="password" @bind="senhaAtual" @bind:event="oninput" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Sua senha atual" />
+            </div>
+        }
 
         <div>
             <label class="block text-sm font-medium text-slate-300 mb-2">Nova Senha *</label>
             <input type="password" @bind="novaSenha" @bind:event="oninput" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Mínimo 6 caracteres" />
-            @if (!string.IsNullOrEmpty(erro))
-            {
-                <p class="text-red-500 text-sm mt-1">@erro</p>
-            }
         </div>
 
+        @if (ModoAutoServico)
+        {
+            <div class="mt-4">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Confirmar Nova Senha *</label>
+                <input type="password" @bind="confirmarSenha" @bind:event="oninput" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Repita a nova senha" />
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(erro))
+        {
+            <p class="text-red-500 text-sm mt-2">@erro</p>
+        }
+
         <div class="flex space-x-3 mt-6">
-            <button type="button" @onclick="HandleSubmit" class="flex-1 bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
-                <i class="fas fa-key mr-2"></i>Redefinir
+            <button type="button" @onclick="HandleSubmit" disabled="@enviando" class="flex-1 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 px-4 py-2 rounded-lg text-white transition-colors">
+                <i class="fas @(enviando ? "fa-spinner fa-spin" : "fa-key") mr-2"></i>@(ModoAutoServico ? "Alterar Senha" : "Redefinir")
             </button>
             <button type="button" @onclick="Close" class="flex-1 bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded-lg text-white transition-colors">
                 Cancelar
@@ -37,12 +59,25 @@
     [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
     [Parameter] public EventCallback<(int IDUsuario, string NovaSenha)> OnSave { get; set; }
 
+    // Modo autosserviço: o próprio usuário logado trocando sua senha (aberto pelo TopBar),
+    // em vez de um admin resetando a senha de outra pessoa. Exige a senha atual (o admin
+    // não teria como sabê-la) e chama ApiService.AlterarSenhaAsync diretamente (em vez de
+    // delegar pro pai via callback) pra poder mostrar o erro do servidor ("senha atual
+    // incorreta") sem fechar o modal — diferente do fluxo de reset admin, que sempre fecha.
+    [Parameter] public bool ModoAutoServico { get; set; }
+    [Parameter] public EventCallback OnSenhaAlterada { get; set; }
+
+    private string senhaAtual = string.Empty;
     private string novaSenha = string.Empty;
+    private string confirmarSenha = string.Empty;
     private string? erro;
+    private bool enviando;
 
     private async Task Close()
     {
+        senhaAtual = string.Empty;
         novaSenha = string.Empty;
+        confirmarSenha = string.Empty;
         erro = null;
         IsVisible = false;
         await IsVisibleChanged.InvokeAsync(false);
@@ -56,6 +91,41 @@
             return;
         }
 
+        if (ModoAutoServico)
+        {
+            if (string.IsNullOrEmpty(senhaAtual))
+            {
+                erro = "Informe sua senha atual.";
+                return;
+            }
+
+            if (novaSenha != confirmarSenha)
+            {
+                erro = "As senhas não conferem.";
+                return;
+            }
+
+            erro = null;
+            enviando = true;
+            try
+            {
+                await ApiService.AlterarSenhaAsync(senhaAtual, novaSenha, confirmarSenha);
+                await OnSenhaAlterada.InvokeAsync();
+                await Close();
+            }
+            catch (Exception ex)
+            {
+                erro = ex.Message;
+            }
+            finally
+            {
+                enviando = false;
+            }
+
+            return;
+        }
+
+        erro = null;
         await OnSave.InvokeAsync((Usuario.IDUsuario, novaSenha));
         await Close();
     }

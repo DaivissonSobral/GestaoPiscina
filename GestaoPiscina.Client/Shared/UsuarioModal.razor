@@ -1,10 +1,13 @@
 @using GestaoPiscina.Client.Models
+@using GestaoPiscina.Client.Services
+@using Microsoft.AspNetCore.Components.Forms
+@inject ApiService ApiService
 
 <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 @(IsVisible ? "" : "hidden")">
     <div class="bg-slate-800 rounded-xl p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-semibold text-slate-100">
-                @(Usuario.IDUsuario > 0 ? "Editar Usuário" : "Novo Usuário")
+                @(ModoPerfil ? "Perfil" : (Usuario.IDUsuario > 0 ? "Editar Usuário" : "Novo Usuário"))
             </h3>
             <button @onclick="Close" class="text-slate-400 hover:text-slate-200">
                 <i class="fas fa-times"></i>
@@ -15,27 +18,57 @@
             <DataAnnotationsValidator />
 
             <div class="space-y-4">
+                <div class="flex justify-center">
+                    <div class="relative w-24 h-24">
+                        @if (!string.IsNullOrEmpty(Usuario.FotoUrl))
+                        {
+                            <img src="@Usuario.FotoUrl" alt="Foto de perfil" class="w-24 h-24 rounded-full object-cover border border-slate-600" />
+                        }
+                        else
+                        {
+                            <div class="w-24 h-24 rounded-full bg-slate-700 border border-slate-600 flex items-center justify-center text-slate-400">
+                                <i class="fas fa-user text-3xl"></i>
+                            </div>
+                        }
+                        <label class="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-cyan-600 hover:bg-cyan-500 text-white flex items-center justify-center cursor-pointer transition-colors" title="Trocar foto">
+                            @if (enviandoFoto)
+                            {
+                                <i class="fas fa-spinner fa-spin text-sm"></i>
+                            }
+                            else
+                            {
+                                <i class="fas fa-camera text-sm"></i>
+                            }
+                            <InputFile OnChange="OnFotoSelecionada" accept="image/*" class="hidden" disabled="@enviandoFoto" />
+                        </label>
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(erroFoto))
+                {
+                    <p class="text-red-400 text-xs text-center">@erroFoto</p>
+                }
+
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-2">Nome *</label>
-                    <InputText @bind-Value="Usuario.Nome" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Nome completo" />
+                    <InputText @bind-Value="Usuario.Nome" disabled="@CamposSensiveisBloqueados" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 disabled:opacity-60 disabled:cursor-not-allowed" placeholder="Nome completo" />
                     <ValidationMessage For="@(() => Usuario.Nome)" class="text-red-500 text-sm" />
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-2">E-mail *</label>
-                    <InputText @bind-Value="Usuario.Email" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="email@exemplo.com" />
+                    <InputText @bind-Value="Usuario.Email" disabled="@CamposSensiveisBloqueados" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 disabled:opacity-60 disabled:cursor-not-allowed" placeholder="email@exemplo.com" />
                     <ValidationMessage For="@(() => Usuario.Email)" class="text-red-500 text-sm" />
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-2">Login *</label>
-                    <InputText @bind-Value="Usuario.Login" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Usado para entrar no sistema" />
+                    <InputText @bind-Value="Usuario.Login" disabled="@CamposSensiveisBloqueados" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 disabled:opacity-60 disabled:cursor-not-allowed" placeholder="Usado para entrar no sistema" />
                     <ValidationMessage For="@(() => Usuario.Login)" class="text-red-500 text-sm" />
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-2">Perfil *</label>
-                    <InputSelect @bind-Value="Usuario.IDPerfil" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                    <InputSelect @bind-Value="Usuario.IDPerfil" disabled="@CamposSensiveisBloqueados" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 disabled:opacity-60 disabled:cursor-not-allowed">
                         <option value="0">Selecione...</option>
                         @if (Perfis != null)
                         {
@@ -48,30 +81,38 @@
                     <ValidationMessage For="@(() => Usuario.IDPerfil)" class="text-red-500 text-sm" />
                 </div>
 
-                @if (Usuario.IDUsuario == 0)
+                @if (!ModoPerfil)
                 {
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Senha Inicial *</label>
-                        <InputText type="password" @bind-Value="Usuario.SenhaInicial" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Mínimo 6 caracteres" />
-                        @if (!string.IsNullOrEmpty(erroSenha))
-                        {
-                            <p class="text-red-500 text-sm">@erroSenha</p>
-                        }
-                        <p class="text-xs text-slate-400 mt-1">O usuário pode trocar depois em "Alterar Senha".</p>
-                    </div>
-                }
-                else
-                {
-                    <div class="flex items-center">
-                        <InputCheckbox @bind-Value="Usuario.Ativo" class="mr-2" id="usuario-ativo" />
-                        <label for="usuario-ativo" class="text-sm font-medium text-slate-300">Usuário ativo</label>
-                    </div>
+                    @if (Usuario.IDUsuario == 0)
+                    {
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Senha Inicial *</label>
+                            <InputText type="password" @bind-Value="Usuario.SenhaInicial" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Mínimo 6 caracteres" />
+                            @if (!string.IsNullOrEmpty(erroSenha))
+                            {
+                                <p class="text-red-500 text-sm">@erroSenha</p>
+                            }
+                            <p class="text-xs text-slate-400 mt-1">O usuário pode trocar depois em "Alterar Senha".</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="flex items-center">
+                            <InputCheckbox @bind-Value="Usuario.Ativo" class="mr-2" id="usuario-ativo" />
+                            <label for="usuario-ativo" class="text-sm font-medium text-slate-300">Usuário ativo</label>
+                        </div>
+                    }
                 }
             </div>
 
+            @if (!string.IsNullOrEmpty(erroPerfil))
+            {
+                <p class="text-red-500 text-sm mt-4">@erroPerfil</p>
+            }
+
             <div class="flex space-x-3 mt-6">
-                <button type="submit" class="flex-1 bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
-                    <i class="fas fa-save mr-2"></i>Salvar
+                <button type="submit" disabled="@salvandoPerfil" class="flex-1 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 px-4 py-2 rounded-lg text-white transition-colors">
+                    <i class="fas @(salvandoPerfil ? "fa-spinner fa-spin" : "fa-save") mr-2"></i>Salvar
                 </button>
                 <button type="button" @onclick="Close" class="flex-1 bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded-lg text-white transition-colors">
                     Cancelar
@@ -88,17 +129,82 @@
     [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
     [Parameter] public EventCallback<UsuarioAdmin> OnSave { get; set; }
 
+    // Modo "Perfil": o próprio usuário logado editando a si mesmo (aberto pelo TopBar),
+    // em vez do cadastro administrativo normal. Nome/E-mail/Login/Perfil só ficam
+    // editáveis quando PodeEditarCamposSensiveis é true (usuário com permissão de
+    // gerenciar usuários, ex.: Gestor) — Ativo e Senha Inicial nunca aparecem aqui,
+    // já que autodesativação não faz sentido e a senha tem fluxo próprio ("Trocar minha senha").
+    [Parameter] public bool ModoPerfil { get; set; }
+    [Parameter] public bool PodeEditarCamposSensiveis { get; set; }
+    // Chamado (com o UsuarioInfo já atualizado pelo servidor) só quando o salvamento do
+    // Perfil dá certo — quem escuta (TopBar) usa isso pra atualizar o cache/avatar.
+    [Parameter] public EventCallback<Models.UsuarioInfo> OnPerfilSalvo { get; set; }
+
+    private bool CamposSensiveisBloqueados => ModoPerfil && !PodeEditarCamposSensiveis;
+
     private string? erroSenha;
+    private bool enviandoFoto;
+    private string? erroFoto;
+    private bool salvandoPerfil;
+    private string? erroPerfil;
+
+    private async Task OnFotoSelecionada(InputFileChangeEventArgs e)
+    {
+        erroFoto = null;
+        enviandoFoto = true;
+        StateHasChanged();
+
+        try
+        {
+            Usuario.FotoUrl = await ApiService.UploadFotoAsync(e.File, "usuarios");
+        }
+        catch (Exception ex)
+        {
+            erroFoto = ex.Message;
+        }
+        finally
+        {
+            enviandoFoto = false;
+        }
+    }
 
     private async Task Close()
     {
         erroSenha = null;
+        erroFoto = null;
+        erroPerfil = null;
         IsVisible = false;
         await IsVisibleChanged.InvokeAsync(false);
     }
 
     private async Task HandleSubmit()
     {
+        if (ModoPerfil)
+        {
+            salvandoPerfil = true;
+            erroPerfil = null;
+            try
+            {
+                var atualizado = await ApiService.AtualizarMeuPerfilAsync(Usuario);
+                if (atualizado != null)
+                {
+                    await OnPerfilSalvo.InvokeAsync(atualizado);
+                }
+
+                await Close();
+            }
+            catch (Exception ex)
+            {
+                erroPerfil = ex.Message;
+            }
+            finally
+            {
+                salvandoPerfil = false;
+            }
+
+            return;
+        }
+
         if (Usuario.IDUsuario == 0 && Usuario.SenhaInicial.Length < 6)
         {
             erroSenha = "A senha deve ter no mínimo 6 caracteres.";

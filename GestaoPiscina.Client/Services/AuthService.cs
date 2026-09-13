@@ -109,6 +109,15 @@ namespace GestaoPiscina.Client.Services
             return null;
         }
 
+        // Atualiza o usuário em cache (ex.: depois de trocar a foto/dados no menu "Perfil")
+        // e avisa quem estiver escutando AuthenticationStateChanged (ex.: TopBar) para
+        // re-renderizar com os dados novos, sem precisar de um novo login.
+        public async Task AtualizarUsuarioCacheAsync(UsuarioInfo usuario)
+        {
+            await _localStorage.SetItemAsync("user", usuario);
+            AuthenticationStateChanged?.Invoke();
+        }
+
         public async Task<string?> GetTokenAsync()
         {
             return await _localStorage.GetItemAsync<string>("token");

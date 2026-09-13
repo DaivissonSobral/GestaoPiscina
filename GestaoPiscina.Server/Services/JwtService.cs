@@ -107,6 +107,7 @@ namespace GestaoPiscina.Server.Services
                 Login = usuario.Login,
                 NomePerfil = usuario.Perfil.Nome,
                 IDPerfil = usuario.IDPerfil,
+                FotoUrl = usuario.FotoUrl,
                 Permissoes = new Dictionary<string, bool>
                 {
                     ["PodeGerenciarUsuarios"] = usuario.Perfil.PodeGerenciarUsuarios,

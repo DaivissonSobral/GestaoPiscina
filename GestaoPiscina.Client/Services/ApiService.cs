@@ -106,7 +106,7 @@ namespace GestaoPiscina.Client.Services
             public string Url { get; set; } = string.Empty;
         }
 
-        public async Task<string> UploadFotoAsync(IBrowserFile arquivo)
+        public async Task<string> UploadFotoAsync(IBrowserFile arquivo, string pasta = "os")
         {
             try
             {
@@ -117,7 +117,7 @@ namespace GestaoPiscina.Client.Services
                 streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(arquivo.ContentType);
                 content.Add(streamContent, "arquivo", arquivo.Name);
 
-                var response = await _httpClient.PostAsync($"{_baseUrl}uploads/foto", content);
+                var response = await _httpClient.PostAsync($"{_baseUrl}uploads/foto?pasta={Uri.EscapeDataString(pasta)}", content);
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorMessage = await GetErrorMessageAsync(response);
@@ -1165,6 +1165,59 @@ namespace GestaoPiscina.Client.Services
             catch (Exception ex)
             {
                 throw new Exception($"Erro ao buscar perfis: {ex.Message}");
+            }
+        }
+
+        // Autoatendimento do usuário logado (menu "Perfil" / "Trocar minha senha" no TopBar).
+        public async Task AlterarSenhaAsync(string senhaAtual, string novaSenha, string confirmarSenha)
+        {
+            try
+            {
+                await AddAuthHeaderAsync();
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}auth/alterar-senha", new
+                {
+                    SenhaAtual = senhaAtual,
+                    NovaSenha = novaSenha,
+                    ConfirmarSenha = confirmarSenha
+                });
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao alterar senha: {ex.Message}");
+            }
+        }
+
+        public async Task<UsuarioInfo?> AtualizarMeuPerfilAsync(UsuarioAdmin usuario)
+        {
+            try
+            {
+                await AddAuthHeaderAsync();
+                var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}usuarios/meu-perfil", new
+                {
+                    usuario.Nome,
+                    usuario.Email,
+                    usuario.Login,
+                    usuario.IDPerfil,
+                    usuario.FotoUrl
+                });
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+
+                return await response.Content.ReadFromJsonAsync<UsuarioInfo>();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao atualizar perfil: {ex.Message}");
             }
         }
     }

@@ -36,3 +36,6 @@ GestaoPiscina.Server/GestaoPiscina.db-shm
 # Fotos enviadas pelos técnicos (armazenamento local de dev, não versionar)
 GestaoPiscina.Server/wwwroot/uploads/os/*
 !GestaoPiscina.Server/wwwroot/uploads/os/.gitkeep
+
+# Fotos de perfil dos usuários (armazenamento local de dev, não versionar)
+GestaoPiscina.Server/wwwroot/uploads/usuarios/

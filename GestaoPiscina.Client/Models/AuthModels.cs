@@ -29,6 +29,7 @@ namespace GestaoPiscina.Client.Models
         public string Login { get; set; } = string.Empty;
         public string NomePerfil { get; set; } = string.Empty;
         public int IDPerfil { get; set; }
+        public string? FotoUrl { get; set; }
         public Dictionary<string, bool> Permissoes { get; set; } = new();
     }
     
