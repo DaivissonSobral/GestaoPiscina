@@ -127,14 +127,14 @@
         else if (viewMode == "cards")
         {
             <!-- Visão em Cards por Status - Layout Kanban -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:flex gap-4">
                 @foreach (var coluna in colunasKanban)
                 {
                     var ordensColuna = GetOrdensPorStatus(coluna.Status).ToList();
-                    <div class="bg-slate-800 rounded-lg p-3 border-2 @coluna.CorBorda">
-                        <h3 class="@coluna.CorTexto font-bold text-center mb-3 text-sm flex items-center justify-center gap-2">
-                            @coluna.Label
-                            <span class="bg-slate-900 text-slate-300 text-xs font-semibold rounded-full px-2 py-0.5">@ordensColuna.Count</span>
+                    <div class="bg-slate-800 rounded-lg p-3 border-2 border-slate-700 @(ordensColuna.Any() ? "lg:flex-1 lg:min-w-0" : "hidden lg:block lg:flex-none lg:w-12 lg:px-1 xl:w-fit xl:px-3")">
+                        <h3 class="@coluna.CorTexto font-bold text-center mb-3 text-sm flex items-center justify-center gap-2 lg:whitespace-nowrap @(!ordensColuna.Any() ? "lg:flex-col" : "")">
+                            <span class="@(!ordensColuna.Any() ? "lg:[writing-mode:vertical-rl] lg:[text-orientation:mixed] xl:[writing-mode:horizontal-tb]" : "")">@coluna.Label</span>
+                            <span class="bg-slate-900 text-slate-300 text-xs font-semibold rounded-full px-2 py-0.5 @(!ordensColuna.Any() ? "lg:hidden xl:inline" : "")">@ordensColuna.Count</span>
                         </h3>
                         <div class="space-y-2 max-h-[65vh] overflow-y-auto pr-1 scroll-tema">
                             @foreach (var os in ordensColuna)
@@ -178,7 +178,7 @@
                             }
                             @if (!ordensColuna.Any())
                             {
-                                <div class="text-slate-500 text-center text-xs py-6">Nenhuma OS</div>
+                                <div class="text-slate-500 text-center text-xs py-6 hidden xl:block">Nenhuma OS</div>
                             }
                         </div>
                     </div>
@@ -298,16 +298,16 @@
     private string mensagemToast = "";
     private string tipoToast = "success";
 
-    private record ColunaKanban(string Status, string Label, string CorBorda, string CorTexto);
+    private record ColunaKanban(string Status, string Label, string CorTexto);
 
     private readonly List<ColunaKanban> colunasKanban = new()
     {
-        new("Em Aberto", "Em Aberto", "border-yellow-500", "text-yellow-400"),
-        new("Em Andamento", "Em Andamento", "border-blue-500", "text-blue-400"),
-        new("Finalizada", "Finalizada", "border-green-500", "text-green-400"),
-        new("Ocorrência", "Ocorrência", "border-purple-500", "text-purple-400"),
-        new("Reagendada", "Reagendada", "border-orange-500", "text-orange-400"),
-        new("Cancelada", "Cancelada", "border-red-500", "text-red-400"),
+        new("Em Aberto", "Em Aberto", "text-yellow-400"),
+        new("Em Andamento", "Em Andamento", "text-blue-400"),
+        new("Finalizada", "Finalizada", "text-green-400"),
+        new("Ocorrência", "Ocorrência", "text-purple-400"),
+        new("Reagendada", "Reagendada", "text-orange-400"),
+        new("Cancelada", "Cancelada", "text-red-400"),
     };
 
     private string? NomeTecnico(OrdemDeServico os) => tecnicos?.FirstOrDefault(u => u.IDUsuario == os.IDUsuario)?.Nome;
