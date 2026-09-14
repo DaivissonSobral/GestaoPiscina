@@ -154,10 +154,10 @@
                 @foreach (var coluna in colunasKanban)
                 {
                     var ordensColuna = GetOrdensPorStatus(coluna.Status).ToList();
-                    <div class="bg-slate-800 rounded-lg p-3 border-2 border-slate-700 @(ordensColuna.Any() ? "lg:flex-1 lg:min-w-0" : "hidden lg:block lg:flex-none lg:w-12 lg:px-1 xl:w-fit xl:px-3")">
+                    <div class="bg-slate-800 rounded-lg p-3 border-2 border-slate-700 @(ordensColuna.Any() ? "lg:flex-1 lg:min-w-0" : "hidden lg:block lg:flex-none lg:w-12 lg:px-1")">
                         <h3 class="@coluna.CorTexto font-bold text-center mb-3 text-sm flex items-center justify-center gap-2 lg:whitespace-nowrap @(!ordensColuna.Any() ? "lg:flex-col" : "")">
-                            <span class="@(!ordensColuna.Any() ? "lg:[writing-mode:vertical-rl] lg:[text-orientation:mixed] xl:[writing-mode:horizontal-tb]" : "")">@coluna.Label</span>
-                            <span class="bg-slate-900 text-slate-300 text-xs font-semibold rounded-full px-2 py-0.5 @(!ordensColuna.Any() ? "lg:hidden xl:inline" : "")">@ordensColuna.Count</span>
+                            <span class="@(!ordensColuna.Any() ? "lg:[writing-mode:vertical-rl] lg:[text-orientation:mixed]" : "")">@coluna.Label</span>
+                            <span class="bg-slate-900 text-slate-300 text-xs font-semibold rounded-full px-2 py-0.5 @(!ordensColuna.Any() ? "lg:hidden" : "")">@ordensColuna.Count</span>
                         </h3>
                         <div class="space-y-2 max-h-[65vh] overflow-y-auto pr-1 scroll-tema">
                             @foreach (var os in ordensColuna)
@@ -198,10 +198,6 @@
                                         </div>
                                     }
                                 </div>
-                            }
-                            @if (!ordensColuna.Any())
-                            {
-                                <div class="text-slate-500 text-center text-xs py-6 hidden xl:block">Nenhuma OS</div>
                             }
                         </div>
                     </div>
