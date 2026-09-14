@@ -17,6 +17,10 @@ namespace GestaoPiscina.Server.Controllers
         private readonly GestaoPiscinaContext _context;
         private readonly JwtService _jwtService;
 
+        // Só Técnico e Supervisor vão a campo até o cliente — os demais perfis não
+        // precisam de endereço cadastrado.
+        private static readonly HashSet<string> PerfisComEnderecoObrigatorio = new() { "Técnico", "Supervisor" };
+
         public UsuariosController(GestaoPiscinaContext context, JwtService jwtService)
         {
             _context = context;
@@ -92,7 +96,8 @@ namespace GestaoPiscina.Server.Controllers
                     Ativo = u.Ativo,
                     DataCriacao = u.DataCriacao,
                     UltimoAcesso = u.UltimoAcesso,
-                    FotoUrl = u.FotoUrl
+                    FotoUrl = u.FotoUrl,
+                    Endereco = u.Endereco
                 })
                 .ToListAsync();
 
@@ -123,6 +128,11 @@ namespace GestaoPiscina.Server.Controllers
                 return BadRequest(new { message = "Perfil inválido." });
             }
 
+            if (PerfisComEnderecoObrigatorio.Contains(perfil.Nome) && string.IsNullOrWhiteSpace(dto.Endereco))
+            {
+                return BadRequest(new { message = "Endereço é obrigatório para o perfil selecionado." });
+            }
+
             var usuario = new Usuario
             {
                 Nome = dto.Nome,
@@ -132,7 +142,8 @@ namespace GestaoPiscina.Server.Controllers
                 IDPerfil = dto.IDPerfil,
                 Ativo = true,
                 DataCriacao = DateTime.Now,
-                FotoUrl = dto.FotoUrl
+                FotoUrl = dto.FotoUrl,
+                Endereco = dto.Endereco
             };
 
             _context.Usuarios.Add(usuario);
@@ -149,7 +160,8 @@ namespace GestaoPiscina.Server.Controllers
                 Ativo = usuario.Ativo,
                 DataCriacao = usuario.DataCriacao,
                 UltimoAcesso = usuario.UltimoAcesso,
-                FotoUrl = usuario.FotoUrl
+                FotoUrl = usuario.FotoUrl,
+                Endereco = usuario.Endereco
             });
         }
 
@@ -177,9 +189,15 @@ namespace GestaoPiscina.Server.Controllers
                 return Conflict(new { message = "Já existe um usuário com este e-mail." });
             }
 
-            if (!await _context.Perfis.AnyAsync(p => p.IDPerfil == dto.IDPerfil))
+            var perfil = await _context.Perfis.FindAsync(dto.IDPerfil);
+            if (perfil == null)
             {
                 return BadRequest(new { message = "Perfil inválido." });
+            }
+
+            if (PerfisComEnderecoObrigatorio.Contains(perfil.Nome) && string.IsNullOrWhiteSpace(dto.Endereco))
+            {
+                return BadRequest(new { message = "Endereço é obrigatório para o perfil selecionado." });
             }
 
             usuario.Nome = dto.Nome;
@@ -188,6 +206,7 @@ namespace GestaoPiscina.Server.Controllers
             usuario.IDPerfil = dto.IDPerfil;
             usuario.Ativo = dto.Ativo;
             usuario.FotoUrl = dto.FotoUrl;
+            usuario.Endereco = dto.Endereco;
 
             await _context.SaveChangesAsync();
 
@@ -222,6 +241,15 @@ namespace GestaoPiscina.Server.Controllers
                 usuario.FotoUrl = dto.FotoUrl;
             }
 
+            // Endereço qualquer usuário pode manter atualizado (igual à foto) — não é um
+            // campo sensível como Nome/E-mail/Login/Perfil, que só Gestor edita.
+            if (dto.Endereco != null)
+            {
+                usuario.Endereco = dto.Endereco;
+            }
+
+            var perfilNomeFinal = usuario.Perfil.Nome;
+
             if (usuario.Perfil.PodeGerenciarUsuarios)
             {
                 if (!string.IsNullOrWhiteSpace(dto.Nome))
@@ -239,10 +267,22 @@ namespace GestaoPiscina.Server.Controllers
                     usuario.Login = dto.Login;
                 }
 
-                if (dto.IDPerfil.HasValue && await _context.Perfis.AnyAsync(p => p.IDPerfil == dto.IDPerfil.Value))
+                if (dto.IDPerfil.HasValue)
                 {
-                    usuario.IDPerfil = dto.IDPerfil.Value;
+                    var perfilAlvo = await _context.Perfis.FindAsync(dto.IDPerfil.Value);
+                    if (perfilAlvo != null)
+                    {
+                        usuario.IDPerfil = perfilAlvo.IDPerfil;
+                        perfilNomeFinal = perfilAlvo.Nome;
+                    }
                 }
+            }
+
+            // Baseado no perfil que vai valer depois deste salvamento (já considerando uma
+            // eventual troca de perfil pelo Gestor acima), não no perfil antigo.
+            if (PerfisComEnderecoObrigatorio.Contains(perfilNomeFinal) && string.IsNullOrWhiteSpace(usuario.Endereco))
+            {
+                return BadRequest(new { message = "Endereço é obrigatório para o perfil selecionado." });
             }
 
             await _context.SaveChangesAsync();
@@ -295,6 +335,7 @@ namespace GestaoPiscina.Server.Controllers
         public DateTime DataCriacao { get; set; }
         public DateTime? UltimoAcesso { get; set; }
         public string? FotoUrl { get; set; }
+        public string? Endereco { get; set; }
     }
 
     public class CriarUsuarioDTO
@@ -305,6 +346,7 @@ namespace GestaoPiscina.Server.Controllers
         [Required] [MinLength(6, ErrorMessage = "A senha deve ter no mínimo 6 caracteres.")] public string SenhaInicial { get; set; } = string.Empty;
         [Required] public int IDPerfil { get; set; }
         [StringLength(500)] public string? FotoUrl { get; set; }
+        [StringLength(300)] public string? Endereco { get; set; }
     }
 
     public class AtualizarUsuarioDTO
@@ -315,6 +357,7 @@ namespace GestaoPiscina.Server.Controllers
         [Required] public int IDPerfil { get; set; }
         public bool Ativo { get; set; } = true;
         [StringLength(500)] public string? FotoUrl { get; set; }
+        [StringLength(300)] public string? Endereco { get; set; }
     }
 
     // Autoatendimento (ver AtualizarMeuPerfil): todos os campos são opcionais — Nome/Email/
@@ -327,6 +370,7 @@ namespace GestaoPiscina.Server.Controllers
         [StringLength(20)] public string? Login { get; set; }
         public int? IDPerfil { get; set; }
         [StringLength(500)] public string? FotoUrl { get; set; }
+        [StringLength(300)] public string? Endereco { get; set; }
     }
 
     public class ResetarSenhaDTO

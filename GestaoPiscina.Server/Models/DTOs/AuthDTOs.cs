@@ -30,6 +30,7 @@ namespace GestaoPiscina.Server.Models.DTOs
         public string NomePerfil { get; set; } = string.Empty;
         public int IDPerfil { get; set; }
         public string? FotoUrl { get; set; }
+        public string? Endereco { get; set; }
         public Dictionary<string, bool> Permissoes { get; set; } = new();
     }
     

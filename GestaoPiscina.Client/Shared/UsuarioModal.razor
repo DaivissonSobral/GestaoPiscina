@@ -81,6 +81,15 @@
                     <ValidationMessage For="@(() => Usuario.IDPerfil)" class="text-red-500 text-sm" />
                 </div>
 
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Endereço@(EnderecoObrigatorio ? " *" : "")</label>
+                    <InputText @bind-Value="Usuario.Endereco" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Endereço completo" />
+                    @if (!string.IsNullOrEmpty(erroEndereco))
+                    {
+                        <p class="text-red-500 text-sm">@erroEndereco</p>
+                    }
+                </div>
+
                 @if (!ModoPerfil)
                 {
                     @if (Usuario.IDUsuario == 0)
@@ -142,11 +151,20 @@
 
     private bool CamposSensiveisBloqueados => ModoPerfil && !PodeEditarCamposSensiveis;
 
+    // Só Técnico e Supervisor precisam de endereço (vão até o cliente) — mesma regra
+    // aplicada no servidor (ver UsuariosController.PerfisComEnderecoObrigatorio).
+    private static readonly HashSet<string> PerfisComEnderecoObrigatorio = new() { "Técnico", "Supervisor" };
+
+    private bool EnderecoObrigatorio =>
+        Perfis?.FirstOrDefault(p => p.IDPerfil == Usuario.IDPerfil) is { } perfil
+        && PerfisComEnderecoObrigatorio.Contains(perfil.Nome);
+
     private string? erroSenha;
     private bool enviandoFoto;
     private string? erroFoto;
     private bool salvandoPerfil;
     private string? erroPerfil;
+    private string? erroEndereco;
 
     private async Task OnFotoSelecionada(InputFileChangeEventArgs e)
     {
@@ -173,12 +191,20 @@
         erroSenha = null;
         erroFoto = null;
         erroPerfil = null;
+        erroEndereco = null;
         IsVisible = false;
         await IsVisibleChanged.InvokeAsync(false);
     }
 
     private async Task HandleSubmit()
     {
+        erroEndereco = null;
+        if (EnderecoObrigatorio && string.IsNullOrWhiteSpace(Usuario.Endereco))
+        {
+            erroEndereco = "Endereço é obrigatório para este perfil.";
+            return;
+        }
+
         if (ModoPerfil)
         {
             salvandoPerfil = true;

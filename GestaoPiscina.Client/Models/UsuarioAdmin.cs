@@ -36,6 +36,12 @@ namespace GestaoPiscina.Client.Models
         [StringLength(500)]
         public string? FotoUrl { get; set; }
 
+        // Obrigatório só para Técnico/Supervisor — checado manualmente em
+        // UsuarioModal.HandleSubmit (não dá pra expressar "obrigatório condicional ao
+        // perfil selecionado" com um [Required] simples), não pelo DataAnnotationsValidator.
+        [StringLength(300)]
+        public string? Endereco { get; set; }
+
         // Sem [StringLength(MinimumLength=...)] aqui de propósito: em modo de edição este
         // campo fica vazio (não é usado) e MinimumLength validaria a string vazia como
         // inválida mesmo sem [Required], bloqueando o submit do formulário de edição sem

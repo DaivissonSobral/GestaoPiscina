@@ -31,6 +31,11 @@ namespace GestaoPiscina.Server.Models
         [StringLength(500)]
         public string? FotoUrl { get; set; }
 
+        // Obrigatório apenas para Técnico e Supervisor (ver ValidarEndereco em
+        // UsuariosController) — os demais perfis não dependem de deslocamento até o cliente.
+        [StringLength(300)]
+        public string? Endereco { get; set; }
+
         // Relacionamento com Perfil
         public int IDPerfil { get; set; }
         public Perfil Perfil { get; set; } = null!;
