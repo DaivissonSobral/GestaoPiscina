@@ -259,7 +259,7 @@
             <button @onclick="() => OnEdit.InvokeAsync(OrdemDeServico)" class="flex-1 bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
                 <i class="fas fa-edit mr-2"></i>@TextoBotaoEditar()
             </button>
-            <button @onclick="AbrirRelatorio" disabled="@(!PodeVerRelatorio)" class="flex-1 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors" title="@(PodeVerRelatorio ? "" : "Disponível quando a OS estiver finalizada ou com ocorrência")">
+            <button @onclick="AbrirRelatorio" disabled="@(!PodeVerRelatorio)" class="flex-1 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors" title="@(PodeVerRelatorio ? "" : "Disponível quando a OS estiver finalizada ou a ocorrência for aprovada")">
                 <i class="fas fa-file-alt mr-2"></i>Relatório
             </button>
             <button @onclick="Close" class="flex-1 bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded-lg text-white transition-colors">
@@ -298,7 +298,11 @@
     private string TextoDosagemAplicada =>
         ChecklistOS.TextoDosagemAplicada(ChecklistOS.NomePiscina(OrdemDeServico.Piscina?.Tipo), dosagensAtuais);
 
-    private bool PodeVerRelatorio => OrdemDeServico.Status is "Finalizada" or "Ocorrência";
+    // Numa Ocorrência, o Relatório só libera depois que ela for aprovada — antes disso,
+    // tanto aqui quanto no cadastro (OrdemServicoModal), o botão fica desabilitado.
+    private bool PodeVerRelatorio =>
+        OrdemDeServico.Status == "Finalizada"
+        || (OrdemDeServico.Status == "Ocorrência" && OrdemDeServico.OcorrenciaAprovada);
 
     private string NomeAprovador() =>
         Aprovadores?.FirstOrDefault(a => a.IDUsuario == OrdemDeServico.Aprovador)?.Nome ?? "-";
@@ -376,10 +380,14 @@
         Navigation.NavigateTo($"/relatorios/os/{OrdemDeServico.IDOS}");
     }
 
+    // Uma Ocorrência trava Salvar pro técnico responsável (ver EstaFinalizadaOuOcorrencia
+    // no OrdemServicoModal) — pra ele o botão diz "Abrir" (só visualização), igual a uma OS
+    // já finalizada. Quem não é o técnico (ex.: o aprovador/química) continua vendo "Continuar".
     private string TextoBotaoEditar() => OrdemDeServico.Status switch
     {
         "Em Aberto" => "Iniciar",
         "Finalizada" => "Abrir",
+        "Ocorrência" when currentUserId == OrdemDeServico.IDUsuario => "Abrir",
         _ => "Continuar"
     };
 

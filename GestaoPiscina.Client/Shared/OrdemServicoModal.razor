@@ -263,7 +263,7 @@
                    esse mesmo clique destruísse/trocasse o botão (que é type="submit") por outro
                    elemento no meio do próprio evento, o Blazor re-renderiza antes do navegador
                    concluir o envio nativo do formulário — o submit nunca chega a acontecer. *@
-                <button type="button" @onclick="AbrirRelatorio" class="flex-1 bg-teal-600 hover:bg-teal-500 px-4 py-2 rounded-lg text-white transition-colors @(EstaFinalizadaOuOcorrencia && !PodeAprovarOcorrencia ? "" : "hidden")">
+                <button type="button" @onclick="AbrirRelatorio" disabled="@(!PodeVerRelatorio)" class="flex-1 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors @(EstaFinalizadaOuOcorrencia && !PodeAprovarOcorrencia ? "" : "hidden")" title="@(PodeVerRelatorio ? "" : "Disponível quando a ocorrência for aprovada")">
                     <i class="fas fa-file-alt mr-2"></i>Relatório
                 </button>
                 @* Some ao "Registrar ocorrência" pra quem já era o Aprovador quando o modal abriu:
@@ -444,6 +444,11 @@
     // assim que a OS JÁ ESTAVA com ocorrência registrada quando o modal foi aberto (edições
     // posteriores só acontecem via aprovação, não por aqui).
     private bool EstaFinalizadaOuOcorrencia => OrdemDeServico.Status == "Finalizada" || statusOriginal == "Ocorrência";
+
+    // O botão Relatório só aparece quando EstaFinalizadaOuOcorrencia é true (Finalizada ou
+    // Ocorrência pré-existente) — dentro desse contexto, só falta travar o caso de Ocorrência
+    // ainda não aprovada, já que Finalizada nunca depende de aprovação.
+    private bool PodeVerRelatorio => OrdemDeServico.Status == "Finalizada" || OrdemDeServico.OcorrenciaAprovada;
 
     private void AbrirRelatorio()
     {
