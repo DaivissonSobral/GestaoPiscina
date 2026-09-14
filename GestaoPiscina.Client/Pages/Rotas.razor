@@ -469,8 +469,12 @@
 
             foreach (var tecnico in tecnicos.Where(TemLocalizacao))
             {
-                await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.addPhotoMarker", MapaId,
-                    tecnico.Latitude!.Value, tecnico.Longitude!.Value, tecnico.FotoUrl, $"{tecnico.Nome} ({tecnico.Perfil})");
+                // Mesmo recurso usado pros clientes (iniciais desenhadas via canvas) — a
+                // foto do técnico direto no marcador (addPhotoMarker) dependia de baixar a
+                // imagem de outra origem, o que se mostrou frágil (CORS, cache do
+                // navegador colidindo com a mesma foto já carregada na lista ao lado).
+                await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.addInitialsMarker", MapaId,
+                    tecnico.Latitude!.Value, tecnico.Longitude!.Value, Iniciais(tecnico.Nome), $"{tecnico.Nome} ({tecnico.Perfil})", "#7c3aed");
             }
 
             // Só reajusta o zoom/enquadramento em cargas estruturais (data trocada, dados

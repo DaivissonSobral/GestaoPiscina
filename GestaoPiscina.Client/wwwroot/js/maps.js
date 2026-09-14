@@ -1,8 +1,11 @@
 // Integração com Google Maps (Maps JavaScript API + Geocoding), usada em dois lugares:
 // 1) Geocodificar o endereço de Clientes/Usuários no momento de salvar (ClienteCadastroModal,
 //    UsuarioModal), gravando Latitude/Longitude no banco pra não precisar geocodificar de novo.
-// 2) Exibir o mapa de Gestão de Rota (Pages/Rotas.razor), com marcadores de clientes (iniciais)
-//    e técnicos/supervisores (foto).
+// 2) Exibir o mapa de Gestão de Rota (Pages/Rotas.razor) e o widget de rota da tela de OS
+//    (Shared/RotaOSWidget.razor), com marcadores de clientes e técnicos/supervisores — todos
+//    com iniciais desenhadas via canvas (addInitialsMarker), nunca a foto de perfil: mostrar
+//    a foto direto no marcador já foi tentado e se mostrou frágil (CORS, cache do navegador
+//    colidindo com a mesma foto carregada sem CORS em outro lugar da tela).
 //
 // Usa google.maps.Marker (API clássica) em vez de AdvancedMarkerElement de propósito: o
 // marcador avançado exige configurar um "Map ID" separado no Google Cloud Console, e queremos
@@ -151,61 +154,6 @@ window.gestaoPiscinaMaps = (function () {
         });
     }
 
-    // Recorta a foto em círculo via canvas; se a imagem for de outra origem sem CORS
-    // liberado, o canvas fica "contaminado" (toDataURL lança SecurityError) — nesse caso,
-    // cai de volta pra usar a URL da foto direto (sem recorte), em vez de falhar o marcador.
-    function drawCircularCrop(img, size) {
-        const canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size;
-        const ctx = canvas.getContext('2d');
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(size / 2, size / 2, size / 2 - 2, 0, 2 * Math.PI);
-        ctx.closePath();
-        ctx.clip();
-        ctx.drawImage(img, 0, 0, size, size);
-        ctx.restore();
-        ctx.beginPath();
-        ctx.arc(size / 2, size / 2, size / 2 - 2, 0, 2 * Math.PI);
-        ctx.strokeStyle = '#0f172a';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        return canvas.toDataURL();
-    }
-
-    // Carrega a foto em duas etapas: primeiro com crossOrigin "anonymous", pra poder
-    // recortar em círculo via canvas; se o servidor da foto não enviar cabeçalhos CORS
-    // (ex.: acesso via um túnel ainda não liberado em Program.cs), o navegador REJEITA
-    // esse carregamento (onerror, nunca onload) em vez de só "contaminar" o canvas — nesse
-    // caso caímos pra uma segunda tentativa sem crossOrigin, que sempre carrega (é assim
-    // que a foto já aparece em outras telas do sistema), só que sem o recorte circular.
-    // Só cai no "?" de iniciais se a foto realmente não existir/carregar de jeito nenhum.
-    function addPhotoMarker(elementId, lat, lng, photoUrl, title) {
-        if (!photoUrl) {
-            addInitialsMarker(elementId, lat, lng, '?', title, '#7c3aed');
-            return;
-        }
-
-        const size = 44;
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-            try {
-                addMarkerWithIcon(elementId, lat, lng, drawCircularCrop(img, size), title, size);
-            } catch (e) {
-                addMarkerWithIcon(elementId, lat, lng, photoUrl, title, size);
-            }
-        };
-        img.onerror = () => {
-            const fallbackImg = new Image();
-            fallbackImg.onload = () => addMarkerWithIcon(elementId, lat, lng, photoUrl, title, size);
-            fallbackImg.onerror = () => addInitialsMarker(elementId, lat, lng, '?', title, '#7c3aed');
-            fallbackImg.src = photoUrl;
-        };
-        img.src = photoUrl;
-    }
-
     // Traça a rota (viagem redonda: sai do técnico, visita os clientes selecionados,
     // volta pro técnico) usando DirectionsService, com optimizeWaypoints pra deixar o
     // Google decidir a melhor ordem de visita entre os pontos escolhidos manualmente
@@ -318,7 +266,6 @@ window.gestaoPiscinaMaps = (function () {
         fitToMarkers: fitToMarkers,
         addInitialsMarker: addInitialsMarker,
         addSelectableInitialsMarker: addSelectableInitialsMarker,
-        addPhotoMarker: addPhotoMarker,
         calculateRoute: calculateRoute,
         tracarRotaSimples: tracarRotaSimples,
         obterLocalizacaoAtual: obterLocalizacaoAtual,

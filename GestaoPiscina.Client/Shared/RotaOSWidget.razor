@@ -37,7 +37,6 @@ else
     [Parameter] public double? TecnicoLat { get; set; }
     [Parameter] public double? TecnicoLng { get; set; }
     [Parameter] public string? TecnicoNome { get; set; }
-    [Parameter] public string? TecnicoFotoUrl { get; set; }
     [Parameter] public double? ClienteLat { get; set; }
     [Parameter] public double? ClienteLng { get; set; }
     [Parameter] public string? ClienteNome { get; set; }
@@ -88,7 +87,11 @@ else
                 await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.clearMarkers", MapaId);
             }
 
-            await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.addPhotoMarker", MapaId, TecnicoLat.Value, TecnicoLng.Value, TecnicoFotoUrl, TecnicoNome ?? "Técnico");
+            // Mesmo recurso usado pro cliente logo abaixo (iniciais via canvas) — a foto do
+            // técnico direto no marcador (addPhotoMarker) dependia de baixar a imagem de
+            // outra origem, o que se mostrou frágil (CORS, cache do navegador colidindo
+            // com a mesma foto já carregada em outro lugar da tela).
+            await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.addInitialsMarker", MapaId, TecnicoLat.Value, TecnicoLng.Value, Iniciais(TecnicoNome), TecnicoNome ?? "Técnico", "#7c3aed");
             await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.addInitialsMarker", MapaId, ClienteLat.Value, ClienteLng.Value, Iniciais(ClienteNome), ClienteNome ?? "Cliente", "#0891b2");
 
             resultado = await JSRuntime.InvokeAsync<RotaResultado>("gestaoPiscinaMaps.tracarRotaSimples", MapaId, apiKey, TecnicoLat.Value, TecnicoLng.Value, ClienteLat.Value, ClienteLng.Value);
