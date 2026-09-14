@@ -68,25 +68,25 @@
     private List<MenuItem> menuItems = new()
     {
         new("/","fa-tachometer-alt","Início"),
-        new("clientes","fa-user-friends","Clientes"),
-        new("piscinas","fa-swimming-pool","Piscinas"),
-        new("produtos","fa-box","Produtos"),
-        new("equipamentos","fa-robot","Equipamentos"),
-        new("gestores","fa-user-tie","Gestores"),
         new("ordens-servico","fa-tasks","Ordens de Serviço"),
         new("rotas","fa-route","Gestão de Rota"),
-        new("reagendamentos","fa-calendar-alt","Reagendamentos", Hidden: true),
-        new("relatorios","fa-chart-line","Relatórios"),
-        new("supervisao","fa-star","Supervisão", Hidden: true),
+        new("clientes","fa-user-friends","Clientes"),
+        new("piscinas","fa-swimming-pool","Piscinas"),
+        new("equipamentos","fa-robot","Equipamentos"),
+        new("produtos","fa-box","Produtos"),
         new("estoque","fa-warehouse","Estoque"),
+        new("relatorios","fa-chart-line","Relatórios"),
+        new("reagendamentos","fa-calendar-alt","Reagendamentos", Hidden: true),
+        new("supervisao","fa-star","Supervisão", Hidden: true),
     };
 
-    // Checklist e Usuários vivem dentro do grupo Configurações, como um treeview —
+    // Checklist, Gestores e Usuários vivem dentro do grupo Configurações, como um treeview —
     // em vez de itens soltos no nível principal do menu.
     private readonly GrupoMenu grupoConfiguracoes = new("fa-cogs", "Configurações", new List<MenuItem>
     {
         new("configuracoes","fa-sliders-h","Geral"),
         new("checklist-itens","fa-clipboard-check","Checklist"),
+        new("gestores","fa-user-tie","Gestores"),
         new("usuarios","fa-users-cog","Usuários","PodeGerenciarUsuarios"),
     });
 
