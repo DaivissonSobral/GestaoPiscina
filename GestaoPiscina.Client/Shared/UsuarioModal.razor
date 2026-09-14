@@ -41,7 +41,7 @@
                             {
                                 <i class="fas fa-camera text-sm"></i>
                             }
-                            <InputFile OnChange="OnFotoSelecionada" accept="image/*" class="hidden" disabled="@enviandoFoto" />
+                            <InputFile OnChange="OnArquivoSelecionado" accept="image/*" class="hidden" disabled="@enviandoFoto" />
                         </label>
                     </div>
                 </div>
@@ -133,6 +133,29 @@
     </div>
 </div>
 
+<div class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[60] @(cropModalVisible ? "" : "hidden")">
+    <div class="bg-slate-800 rounded-xl p-6 w-full max-w-sm mx-4">
+        <h4 class="text-slate-100 font-semibold mb-1">Ajustar foto</h4>
+        <p class="text-slate-400 text-xs mb-3">Arraste a imagem para posicionar o rosto e use o controle para aproximar.</p>
+        <div class="flex justify-center mb-3">
+            <canvas id="@CropCanvasId" width="280" height="280" class="rounded-lg bg-slate-900 touch-none cursor-move"></canvas>
+        </div>
+        <input type="range" min="0" max="100" value="0" @oninput="OnZoomChange" class="w-full mb-4" />
+        @if (!string.IsNullOrEmpty(erroFoto))
+        {
+            <p class="text-red-400 text-xs text-center mb-2">@erroFoto</p>
+        }
+        <div class="flex space-x-3">
+            <button type="button" @onclick="ConfirmarCropAsync" disabled="@enviandoFoto" class="flex-1 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 px-4 py-2 rounded-lg text-white transition-colors">
+                <i class="fas @(enviandoFoto ? "fa-spinner fa-spin" : "fa-check") mr-2"></i>Aplicar
+            </button>
+            <button type="button" @onclick="CancelarCrop" disabled="@enviandoFoto" class="flex-1 bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded-lg text-white transition-colors">
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
 @code {
     [Parameter] public bool IsVisible { get; set; }
     [Parameter] public UsuarioAdmin Usuario { get; set; } = new UsuarioAdmin();
@@ -168,15 +191,66 @@
     private string? erroPerfil;
     private string? erroEndereco;
 
-    private async Task OnFotoSelecionada(InputFileChangeEventArgs e)
+    private bool cropModalVisible;
+    // Precisa ser único por instância: a TopBar (modal "Perfil") e a tela de Gestão de
+    // Usuários (cadastro/edição) montam cada uma o seu próprio UsuarioModal ao mesmo tempo
+    // — com um id fixo, document.getElementById sempre acharia o canvas da primeira
+    // instância montada, deixando o recorte da outra tela sempre em branco.
+    private readonly string CropCanvasId = $"cropper-canvas-usuario-{Guid.NewGuid():N}";
+    private const long TamanhoMaximoFoto = 15 * 1024 * 1024;
+
+    // Em vez de subir o arquivo direto, primeiro carrega a imagem escolhida no canvas de
+    // recorte (ver imageCropper.js) — o usuário posiciona/amplia até enquadrar o rosto
+    // antes de gerar o arquivo final que vai pro servidor. O conteúdo do arquivo é passado
+    // pro JS via DotNetStreamReference (forma oficial de streaming .NET -> JS), em vez de
+    // depender de ler o <input type=file> diretamente do lado do JS — mais confiável entre
+    // navegadores/dispositivos do que expor o elemento por referência.
+    private async Task OnArquivoSelecionado(InputFileChangeEventArgs e)
+    {
+        erroFoto = null;
+        try
+        {
+            using var stream = e.File.OpenReadStream(TamanhoMaximoFoto);
+            using var streamRef = new DotNetStreamReference(stream, leaveOpen: false);
+            var ok = await JSRuntime.InvokeAsync<bool>("gestaoPiscinaCropper.iniciarComStream", CropCanvasId, streamRef);
+            if (!ok)
+            {
+                erroFoto = "Não foi possível carregar a imagem selecionada. Tente outro arquivo.";
+                return;
+            }
+
+            cropModalVisible = true;
+        }
+        catch (Exception ex)
+        {
+            erroFoto = $"Erro ao carregar a imagem: {ex.Message}";
+        }
+    }
+
+    private async Task OnZoomChange(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var valor))
+        {
+            await JSRuntime.InvokeVoidAsync("gestaoPiscinaCropper.zoom", CropCanvasId, valor);
+        }
+    }
+
+    private async Task ConfirmarCropAsync()
     {
         erroFoto = null;
         enviandoFoto = true;
-        StateHasChanged();
-
         try
         {
-            Usuario.FotoUrl = await ApiService.UploadFotoAsync(e.File, "usuarios");
+            var base64 = await JSRuntime.InvokeAsync<string?>("gestaoPiscinaCropper.exportar", CropCanvasId, 400);
+            if (string.IsNullOrEmpty(base64))
+            {
+                throw new Exception("Não foi possível processar a imagem.");
+            }
+
+            var bytes = Convert.FromBase64String(base64);
+            Usuario.FotoUrl = await ApiService.UploadFotoAsync(bytes, "foto.jpg", "image/jpeg", "usuarios");
+            await JSRuntime.InvokeVoidAsync("gestaoPiscinaCropper.descartar", CropCanvasId);
+            cropModalVisible = false;
         }
         catch (Exception ex)
         {
@@ -186,6 +260,13 @@
         {
             enviandoFoto = false;
         }
+    }
+
+    private async Task CancelarCrop()
+    {
+        await JSRuntime.InvokeVoidAsync("gestaoPiscinaCropper.descartar", CropCanvasId);
+        cropModalVisible = false;
+        erroFoto = null;
     }
 
     private async Task Close()

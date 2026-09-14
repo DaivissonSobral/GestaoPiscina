@@ -138,6 +138,38 @@ namespace GestaoPiscina.Client.Services
             }
         }
 
+        // Usado pela foto de perfil já recortada no navegador (ver imageCropper.js) — o
+        // arquivo já chega pronto em bytes, sem passar por um IBrowserFile.
+        public async Task<string> UploadFotoAsync(byte[] arquivo, string nomeArquivo, string contentType, string pasta = "os")
+        {
+            try
+            {
+                using var content = new MultipartFormDataContent();
+                using var byteContent = new ByteArrayContent(arquivo);
+                byteContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+                content.Add(byteContent, "arquivo", nomeArquivo);
+
+                var response = await _httpClient.PostAsync($"{_baseUrl}uploads/foto?pasta={Uri.EscapeDataString(pasta)}", content);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+
+                var resultado = await response.Content.ReadFromJsonAsync<UploadFotoResponse>();
+                if (string.IsNullOrEmpty(resultado?.Url))
+                {
+                    throw new Exception("Resposta inválida do servidor ao enviar a foto.");
+                }
+
+                return resultado.Url;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao enviar foto: {ex.Message}");
+            }
+        }
+
         // Clientes
         public async Task<List<Cliente>> GetClientesAsync()
         {
