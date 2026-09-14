@@ -1002,6 +1002,27 @@ namespace GestaoPiscina.Client.Services
             }
         }
 
+        // Apaga a rota confirmada desse técnico/dia (usado pelo "Refazer" — diferente de
+        // "Editar", que só mexe no estado local até uma nova confirmação, aqui a remoção do
+        // banco é imediata).
+        public async Task ExcluirRotaAsync(int idUsuario, DateTime data)
+        {
+            try
+            {
+                var dataFormatada = data.ToString("yyyy-MM-dd");
+                var response = await _httpClient.DeleteAsync($"{_baseUrl}rotas/tecnico/{idUsuario}?data={dataFormatada}");
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao desfazer rota: {ex.Message}");
+            }
+        }
+
         // Push Notifications
         public async Task<string?> GetVapidPublicKeyAsync()
         {

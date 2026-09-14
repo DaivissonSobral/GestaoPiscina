@@ -138,9 +138,14 @@
                                         </div>
                                     }
                                 </div>
-                                <button @onclick="() => EditarRotaConfirmadaAsync(tecnico.IDUsuario)" class="w-full bg-slate-600 hover:bg-slate-500 text-white text-xs py-1.5 rounded-md transition-colors">
-                                    <i class="fas fa-pen mr-1"></i>Editar
-                                </button>
+                                <div class="flex gap-2">
+                                    <button @onclick="() => EditarRotaConfirmadaAsync(tecnico.IDUsuario)" disabled="@(refazendoRotaId == tecnico.IDUsuario)" class="flex-1 bg-slate-600 hover:bg-slate-500 disabled:opacity-50 text-white text-xs py-1.5 rounded-md transition-colors">
+                                        <i class="fas fa-pen mr-1"></i>Editar
+                                    </button>
+                                    <button @onclick="() => RefazerRotaConfirmadaAsync(tecnico.IDUsuario)" disabled="@(refazendoRotaId == tecnico.IDUsuario)" class="flex-1 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white text-xs py-1.5 rounded-md transition-colors">
+                                        <i class="fas @(refazendoRotaId == tecnico.IDUsuario ? "fa-spinner fa-spin" : "fa-undo") mr-1"></i>@(refazendoRotaId == tecnico.IDUsuario ? "Desfazendo..." : "Refazer")
+                                    </button>
+                                </div>
                             </div>
                         }
                         else if (expandido)
@@ -168,12 +173,12 @@
                                             var selecionado = clientesSelecionadosIds.Contains(cliente.IDCliente);
                                             var ordem = selecionado && rotaCalculada?.Sucesso == true ? clientesSelecionadosIds.IndexOf(cliente.IDCliente) + 1 : (int?)null;
                                             <label class="flex items-center justify-between gap-2 bg-slate-800 rounded-lg px-2 py-1.5 cursor-pointer hover:bg-slate-600/50 transition-colors">
-                                                <div class="min-w-0 flex-1">
-                                                    <div class="flex items-center gap-2">
-                                                        <span class="w-5 h-5 rounded-full @(selecionado ? "bg-orange-500" : "bg-cyan-700") text-white text-[10px] font-bold flex items-center justify-center shrink-0">@Iniciais(cliente.Nome)</span>
-                                                        <span class="text-white text-xs font-medium truncate">@cliente.Nome</span>
+                                                <div class="flex items-center gap-2 min-w-0 flex-1">
+                                                    <span class="w-8 h-8 rounded-full @(selecionado ? "bg-orange-500" : "bg-cyan-700") text-white text-sm font-bold flex items-center justify-center shrink-0">@Iniciais(cliente.Nome)</span>
+                                                    <div class="min-w-0 flex-1">
+                                                        <div class="text-white text-xs font-medium truncate">@cliente.Nome</div>
+                                                        <div class="text-slate-400 text-[11px] truncate">@PiscinasDoDia(cliente)</div>
                                                     </div>
-                                                    <div class="text-slate-400 text-[11px] truncate ml-7">@PiscinasDoDia(cliente)</div>
                                                 </div>
                                                 <div class="flex items-center gap-2 shrink-0">
                                                     @if (ordem != null)
@@ -593,6 +598,35 @@
         tecnicoSelecionadoId = idTecnico;
         await LimparRotaAsync();
         StateHasChanged();
+    }
+
+    private int? refazendoRotaId;
+
+    // Diferente de "Editar" (só mexe no estado local até confirmar de novo), "Refazer"
+    // desfaz a rota confirmada já no banco (DELETE api/rotas/tecnico/{id}) e devolve o
+    // técnico pra seleção zerada, pra montar tudo de novo do zero.
+    private async Task RefazerRotaConfirmadaAsync(int idTecnico)
+    {
+        refazendoRotaId = idTecnico;
+        StateHasChanged();
+        try
+        {
+            await ApiService.ExcluirRotaAsync(idTecnico, dataSelecionada);
+            rotasConfirmadas.Remove(idTecnico);
+            clientesSelecionadosIds = new List<int>();
+            modoAutomatico = false;
+            tecnicoSelecionadoId = idTecnico;
+            await LimparRotaAsync();
+        }
+        catch (Exception ex)
+        {
+            ShowToast("Erro", ex.Message, "error");
+        }
+        finally
+        {
+            refazendoRotaId = null;
+            StateHasChanged();
+        }
     }
 
     // Alterna entre montar a rota escolhendo manualmente (lista/mapa em branco, você marca)
