@@ -119,12 +119,7 @@
     }
 
     public bool MobileMenuOpen { get; private set; }
-
-    public void ToggleMobileMenu()
-    {
-        MobileMenuOpen = !MobileMenuOpen;
-        StateHasChanged();
-    }
+    public bool DesktopSidebarCollapsed { get; private set; }
 
     public void CloseMobileMenu()
     {
@@ -133,5 +128,17 @@
             MobileMenuOpen = false;
             StateHasChanged();
         }
+    }
+
+    // Um botão só (ver TopBar) alterna os dois estados juntos: no celular isso abre/fecha a
+    // faixa cheia por cima do conteúdo; no computador isso encolhe a barra pra só os ícones.
+    // Cada estado só tem efeito visual na faixa de largura certa (classes com prefixo "md:"
+    // no Sidebar), então alternar os dois no mesmo clique funciona nos dois tamanhos sem
+    // precisar detectar a largura da tela.
+    public void ToggleSidebar()
+    {
+        MobileMenuOpen = !MobileMenuOpen;
+        DesktopSidebarCollapsed = !DesktopSidebarCollapsed;
+        StateHasChanged();
     }
 }
