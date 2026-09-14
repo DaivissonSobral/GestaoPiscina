@@ -114,7 +114,7 @@ window.gestaoPiscinaMaps = (function () {
         return canvas.toDataURL();
     }
 
-    function addMarkerWithIcon(elementId, lat, lng, iconUrl, title, size) {
+    function addMarkerWithIcon(elementId, lat, lng, iconUrl, title, size, onClick) {
         const entry = maps[elementId];
         if (!entry) {
             return;
@@ -130,12 +130,25 @@ window.gestaoPiscinaMaps = (function () {
                 anchor: new google.maps.Point(size / 2, size / 2)
             }
         });
+        if (onClick) {
+            marker.addListener('click', onClick);
+        }
         entry.markers.push(marker);
         entry.bounds.extend(position);
     }
 
     function addInitialsMarker(elementId, lat, lng, initials, title, color) {
         addMarkerWithIcon(elementId, lat, lng, drawInitialsIcon(initials, color), title, 40);
+    }
+
+    // Igual addInitialsMarker, mas clicável: usado pelos clientes do dia na tela de Gestão
+    // de Rota (Pages/Rotas.razor) pra permitir selecionar/desselecionar clientes na hora de
+    // montar a rota manualmente de um técnico. dotNetRef é a referência .NET do componente
+    // (DotNetObjectReference), chamada de volta via JSInvokable a cada clique.
+    function addSelectableInitialsMarker(elementId, lat, lng, initials, title, color, dotNetRef, idCliente) {
+        addMarkerWithIcon(elementId, lat, lng, drawInitialsIcon(initials, color), title, 40, () => {
+            dotNetRef.invokeMethodAsync('OnClienteMarcadorClicado', idCliente);
+        });
     }
 
     // Recorta a foto em círculo via canvas; se a imagem for de outra origem sem CORS
@@ -193,12 +206,68 @@ window.gestaoPiscinaMaps = (function () {
         img.src = photoUrl;
     }
 
+    // Traça a rota (viagem redonda: sai do técnico, visita os clientes selecionados,
+    // volta pro técnico) usando DirectionsService, com optimizeWaypoints pra deixar o
+    // Google decidir a melhor ordem de visita entre os pontos escolhidos manualmente
+    // (ou sugeridos por proximidade) em Pages/Rotas.razor. preserveViewport porque quem
+    // controla o enquadramento do mapa é sempre fitToMarkers, chamado logo depois.
+    function calculateRoute(elementId, apiKey, originLat, originLng, waypoints) {
+        return loadScript(apiKey).then(() => new Promise((resolve) => {
+            const entry = maps[elementId];
+            if (!entry) {
+                resolve({ sucesso: false, erro: 'Mapa não iniciado' });
+                return;
+            }
+            if (!entry.directionsRenderer) {
+                entry.directionsRenderer = new google.maps.DirectionsRenderer({ map: entry.map, suppressMarkers: true, preserveViewport: true });
+            }
+            const origin = { lat: originLat, lng: originLng };
+            const directionsService = new google.maps.DirectionsService();
+            directionsService.route({
+                origin: origin,
+                destination: origin,
+                waypoints: waypoints.map((w) => ({ location: { lat: w.lat, lng: w.lng }, stopover: true })),
+                optimizeWaypoints: true,
+                travelMode: google.maps.TravelMode.DRIVING
+            }, (result, status) => {
+                if (status === 'OK' && result) {
+                    entry.directionsRenderer.setDirections(result);
+                    let distanciaMetros = 0;
+                    let duracaoSegundos = 0;
+                    result.routes[0].legs.forEach((leg) => {
+                        distanciaMetros += leg.distance ? leg.distance.value : 0;
+                        duracaoSegundos += leg.duration ? leg.duration.value : 0;
+                    });
+                    resolve({
+                        sucesso: true,
+                        distanciaMetros: distanciaMetros,
+                        duracaoSegundos: duracaoSegundos,
+                        ordem: result.routes[0].waypoint_order
+                    });
+                } else {
+                    resolve({ sucesso: false, erro: status });
+                }
+            });
+        }));
+    }
+
+    function limparRota(elementId) {
+        const entry = maps[elementId];
+        if (entry && entry.directionsRenderer) {
+            entry.directionsRenderer.setMap(null);
+            entry.directionsRenderer = null;
+        }
+    }
+
     return {
         geocode: geocode,
         initMap: initMap,
         clearMarkers: clearMarkers,
         fitToMarkers: fitToMarkers,
         addInitialsMarker: addInitialsMarker,
-        addPhotoMarker: addPhotoMarker
+        addSelectableInitialsMarker: addSelectableInitialsMarker,
+        addPhotoMarker: addPhotoMarker,
+        calculateRoute: calculateRoute,
+        limparRota: limparRota
     };
 })();

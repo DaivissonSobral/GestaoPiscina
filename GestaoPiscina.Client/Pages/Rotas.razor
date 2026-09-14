@@ -9,18 +9,34 @@
 
 <section class="p-4 space-y-4">
     <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="text-slate-300">
-            <span class="font-semibold text-slate-100">@DateTime.Today.ToString("dd/MM/yyyy")</span>
-            — @ordensHoje.Count OS hoje
-            @if (clientesSemLocalizacao > 0 || tecnicosSemLocalizacao > 0)
-            {
-                <span class="text-amber-400">· @(clientesSemLocalizacao + tecnicosSemLocalizacao) sem localização</span>
-            }
+        <div class="flex flex-wrap items-center gap-2">
+            <button @onclick="() => DefinirDataAsync(DateTime.Today)" class="@BotaoDataClasse(DateTime.Today) px-3 py-1.5 rounded-lg text-sm transition-colors">Hoje</button>
+            <button @onclick="() => DefinirDataAsync(DateTime.Today.AddDays(1))" class="@BotaoDataClasse(DateTime.Today.AddDays(1)) px-3 py-1.5 rounded-lg text-sm transition-colors">Amanhã</button>
+            <input type="date" value="@dataSelecionada.ToString("yyyy-MM-dd")" @onchange="OnDataInputChangedAsync"
+                   class="bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-cyan-500" />
+            <span class="text-slate-300 text-sm">
+                @ordensDoDia.Count OS
+                @if (clientesSemLocalizacao > 0 || tecnicosSemLocalizacao > 0)
+                {
+                    <span class="text-amber-400">· @(clientesSemLocalizacao + tecnicosSemLocalizacao) sem localização</span>
+                }
+            </span>
         </div>
         <button @onclick="AtualizarLocalizacoesAsync" disabled="@atualizandoLocalizacoes" class="bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 px-4 py-2 rounded-lg text-white text-sm transition-colors">
             <i class="fas @(atualizandoLocalizacoes ? "fa-spinner fa-spin" : "fa-map-marker-alt") mr-2"></i>
             @(atualizandoLocalizacoes ? "Atualizando..." : "Atualizar localizações")
         </button>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+        <label class="text-slate-300 text-sm">Montar rota para:</label>
+        <select @onchange="OnTecnicoSelecionadoChangedAsync" class="bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+            <option value="" selected="@(tecnicoSelecionadoId == null)">Nenhum (visão geral)</option>
+            @foreach (var t in tecnicos.Where(TemLocalizacao))
+            {
+                <option value="@t.IDUsuario" selected="@(tecnicoSelecionadoId == t.IDUsuario)">@t.Nome (@t.Perfil)</option>
+            }
+        </select>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -29,18 +45,74 @@
             @if (carregando)
             {
                 <div class="absolute inset-0 bg-slate-800 flex items-center justify-center">
-                    <LoadingSpinner IsVisible="true" Message="Carregando ordens de serviço do dia..." />
+                    <LoadingSpinner IsVisible="true" Message="Carregando ordens de serviço..." />
                 </div>
             }
         </div>
 
         <div class="bg-slate-800 rounded-xl border border-slate-700 p-4 space-y-3 max-h-[560px] overflow-y-auto scroll-tema">
-            <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wider">Ordens de Serviço de Hoje</h3>
-            @if (!carregando && !ordensHoje.Any())
+            @if (tecnicoSelecionadoId != null)
             {
-                <p class="text-slate-500 text-sm">Nenhuma OS agendada para hoje.</p>
+                <div class="bg-slate-700 rounded-lg p-3 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-semibold text-slate-200 uppercase tracking-wider truncate">Rota de @TecnicoSelecionado?.Nome</h3>
+                        <button @onclick="CancelarSelecaoAsync" class="text-slate-400 hover:text-white shrink-0" title="Cancelar"><i class="fas fa-times"></i></button>
+                    </div>
+
+                    <button @onclick="SugerirAutomaticamente" class="w-full bg-slate-600 hover:bg-slate-500 text-white text-xs py-1.5 rounded-md transition-colors">
+                        <i class="fas fa-magic mr-1"></i> Sugerir automaticamente (~@MetaClientesPorRota mais próximos)
+                    </button>
+
+                    @if (clientesSelecionadosIds.Any())
+                    {
+                        <div class="space-y-1">
+                            @{ var indice = 0; }
+                            @foreach (var idCliente in clientesSelecionadosIds)
+                            {
+                                var cliente = ClientesDoDia().FirstOrDefault(c => c.IDCliente == idCliente);
+                                var numero = ++indice;
+                                <div class="flex items-center justify-between gap-2 bg-slate-800 rounded px-2 py-1 text-xs">
+                                    <span class="text-white truncate"><span class="text-cyan-400 font-bold">@numero.</span> @cliente?.Nome</span>
+                                    <button @onclick="() => RemoverDaSelecaoAsync(idCliente)" class="text-slate-400 hover:text-red-400 shrink-0"><i class="fas fa-times"></i></button>
+                                </div>
+                            }
+                        </div>
+
+                        <button @onclick="MontarRotaAsync" disabled="@calculandoRota" class="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-xs py-1.5 rounded-md transition-colors">
+                            <i class="fas @(calculandoRota ? "fa-spinner fa-spin" : "fa-route") mr-1"></i>
+                            @(calculandoRota ? "Calculando..." : "Montar rota")
+                        </button>
+
+                        @if (rotaCalculada != null)
+                        {
+                            @if (rotaCalculada.Sucesso)
+                            {
+                                <div class="text-slate-300 text-xs">
+                                    <i class="fas fa-road mr-1"></i>@FormatarDistancia(rotaCalculada.DistanciaMetros) · @FormatarDuracao(rotaCalculada.DuracaoSegundos)
+                                </div>
+                                <button @onclick="ConfirmarAtribuicaoAsync" disabled="@confirmandoAtribuicao" class="w-full bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white text-xs py-1.5 rounded-md transition-colors">
+                                    @(confirmandoAtribuicao ? "Salvando..." : "Confirmar atribuição")
+                                </button>
+                            }
+                            else
+                            {
+                                <p class="text-red-400 text-xs">Não foi possível montar a rota (@rotaCalculada.Erro).</p>
+                            }
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-slate-500 text-xs">Clique nos clientes do mapa pra adicionar à rota, ou use "Sugerir automaticamente".</p>
+                    }
+                </div>
             }
-            @foreach (var os in ordensHoje)
+
+            <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wider">Ordens de Serviço</h3>
+            @if (!carregando && !ordensDoDia.Any())
+            {
+                <p class="text-slate-500 text-sm">Nenhuma OS agendada para esta data.</p>
+            }
+            @foreach (var os in ordensDoDia)
             {
                 <div class="bg-slate-700 rounded-lg p-3 text-xs">
                     <div class="flex items-start justify-between gap-2">
@@ -87,14 +159,27 @@
 </section>
 
 @code {
-    private List<OrdemDeServico> ordensHoje = new();
+    [CascadingParameter] public MainLayout? MainLayout { get; set; }
+
+    private List<OrdemDeServico> ordensDoDia = new();
     private List<Usuario> tecnicos = new();
     private bool carregando = true;
     private bool mapaIniciado;
+    private bool precisaAjustarZoom = true;
     private bool atualizandoLocalizacoes;
     private int clientesSemLocalizacao;
     private int tecnicosSemLocalizacao;
+    private DateTime dataSelecionada = DateTime.Today;
     private const string MapaId = "mapa-rotas";
+
+    // Montagem de rota manual/automática por técnico.
+    private DotNetObjectReference<Rotas>? dotNetRef;
+    private int? tecnicoSelecionadoId;
+    private List<int> clientesSelecionadosIds = new();
+    private RotaResultado? rotaCalculada;
+    private bool calculandoRota;
+    private bool confirmandoAtribuicao;
+    private const int MetaClientesPorRota = 7;
 
     // Centro padrão do mapa (Fortaleza-CE) usado quando ainda não há nenhum marcador
     // posicionável — só serve de ponto de partida, o mapa se ajusta aos marcadores depois.
@@ -103,12 +188,33 @@
 
     protected override async Task OnInitializedAsync()
     {
+        dotNetRef = DotNetObjectReference.Create(this);
         await CarregarDadosAsync();
     }
+
+    private async Task DefinirDataAsync(DateTime data)
+    {
+        dataSelecionada = data.Date;
+        await CancelarSelecaoAsync();
+        await CarregarDadosAsync();
+    }
+
+    private async Task OnDataInputChangedAsync(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out var data))
+        {
+            await DefinirDataAsync(data);
+        }
+    }
+
+    private string BotaoDataClasse(DateTime data) => data.Date == dataSelecionada.Date
+        ? "bg-cyan-600 text-white"
+        : "bg-slate-700 text-slate-300 hover:bg-slate-600";
 
     private async Task CarregarDadosAsync()
     {
         carregando = true;
+        precisaAjustarZoom = true;
         StateHasChanged();
         try
         {
@@ -116,18 +222,13 @@
             var tecnicosTask = ApiService.GetUsuariosAsync("Técnico,Supervisor");
             await Task.WhenAll(ordensTask, tecnicosTask);
 
-            ordensHoje = ordensTask.Result
-                .Where(os => os.DataExecucao.Date == DateTime.Today && os.Status != "Cancelada")
+            ordensDoDia = ordensTask.Result
+                .Where(os => os.DataExecucao.Date == dataSelecionada.Date && os.Status != "Cancelada")
                 .OrderBy(os => os.HoraInicio)
                 .ToList();
             tecnicos = tecnicosTask.Result;
 
-            clientesSemLocalizacao = ordensHoje
-                .Select(os => os.Piscina?.Cliente)
-                .Where(c => c != null)
-                .GroupBy(c => c!.IDCliente)
-                .Select(g => g.First()!)
-                .Count(c => !TemLocalizacao(c));
+            clientesSemLocalizacao = ClientesDoDia().Count(c => !TemLocalizacao(c));
             tecnicosSemLocalizacao = tecnicos.Count(t => !TemLocalizacao(t));
         }
         finally
@@ -136,6 +237,15 @@
             StateHasChanged();
         }
     }
+
+    private List<Cliente> ClientesDoDia() => ordensDoDia
+        .Select(os => os.Piscina?.Cliente)
+        .Where(c => c != null)
+        .GroupBy(c => c!.IDCliente)
+        .Select(g => g.First()!)
+        .ToList();
+
+    private Usuario? TecnicoSelecionado => tecnicos.FirstOrDefault(t => t.IDUsuario == tecnicoSelecionadoId);
 
     private bool TemLocalizacao(Cliente cliente) => cliente.Latitude.HasValue && cliente.Longitude.HasValue;
     private bool TemLocalizacao(Usuario usuario) => usuario.Latitude.HasValue && usuario.Longitude.HasValue;
@@ -147,11 +257,40 @@
     // fosse escondido/recriado condicionalmente, mapaIniciado ficaria dessincronizado do
     // elemento de verdade). Chamado depois de todo re-render enquanto não está carregando —
     // idempotente (redesenha os marcadores do zero a cada chamada), então repetir é seguro.
+    // Evita duas execuções de DesenharMapaAsync em paralelo: cada clique de seleção dispara
+    // StateHasChanged (novo render -> nova chamada daqui), e como DesenharMapaAsync faz vários
+    // awaits de JS interop em sequência (clearMarkers, N addMarker, fitToMarkers), um clique
+    // rápido demais podia iniciar uma segunda passada de redesenho antes da primeira terminar
+    // — as duas mexendo na mesma lista de marcadores ao mesmo tempo, embaralhando qual
+    // clique de fechamento correspondia a qual cliente. Se já tem um redesenho rolando, só
+    // marca que precisa redesenhar de novo assim que o atual terminar (não perde estado).
+    private bool desenhando;
+    private bool redesenhoPendente;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!carregando)
+        if (carregando)
         {
-            await DesenharMapaAsync();
+            return;
+        }
+        if (desenhando)
+        {
+            redesenhoPendente = true;
+            return;
+        }
+
+        desenhando = true;
+        try
+        {
+            do
+            {
+                redesenhoPendente = false;
+                await DesenharMapaAsync();
+            } while (redesenhoPendente);
+        }
+        finally
+        {
+            desenhando = false;
         }
     }
 
@@ -175,17 +314,12 @@
                 await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.clearMarkers", MapaId);
             }
 
-            var clientesJaAdicionados = new HashSet<int>();
-            foreach (var os in ordensHoje)
+            foreach (var cliente in ClientesDoDia().Where(TemLocalizacao))
             {
-                var cliente = os.Piscina?.Cliente;
-                if (cliente == null || !TemLocalizacao(cliente) || !clientesJaAdicionados.Add(cliente.IDCliente))
-                {
-                    continue;
-                }
-
-                await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.addInitialsMarker", MapaId,
-                    cliente.Latitude!.Value, cliente.Longitude!.Value, Iniciais(cliente.Nome), cliente.Nome, "#0891b2");
+                var selecionado = clientesSelecionadosIds.Contains(cliente.IDCliente);
+                var cor = selecionado ? "#16a34a" : "#0891b2";
+                await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.addSelectableInitialsMarker", MapaId,
+                    cliente.Latitude!.Value, cliente.Longitude!.Value, Iniciais(cliente.Nome), cliente.Nome, cor, dotNetRef, cliente.IDCliente);
             }
 
             foreach (var tecnico in tecnicos.Where(TemLocalizacao))
@@ -194,7 +328,14 @@
                     tecnico.Latitude!.Value, tecnico.Longitude!.Value, tecnico.FotoUrl, $"{tecnico.Nome} ({tecnico.Perfil})");
             }
 
-            await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.fitToMarkers", MapaId);
+            // Só reajusta o zoom/enquadramento em cargas estruturais (data trocada, dados
+            // recarregados) — não a cada clique de seleção, senão o mapa "pula" o tempo todo
+            // enquanto o usuário está escolhendo os clientes da rota.
+            if (precisaAjustarZoom)
+            {
+                await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.fitToMarkers", MapaId);
+                precisaAjustarZoom = false;
+            }
         }
         catch
         {
@@ -230,6 +371,202 @@
         "Reagendada" => "bg-orange-100 text-orange-800",
         _ => "bg-slate-100 text-slate-800"
     };
+
+    // Chamado pelo JS (marcador de cliente clicado no mapa — ver maps.js,
+    // addSelectableInitialsMarker) pra alternar a seleção desse cliente na rota do técnico
+    // em montagem. Fora do modo de montagem (nenhum técnico escolhido), não faz nada.
+    [JSInvokable]
+    public async Task OnClienteMarcadorClicado(int idCliente)
+    {
+        if (tecnicoSelecionadoId == null)
+        {
+            return;
+        }
+
+        if (!clientesSelecionadosIds.Remove(idCliente))
+        {
+            clientesSelecionadosIds.Add(idCliente);
+        }
+        await LimparRotaAsync();
+        StateHasChanged();
+    }
+
+    private async Task RemoverDaSelecaoAsync(int idCliente)
+    {
+        clientesSelecionadosIds.Remove(idCliente);
+        await LimparRotaAsync();
+    }
+
+    private async Task OnTecnicoSelecionadoChangedAsync(ChangeEventArgs e)
+    {
+        var valor = e.Value?.ToString();
+        tecnicoSelecionadoId = string.IsNullOrEmpty(valor) ? (int?)null : int.Parse(valor);
+        clientesSelecionadosIds.Clear();
+        await LimparRotaAsync();
+    }
+
+    private async Task CancelarSelecaoAsync()
+    {
+        tecnicoSelecionadoId = null;
+        clientesSelecionadosIds.Clear();
+        await LimparRotaAsync();
+    }
+
+    private async Task LimparRotaAsync()
+    {
+        rotaCalculada = null;
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.limparRota", MapaId);
+        }
+        catch
+        {
+        }
+    }
+
+    // Escolhe, entre os clientes do dia ainda não selecionados, os mais próximos do técnico
+    // em linha reta (fórmula de Haversine) até completar a meta de ~7 clientes por rota —
+    // só uma sugestão de partida; o usuário pode ajustar clicando no mapa antes de montar a
+    // rota de verdade (que aí sim usa a distância real de trajeto via Directions API).
+    private void SugerirAutomaticamente()
+    {
+        var tecnico = TecnicoSelecionado;
+        if (tecnico == null || !TemLocalizacao(tecnico))
+        {
+            return;
+        }
+
+        var vagas = MetaClientesPorRota - clientesSelecionadosIds.Count;
+        if (vagas <= 0)
+        {
+            return;
+        }
+
+        var candidatos = ClientesDoDia()
+            .Where(c => TemLocalizacao(c) && !clientesSelecionadosIds.Contains(c.IDCliente))
+            .OrderBy(c => DistanciaKm(tecnico.Latitude!.Value, tecnico.Longitude!.Value, c.Latitude!.Value, c.Longitude!.Value))
+            .Take(vagas);
+
+        foreach (var cliente in candidatos)
+        {
+            clientesSelecionadosIds.Add(cliente.IDCliente);
+        }
+    }
+
+    private static double DistanciaKm(double lat1, double lng1, double lat2, double lng2)
+    {
+        const double raioTerraKm = 6371;
+        var dLat = (lat2 - lat1) * Math.PI / 180;
+        var dLng = (lng2 - lng1) * Math.PI / 180;
+        var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                Math.Cos(lat1 * Math.PI / 180) * Math.Cos(lat2 * Math.PI / 180) *
+                Math.Sin(dLng / 2) * Math.Sin(dLng / 2);
+        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+        return raioTerraKm * c;
+    }
+
+    // Manda o técnico + clientes selecionados pro Google Directions (via JS interop), que
+    // devolve a melhor ordem de visita (optimizeWaypoints) e desenha o trajeto no mapa.
+    private async Task MontarRotaAsync()
+    {
+        var tecnico = TecnicoSelecionado;
+        if (tecnico == null || !TemLocalizacao(tecnico) || !clientesSelecionadosIds.Any())
+        {
+            return;
+        }
+
+        var apiKey = Configuration["GoogleMapsApiKey"];
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            return;
+        }
+
+        calculandoRota = true;
+        StateHasChanged();
+        try
+        {
+            var clientesSelecionados = ClientesDoDia().Where(c => clientesSelecionadosIds.Contains(c.IDCliente)).ToList();
+            var waypoints = clientesSelecionados.Select(c => new { lat = c.Latitude!.Value, lng = c.Longitude!.Value }).ToArray();
+
+            var resultado = await JSRuntime.InvokeAsync<RotaResultado>("gestaoPiscinaMaps.calculateRoute", MapaId, apiKey,
+                tecnico.Latitude!.Value, tecnico.Longitude!.Value, waypoints);
+
+            rotaCalculada = resultado;
+            if (resultado.Sucesso && resultado.Ordem != null)
+            {
+                clientesSelecionadosIds = resultado.Ordem.Select(indice => clientesSelecionados[indice].IDCliente).ToList();
+            }
+        }
+        finally
+        {
+            calculandoRota = false;
+            StateHasChanged();
+        }
+    }
+
+    // Grava a atribuição decidida no mapa: todas as OS dos clientes selecionados (na data em
+    // exibição) passam a ser do técnico escolhido.
+    private async Task ConfirmarAtribuicaoAsync()
+    {
+        var tecnico = TecnicoSelecionado;
+        if (tecnico == null || !clientesSelecionadosIds.Any())
+        {
+            return;
+        }
+
+        confirmandoAtribuicao = true;
+        StateHasChanged();
+        try
+        {
+            var osParaAtualizar = ordensDoDia
+                .Where(os => os.Piscina?.Cliente != null && clientesSelecionadosIds.Contains(os.Piscina.Cliente.IDCliente))
+                .ToList();
+
+            var falhas = 0;
+            foreach (var os in osParaAtualizar)
+            {
+                os.IDUsuario = tecnico.IDUsuario;
+                try
+                {
+                    await ApiService.UpdateOrdemDeServicoAsync(os);
+                }
+                catch
+                {
+                    falhas++;
+                }
+            }
+
+            if (falhas == 0)
+            {
+                ShowToast("Sucesso", $"Rota com {osParaAtualizar.Count} OS atribuída a {tecnico.Nome}.", "success");
+            }
+            else
+            {
+                ShowToast("Atenção", $"{osParaAtualizar.Count - falhas} de {osParaAtualizar.Count} OS atribuídas. {falhas} falharam.", "warning");
+            }
+
+            await CancelarSelecaoAsync();
+            await CarregarDadosAsync();
+        }
+        finally
+        {
+            confirmandoAtribuicao = false;
+            StateHasChanged();
+        }
+    }
+
+    private static string FormatarDistancia(double metros) => metros >= 1000 ? $"{metros / 1000:0.0} km" : $"{metros:0} m";
+
+    private static string FormatarDuracao(double segundos)
+    {
+        var tempo = TimeSpan.FromSeconds(segundos);
+        return tempo.TotalHours >= 1 ? $"{(int)tempo.TotalHours}h{tempo.Minutes:00}min" : $"{tempo.Minutes}min";
+    }
+
+    private void ShowToast(string title, string message, string type)
+    {
+        MainLayout?.ShowToast(title, message, type);
+    }
 
     // Faz o backfill de Latitude/Longitude pra clientes e técnicos/supervisores que já
     // tinham endereço cadastrado antes deste recurso existir (por isso ainda não têm
@@ -299,6 +636,13 @@
 
     public async ValueTask DisposeAsync()
     {
-        await Task.CompletedTask;
+        dotNetRef?.Dispose();
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.limparRota", MapaId);
+        }
+        catch
+        {
+        }
     }
 }
