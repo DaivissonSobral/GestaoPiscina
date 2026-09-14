@@ -10,38 +10,45 @@
 <section class="p-4 space-y-4">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex flex-wrap items-center gap-2">
-            <button @onclick="() => DefinirDataAsync(DateTime.Today)" class="@BotaoDataClasse(DateTime.Today) px-3 py-1.5 rounded-lg text-sm transition-colors">Hoje</button>
-            <button @onclick="() => DefinirDataAsync(DateTime.Today.AddDays(1))" class="@BotaoDataClasse(DateTime.Today.AddDays(1)) px-3 py-1.5 rounded-lg text-sm transition-colors">Amanhã</button>
-            <input type="date" value="@dataSelecionada.ToString("yyyy-MM-dd")" @onchange="OnDataInputChangedAsync"
-                   class="bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-cyan-500" />
-            <span class="text-slate-300 text-sm">
-                @ordensDoDia.Count OS
-                @if (clientesSemLocalizacao > 0 || tecnicosSemLocalizacao > 0)
-                {
-                    <span class="text-amber-400">· @(clientesSemLocalizacao + tecnicosSemLocalizacao) sem localização</span>
-                }
-            </span>
+            <div class="flex items-stretch bg-slate-700 border border-slate-600 rounded-lg overflow-hidden">
+                <button @onclick="() => DefinirDataAsync(DateTime.Today)" class="@BotaoDataClasse(DateTime.Today) px-3 py-1.5 text-sm transition-colors">Hoje</button>
+                <button @onclick="() => DefinirDataAsync(DateTime.Today.AddDays(1))" class="@BotaoDataClasse(DateTime.Today.AddDays(1)) px-3 py-1.5 text-sm transition-colors border-l border-slate-600">Amanhã</button>
+                <input type="date" value="@dataSelecionada.ToString("yyyy-MM-dd")" @onchange="OnDataInputChangedAsync"
+                       class="bg-transparent text-slate-100 text-sm px-3 py-1.5 border-l border-slate-600 focus:outline-none" />
+            </div>
+            <div class="relative">
+                <!-- Abaixo de "sm", esse ícone ocupa o lugar do campo (que ficaria enorme
+                     com o nome do técnico e quebraria de linha) — o <select> de verdade
+                     continua ali, só invisível e cobrindo o mesmo espaço (opacity-0 +
+                     inset-0), então clicar no ícone clica nele e abre o menu nativo com as
+                     mesmas opções de sempre, com o texto completo. -->
+                <div class="sm:hidden w-9 h-9 rounded-lg bg-slate-700 border border-slate-600 text-slate-100 flex items-center justify-center">
+                    <i class="fas fa-user text-sm"></i>
+                </div>
+                <select @onchange="OnTecnicoSelecionadoChangedAsync"
+                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer sm:static sm:opacity-100 sm:w-auto sm:h-auto bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                    <option value="" selected="@(tecnicoSelecionadoId == null)">Todos (Visão Geral)</option>
+                    @foreach (var t in tecnicos.Where(TemLocalizacao))
+                    {
+                        <option value="@t.IDUsuario" selected="@(tecnicoSelecionadoId == t.IDUsuario)">@t.Nome (@t.Perfil)</option>
+                    }
+                </select>
+            </div>
         </div>
-        <button @onclick="AtualizarLocalizacoesAsync" disabled="@atualizandoLocalizacoes" class="bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 px-4 py-2 rounded-lg text-white text-sm transition-colors">
-            <i class="fas @(atualizandoLocalizacoes ? "fa-spinner fa-spin" : "fa-map-marker-alt") mr-2"></i>
-            @(atualizandoLocalizacoes ? "Atualizando..." : "Atualizar localizações")
-        </button>
-    </div>
-
-    <div class="flex flex-wrap items-center gap-2">
-        <label class="text-slate-300 text-sm">Montar rota para:</label>
-        <select @onchange="OnTecnicoSelecionadoChangedAsync" class="bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-cyan-500">
-            <option value="" selected="@(tecnicoSelecionadoId == null)">Nenhum (visão geral)</option>
-            @foreach (var t in tecnicos.Where(TemLocalizacao))
-            {
-                <option value="@t.IDUsuario" selected="@(tecnicoSelecionadoId == t.IDUsuario)">@t.Nome (@t.Perfil)</option>
-            }
-        </select>
+        @if (clientesSemLocalizacao > 0 || tecnicosSemLocalizacao > 0)
+        {
+            <span class="text-amber-400 text-sm">@(clientesSemLocalizacao + tecnicosSemLocalizacao) sem localização</span>
+        }
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div class="lg:col-span-2 bg-slate-800 rounded-xl overflow-hidden border border-slate-700 relative">
             <div id="mapa-rotas" style="height: 560px; width: 100%;"></div>
+            <button @onclick="AtualizarLocalizacoesAsync" disabled="@atualizandoLocalizacoes"
+                    class="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-slate-100 hover:bg-white disabled:opacity-60 shadow-md flex items-center justify-center transition-colors"
+                    title="Atualizar localizações">
+                <i class="fas @(atualizandoLocalizacoes ? "fa-spinner fa-spin" : "fa-sync-alt") text-slate-600 text-sm"></i>
+            </button>
             @if (carregando)
             {
                 <div class="absolute inset-0 bg-slate-800 flex items-center justify-center">
