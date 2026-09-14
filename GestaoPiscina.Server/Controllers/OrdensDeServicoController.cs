@@ -206,10 +206,56 @@ namespace GestaoPiscina.Server.Controllers
                 return Forbid();
             }
 
+            if (ordemDeServico.OcorrenciaReprovada)
+            {
+                return BadRequest(new { message = "Esta ocorrência já foi reprovada." });
+            }
+
             if (!ordemDeServico.OcorrenciaAprovada)
             {
                 ordemDeServico.OcorrenciaAprovada = true;
                 ordemDeServico.DataAprovacaoOcorrencia = DateTime.Now;
+                await _context.SaveChangesAsync();
+            }
+
+            return Ok(ordemDeServico);
+        }
+
+        [Authorize]
+        [HttpPatch("{id}/reprovar-ocorrencia")]
+        public async Task<IActionResult> ReprovarOcorrencia(int id)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var idUsuarioLogado))
+            {
+                return Unauthorized();
+            }
+
+            var ordemDeServico = await _context.OrdensDeServico.FindAsync(id);
+            if (ordemDeServico == null)
+            {
+                return NotFound();
+            }
+
+            if (ordemDeServico.Status != "Ocorrência")
+            {
+                return BadRequest(new { message = "Só é possível reprovar uma OS com ocorrência registrada." });
+            }
+
+            if (ordemDeServico.Aprovador != idUsuarioLogado)
+            {
+                return Forbid();
+            }
+
+            if (ordemDeServico.OcorrenciaAprovada)
+            {
+                return BadRequest(new { message = "Esta ocorrência já foi aprovada." });
+            }
+
+            if (!ordemDeServico.OcorrenciaReprovada)
+            {
+                ordemDeServico.OcorrenciaReprovada = true;
+                ordemDeServico.DataReprovacaoOcorrencia = DateTime.Now;
                 await _context.SaveChangesAsync();
             }
 

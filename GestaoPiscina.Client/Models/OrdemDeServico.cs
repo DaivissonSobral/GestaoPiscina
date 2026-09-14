@@ -44,6 +44,10 @@ namespace GestaoPiscina.Client.Models
 
         public DateTime? DataAprovacaoOcorrencia { get; set; }
 
+        public bool OcorrenciaReprovada { get; set; }
+
+        public DateTime? DataReprovacaoOcorrencia { get; set; }
+
         [Required(ErrorMessage = "Técnico responsável é obrigatório")]
         [Range(1, int.MaxValue, ErrorMessage = "Selecione um técnico")]
         public int IDUsuario { get; set; }

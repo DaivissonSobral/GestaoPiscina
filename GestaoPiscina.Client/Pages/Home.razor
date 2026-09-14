@@ -25,10 +25,17 @@
                     <span class="text-green-500 text-sm">Tudo em dia</span>
                 }
             </div>
-            <div @onclick="IrParaPiscinasAtendidas" class="bg-slate-800 hover:bg-slate-700 rounded-xl p-4 cursor-pointer transition-colors">
-                <h3 class="text-slate-400 text-sm">Piscinas Atendidas</h3>
-                <p class="text-2xl font-bold mt-2">@PiscinasAtendidasHoje</p>
-                <span class="text-green-500 text-sm">Hoje</span>
+            <div @onclick="IrParaOcorrencias" class="bg-slate-800 hover:bg-slate-700 rounded-xl p-4 cursor-pointer transition-colors">
+                <h3 class="text-slate-400 text-sm">Ocorrências</h3>
+                <p class="text-2xl font-bold mt-2 text-purple-400">@QuantidadeOcorrencias</p>
+                @if (OcorrenciasPendentes > 0)
+                {
+                    <span class="text-yellow-400 text-sm">@OcorrenciasPendentes pendente(s)</span>
+                }
+                else
+                {
+                    <span class="text-green-500 text-sm">Todas Aprovadas</span>
+                }
             </div>
             <div @onclick="IrParaProdutosEmBaixa" class="bg-slate-800 hover:bg-slate-700 rounded-xl p-4 cursor-pointer transition-colors">
                 <h3 class="text-slate-400 text-sm">Produtos em Baixa</h3>
@@ -140,9 +147,9 @@
                 <h3 class="text-sm text-slate-400">Checklists Concluídos</h3>
                 <p class="text-lg font-semibold mt-1">@ChecklistsHoje hoje</p>
             </div>
-            <div @onclick="IrParaOsFinalizadasMes" class="bg-slate-800 hover:bg-slate-700 rounded-xl p-4 cursor-pointer transition-colors">
-                <h3 class="text-sm text-slate-400">OS Finalizadas (Mês)</h3>
-                <p class="text-lg font-semibold mt-1">@OsFinalizadasMes finalizada(s)</p>
+            <div @onclick="IrParaPiscinasAtendidas" class="bg-slate-800 hover:bg-slate-700 rounded-xl p-4 cursor-pointer transition-colors">
+                <h3 class="text-sm text-slate-400">Piscinas Atendidas</h3>
+                <p class="text-lg font-semibold mt-1">@PiscinasAtendidasHoje atendida(s) hoje</p>
             </div>
             <div @onclick="IrParaCalibracaoEquipamentos" class="bg-slate-800 hover:bg-slate-700 rounded-xl p-4 cursor-pointer transition-colors">
                 <h3 class="text-sm text-slate-400">Calibração de Equipamentos</h3>
@@ -206,7 +213,9 @@
 
     private int ChecklistsHoje => OsHoje.Count(o => o.ChecklistConcluido);
 
-    private int OsFinalizadasMes => ordens.Count(o => o.Status == "Finalizada" && o.DataExecucao.Year == Hoje.Year && o.DataExecucao.Month == Hoje.Month);
+    private int QuantidadeOcorrencias => ordens.Count(o => o.Status == "Ocorrência");
+
+    private int OcorrenciasPendentes => ordens.Count(o => o.Status == "Ocorrência" && !o.OcorrenciaAprovada);
 
     private record StatusResumo(string Status, string Cor);
 
@@ -311,9 +320,9 @@
         Navigation.NavigateTo("/ordens-servico?data=hoje");
     }
 
-    private void IrParaOsFinalizadasMes()
+    private void IrParaOcorrencias()
     {
-        Navigation.NavigateTo("/ordens-servico?status=" + Uri.EscapeDataString("Finalizada") + "&data=mes");
+        Navigation.NavigateTo("/ordens-servico?status=" + Uri.EscapeDataString("Ocorrência"));
     }
 
     private void IrParaCalibracaoEquipamentos()

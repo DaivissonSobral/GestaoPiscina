@@ -41,6 +41,12 @@ namespace GestaoPiscina.Server.Models
 
         public DateTime? DataAprovacaoOcorrencia { get; set; }
 
+        // Reprovação da ocorrência pelo químico responsável — mutuamente exclusiva com a
+        // aprovação acima (ver reprovar-ocorrencia).
+        public bool OcorrenciaReprovada { get; set; }
+
+        public DateTime? DataReprovacaoOcorrencia { get; set; }
+
         [Required]
         public int IDUsuario { get; set; } // Técnico responsável
 

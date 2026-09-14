@@ -234,15 +234,12 @@
                                 <span class="text-green-400"><i class="fas fa-check-circle mr-1"></i>@OrdemDeServico.DataAprovacaoOcorrencia?.ToString("dd/MM/yyyy HH:mm")</span>
                             </div>
                         }
-                        else if (PodeAprovarOcorrencia)
+                        else if (OrdemDeServico.OcorrenciaReprovada)
                         {
-                            <button @onclick="AprovarOcorrenciaAsync" disabled="@aprovando" class="w-full bg-purple-700 hover:bg-purple-600 disabled:opacity-50 px-3 py-2 rounded-lg text-white text-sm font-semibold transition-colors">
-                                <i class="fas fa-check mr-2"></i>@(aprovando ? "Aprovando..." : "Aprovar Ocorrência")
-                            </button>
-                            @if (!string.IsNullOrEmpty(erroAprovacao))
-                            {
-                                <p class="text-red-400 text-xs">@erroAprovacao</p>
-                            }
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Reprovada em:</span>
+                                <span class="text-red-400"><i class="fas fa-times-circle mr-1"></i>@OrdemDeServico.DataReprovacaoOcorrencia?.ToString("dd/MM/yyyy HH:mm")</span>
+                            </div>
                         }
 
                         @if (!string.IsNullOrEmpty(OrdemDeServico.FotosOcorrencias))
@@ -269,21 +266,38 @@
         </div>
         </div>
 
+        @if (!string.IsNullOrEmpty(erroAprovacao) || !string.IsNullOrEmpty(erroReprovacao))
+        {
+            <p class="text-red-400 text-xs px-3 sm:px-6 pt-2">@(erroAprovacao ?? erroReprovacao)</p>
+        }
+
         <div class="flex flex-nowrap items-center gap-1.5 sm:gap-3 px-3 sm:px-6 py-3 sm:py-4 border-t border-slate-700 shrink-0">
-            <button @onclick="IniciarEEditarAsync" disabled="@capturandoLocalizacao" class="flex-1 min-w-0 whitespace-nowrap bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 px-2 sm:px-4 py-2 rounded-lg text-white transition-colors">
-                <i class="fas @(capturandoLocalizacao ? "fa-spinner fa-spin" : "fa-edit") mr-1 sm:mr-2"></i>@(capturandoLocalizacao ? "Localizando..." : TextoBotaoEditar())
-            </button>
-            @if (OrdemDeServico.Status is not ("Finalizada" or "Cancelada"))
+            @if (AguardandoDecisaoDoAprovador)
             {
-                <button @onclick="() => cancelarModalVisible = true" class="flex-1 min-w-0 whitespace-nowrap bg-red-600 hover:bg-red-500 px-2 sm:px-4 py-2 rounded-lg text-white transition-colors">
-                    <i class="fas fa-ban mr-1 sm:mr-2"></i>Cancelar
+                <button @onclick="AprovarOcorrenciaAsync" disabled="@(aprovando || reprovando)" class="flex-1 min-w-0 whitespace-nowrap bg-green-600 hover:bg-green-500 disabled:opacity-50 px-2 sm:px-4 py-2 rounded-lg text-white transition-colors">
+                    <i class="fas fa-check mr-1 sm:mr-2"></i>@(aprovando ? "Aprovando..." : "Aprovar")
+                </button>
+                <button @onclick="ReprovarOcorrenciaAsync" disabled="@(aprovando || reprovando)" class="flex-1 min-w-0 whitespace-nowrap bg-red-600 hover:bg-red-500 disabled:opacity-50 px-2 sm:px-4 py-2 rounded-lg text-white transition-colors">
+                    <i class="fas fa-times mr-1 sm:mr-2"></i>@(reprovando ? "Reprovando..." : "Reprovar")
                 </button>
             }
-            @if (PodeVerRelatorio)
+            else
             {
-                <button @onclick="AbrirRelatorio" class="shrink-0 w-11 h-11 flex items-center justify-center bg-teal-600 hover:bg-teal-500 rounded-lg text-white text-lg transition-colors" title="Relatório">
-                    <i class="fas fa-print"></i>
+                <button @onclick="IniciarEEditarAsync" disabled="@capturandoLocalizacao" class="flex-1 min-w-0 whitespace-nowrap bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 px-2 sm:px-4 py-2 rounded-lg text-white transition-colors">
+                    <i class="fas @(capturandoLocalizacao ? "fa-spinner fa-spin" : "fa-edit") mr-1 sm:mr-2"></i>@(capturandoLocalizacao ? "Localizando..." : TextoBotaoEditar())
                 </button>
+                @if (OrdemDeServico.Status is not ("Finalizada" or "Cancelada" or "Ocorrência"))
+                {
+                    <button @onclick="() => cancelarModalVisible = true" class="flex-1 min-w-0 whitespace-nowrap bg-red-600 hover:bg-red-500 px-2 sm:px-4 py-2 rounded-lg text-white transition-colors">
+                        <i class="fas fa-ban mr-1 sm:mr-2"></i>Cancelar
+                    </button>
+                }
+                @if (PodeVerRelatorio)
+                {
+                    <button @onclick="AbrirRelatorio" class="shrink-0 w-11 h-11 flex items-center justify-center bg-teal-600 hover:bg-teal-500 rounded-lg text-white text-lg transition-colors" title="Relatório">
+                        <i class="fas fa-print"></i>
+                    </button>
+                }
             }
             <button @onclick="Close" class="shrink-0 w-11 h-11 flex items-center justify-center bg-slate-600 hover:bg-slate-500 rounded-lg text-white text-lg transition-colors" title="Fechar">
                 <i class="fas fa-door-open"></i>
@@ -335,12 +349,20 @@
 
     private int? currentUserId;
     private bool aprovando;
+    private bool reprovando;
     private string? erroAprovacao;
+    private string? erroReprovacao;
 
     // Só o próprio químico responsável (Aprovador desta OS) pode aprovar, e só enquanto
     // a ocorrência ainda não tiver sido aprovada.
     private bool PodeAprovarOcorrencia =>
         OrdemDeServico.Status == "Ocorrência" && currentUserId.HasValue && currentUserId == OrdemDeServico.Aprovador;
+
+    // Enquanto o aprovador não decidiu (nem aprovou, nem reprovou), a tela dele mostra
+    // só Aprovar/Reprovar/Fechar no rodapé — sem o botão de editar/continuar, Cancelar
+    // ou Relatório, que só fazem sentido depois da decisão.
+    private bool AguardandoDecisaoDoAprovador =>
+        PodeAprovarOcorrencia && !OrdemDeServico.OcorrenciaAprovada && !OrdemDeServico.OcorrenciaReprovada;
 
     private async Task AprovarOcorrenciaAsync()
     {
@@ -359,6 +381,26 @@
         finally
         {
             aprovando = false;
+        }
+    }
+
+    private async Task ReprovarOcorrenciaAsync()
+    {
+        reprovando = true;
+        erroReprovacao = null;
+        try
+        {
+            var atualizada = await ApiService.ReprovarOcorrenciaAsync(OrdemDeServico.IDOS);
+            OrdemDeServico.OcorrenciaReprovada = atualizada?.OcorrenciaReprovada ?? true;
+            OrdemDeServico.DataReprovacaoOcorrencia = atualizada?.DataReprovacaoOcorrencia ?? DateTime.Now;
+        }
+        catch (Exception ex)
+        {
+            erroReprovacao = ex.Message;
+        }
+        finally
+        {
+            reprovando = false;
         }
     }
 
@@ -455,16 +497,15 @@
         StateHasChanged();
     }
 
-    // Uma Ocorrência ou um Cancelamento trava Salvar pro técnico responsável (ver
-    // EstaBloqueadaParaEdicao no OrdemServicoModal) — pra ele o botão diz "Abrir" (só
-    // visualização), igual a uma OS já finalizada. Quem não é o técnico (ex.: o
-    // aprovador/química) continua vendo "Continuar" numa Ocorrência.
+    // Uma Ocorrência ou um Cancelamento trava Salvar pra qualquer um (ver
+    // EstaBloqueadaParaEdicao no OrdemServicoModal) — o botão vira "Abrir" (só
+    // visualização), igual a uma OS já finalizada.
     private string TextoBotaoEditar() => OrdemDeServico.Status switch
     {
         "Em Aberto" => "Iniciar",
         "Finalizada" => "Abrir",
         "Cancelada" => "Abrir",
-        "Ocorrência" when currentUserId == OrdemDeServico.IDUsuario => "Abrir",
+        "Ocorrência" => "Abrir",
         _ => "Continuar"
     };
 

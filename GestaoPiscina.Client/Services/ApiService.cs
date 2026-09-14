@@ -913,6 +913,27 @@ namespace GestaoPiscina.Client.Services
             }
         }
 
+        public async Task<OrdemDeServico?> ReprovarOcorrenciaAsync(int idOS)
+        {
+            try
+            {
+                await AddAuthHeaderAsync();
+                var response = await _httpClient.PatchAsync($"{_baseUrl}ordensdeservico/{idOS}/reprovar-ocorrencia", new StringContent(string.Empty));
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+
+                return await response.Content.ReadFromJsonAsync<OrdemDeServico>();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao reprovar ocorrência: {ex.Message}");
+            }
+        }
+
         // Rotas confirmadas (ver Pages/Rotas.razor)
         public async Task<List<RotaTecnico>> GetRotasAsync(DateTime data)
         {
