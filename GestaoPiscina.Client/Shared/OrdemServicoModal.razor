@@ -249,26 +249,29 @@
                 </div>
             </div>
 
-            <div class="flex flex-wrap gap-3 p-6 pt-4 border-t border-slate-700 shrink-0">
-                <button type="submit" disabled="@EstaBloqueadaParaEdicao" class="flex-1 min-w-[110px] bg-slate-600 hover:bg-slate-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors" title="@(EstaBloqueadaParaEdicao ? "OS finalizada, cancelada ou com ocorrência não pode mais ser salva por aqui" : "")">
-                    <i class="fas fa-save mr-2"></i>Salvar
+            <div class="flex flex-nowrap items-center gap-1.5 sm:gap-3 px-3 sm:px-6 py-3 sm:py-4 border-t border-slate-700 shrink-0">
+                <button type="submit" disabled="@EstaBloqueadaParaEdicao" class="flex-1 min-w-0 whitespace-nowrap overflow-hidden bg-slate-600 hover:bg-slate-500 disabled:opacity-40 disabled:cursor-not-allowed px-2 sm:px-4 py-2 rounded-lg text-white transition-colors" title="@(EstaBloqueadaParaEdicao ? "OS finalizada, cancelada ou com ocorrência não pode mais ser salva por aqui" : "Salvar")">
+                    <i class="fas fa-save mr-1 sm:mr-2"></i>Salvar
                 </button>
-                <button type="button" @onclick="AbrirRelatorio" disabled="@(!PodeVerRelatorio)" class="shrink-0 w-11 h-11 flex items-center justify-center bg-teal-600 hover:bg-teal-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg text-white text-lg transition-colors" title="@(PodeVerRelatorio ? "Relatório" : "Disponível quando a ocorrência for aprovada")">
+                @* Aprovar e Imprimir ficam sempre montados, só escondidos via CSS (não @if): o
+                   próprio clique em AprovarOcorrenciaAsync muda PodeAprovarOcorrencia (e
+                   PodeVerRelatorio) pra outro valor, e mexer no DOM ao redor do Finalizar/Salvar
+                   (type="submit") no meio de um clique já causou o bug do Finalizar não salvar
+                   (ver commit 987b927) — manter tudo sempre montado evita repetir isso. *@
+                <button type="button" @onclick="AprovarOcorrenciaAsync" disabled="@aprovandoOcorrencia" class="flex-1 min-w-0 whitespace-nowrap overflow-hidden bg-purple-600 hover:bg-purple-500 disabled:opacity-50 px-2 sm:px-4 py-2 rounded-lg text-white transition-colors @(PodeAprovarOcorrencia ? "" : "hidden")">
+                    <i class="fas @(aprovandoOcorrencia ? "fa-spinner fa-spin" : "fa-check") mr-1 sm:mr-2"></i>@(aprovandoOcorrencia ? "Aprovando..." : "Aprovar")
+                </button>
+                <button type="submit" @onclick="PrepararFinalizar" disabled="@(!PodeFinalizar)" class="flex-1 min-w-0 whitespace-nowrap overflow-hidden bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed px-2 sm:px-4 py-2 rounded-lg text-white transition-colors" title="@(PodeFinalizar ? "Finalizar" : "Conclua o checklist, os parâmetros da água e as fotos de antes/depois para finalizar")">
+                    <i class="fas fa-check-circle mr-1 sm:mr-2"></i>Finalizar
+                </button>
+                <button type="button" @onclick="() => cancelarModalVisible = true" class="flex-1 min-w-0 whitespace-nowrap overflow-hidden bg-red-600 hover:bg-red-500 px-2 sm:px-4 py-2 rounded-lg text-white transition-colors @(PodeCancelar ? "" : "hidden")">
+                    <i class="fas fa-ban mr-1 sm:mr-2"></i>Cancelar
+                </button>
+                <button type="button" @onclick="AbrirRelatorio" class="shrink-0 w-11 h-11 flex items-center justify-center bg-teal-600 hover:bg-teal-500 rounded-lg text-white text-lg transition-colors @(PodeVerRelatorio ? "" : "hidden")" title="Relatório">
                     <i class="fas fa-print"></i>
                 </button>
-                @* Aprovar fica sempre montado, só escondido via CSS (não @if): o próprio clique em
-                   AprovarOcorrenciaAsync muda PodeAprovarOcorrencia pra falso, e mexer no DOM ao
-                   redor do Finalizar/Salvar (type="submit") no meio de um clique já causou o bug
-                   do Finalizar não salvar (ver commit 987b927) — manter tudo sempre montado evita
-                   repetir isso. *@
-                <button type="button" @onclick="AprovarOcorrenciaAsync" disabled="@aprovandoOcorrencia" class="flex-1 min-w-[110px] bg-purple-600 hover:bg-purple-500 disabled:opacity-50 px-4 py-2 rounded-lg text-white transition-colors @(PodeAprovarOcorrencia ? "" : "hidden")">
-                    <i class="fas fa-check mr-2"></i>@(aprovandoOcorrencia ? "Aprovando..." : "Aprovar")
-                </button>
-                <button type="submit" @onclick="PrepararFinalizar" disabled="@(!PodeFinalizar)" class="flex-1 min-w-[110px] bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors" title="@(PodeFinalizar ? "" : "Conclua o checklist, os parâmetros da água e as fotos de antes/depois para finalizar")">
-                    <i class="fas fa-check-circle mr-2"></i>Finalizar
-                </button>
-                <button type="button" @onclick="Close" class="flex-1 min-w-[110px] bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-white transition-colors">
-                    Fechar
+                <button type="button" @onclick="Close" class="shrink-0 w-11 h-11 flex items-center justify-center bg-slate-600 hover:bg-slate-500 rounded-lg text-white text-lg transition-colors" title="Fechar">
+                    <i class="fas fa-door-open"></i>
                 </button>
             </div>
             @if (!string.IsNullOrEmpty(erroAprovacaoOcorrencia))
@@ -277,6 +280,8 @@
             }
         </EditForm>
     </div>
+
+    <CancelarOSModal @bind-IsVisible="cancelarModalVisible" OrdemDeServico="OrdemDeServico" OnCancelado="OnOSCancelada" />
 </div>
 
 @code {
@@ -437,13 +442,27 @@
     }
 
     // Salvar é bloqueado numa OS Finalizada, Cancelada (ambas feitas por ações dedicadas —
-    // Finalizar aqui mesmo, Cancelar OS só na tela de Detalhes), ou que JÁ ESTAVA com
-    // ocorrência registrada quando o modal foi aberto (edições posteriores só acontecem via
-    // aprovação, não por aqui).
+    // Finalizar e Cancelar aqui mesmo), ou que JÁ ESTAVA com ocorrência registrada quando o
+    // modal foi aberto (edições posteriores só acontecem via aprovação, não por aqui).
     private bool EstaBloqueadaParaEdicao => OrdemDeServico.Status is "Finalizada" or "Cancelada" || statusOriginal == "Ocorrência";
 
     // Cancelada nunca libera o Relatório — só Finalizada (sempre) ou Ocorrência já aprovada.
     private bool PodeVerRelatorio => OrdemDeServico.Status == "Finalizada" || OrdemDeServico.OcorrenciaAprovada;
+
+    // Não faz sentido cancelar uma OS que já está Finalizada ou já Cancelada — mesma regra
+    // usada para esconder o botão "Cancelar" na tela de Detalhes.
+    private bool PodeCancelar => OrdemDeServico.Status is not ("Finalizada" or "Cancelada");
+
+    private bool cancelarModalVisible;
+
+    // O CancelarOSModal já deixou a OrdemDeServico com Status "Cancelada" e salvou no
+    // servidor — só falta repassar pro pai (mesmo callback usado ao Salvar/Finalizar) e
+    // fechar este modal, voltando pra tela de Detalhes já travada.
+    private async Task OnOSCancelada()
+    {
+        await OnSalvo.InvokeAsync(OrdemDeServico);
+        await Close();
+    }
 
     private void AbrirRelatorio()
     {
