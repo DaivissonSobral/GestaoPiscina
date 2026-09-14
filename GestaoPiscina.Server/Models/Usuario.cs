@@ -36,6 +36,11 @@ namespace GestaoPiscina.Server.Models
         [StringLength(300)]
         public string? Endereco { get; set; }
 
+        // Preenchidos via geocodificação (no navegador) sempre que o Endereco é salvo —
+        // usados para posicionar o técnico/supervisor no mapa de Gestão de Rota.
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+
         // Relacionamento com Perfil
         public int IDPerfil { get; set; }
         public Perfil Perfil { get; set; } = null!;

@@ -1205,7 +1205,9 @@ namespace GestaoPiscina.Client.Services
                     usuario.Login,
                     usuario.IDPerfil,
                     usuario.FotoUrl,
-                    usuario.Endereco
+                    usuario.Endereco,
+                    usuario.Latitude,
+                    usuario.Longitude
                 });
 
                 if (!response.IsSuccessStatusCode)

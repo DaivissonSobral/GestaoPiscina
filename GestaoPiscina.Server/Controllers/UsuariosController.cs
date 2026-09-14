@@ -47,7 +47,11 @@ namespace GestaoPiscina.Server.Controllers
                     IDUsuario = u.IDUsuario,
                     Nome = u.Nome,
                     Email = u.Email,
-                    Perfil = u.Perfil.Nome
+                    Perfil = u.Perfil.Nome,
+                    FotoUrl = u.FotoUrl,
+                    Endereco = u.Endereco,
+                    Latitude = u.Latitude,
+                    Longitude = u.Longitude
                 })
                 .ToListAsync();
 
@@ -65,7 +69,11 @@ namespace GestaoPiscina.Server.Controllers
                     IDUsuario = u.IDUsuario,
                     Nome = u.Nome,
                     Email = u.Email,
-                    Perfil = u.Perfil.Nome
+                    Perfil = u.Perfil.Nome,
+                    FotoUrl = u.FotoUrl,
+                    Endereco = u.Endereco,
+                    Latitude = u.Latitude,
+                    Longitude = u.Longitude
                 })
                 .FirstOrDefaultAsync();
 
@@ -97,7 +105,9 @@ namespace GestaoPiscina.Server.Controllers
                     DataCriacao = u.DataCriacao,
                     UltimoAcesso = u.UltimoAcesso,
                     FotoUrl = u.FotoUrl,
-                    Endereco = u.Endereco
+                    Endereco = u.Endereco,
+                    Latitude = u.Latitude,
+                    Longitude = u.Longitude
                 })
                 .ToListAsync();
 
@@ -143,7 +153,9 @@ namespace GestaoPiscina.Server.Controllers
                 Ativo = true,
                 DataCriacao = DateTime.Now,
                 FotoUrl = dto.FotoUrl,
-                Endereco = dto.Endereco
+                Endereco = dto.Endereco,
+                Latitude = dto.Latitude,
+                Longitude = dto.Longitude
             };
 
             _context.Usuarios.Add(usuario);
@@ -161,7 +173,9 @@ namespace GestaoPiscina.Server.Controllers
                 DataCriacao = usuario.DataCriacao,
                 UltimoAcesso = usuario.UltimoAcesso,
                 FotoUrl = usuario.FotoUrl,
-                Endereco = usuario.Endereco
+                Endereco = usuario.Endereco,
+                Latitude = usuario.Latitude,
+                Longitude = usuario.Longitude
             });
         }
 
@@ -207,6 +221,8 @@ namespace GestaoPiscina.Server.Controllers
             usuario.Ativo = dto.Ativo;
             usuario.FotoUrl = dto.FotoUrl;
             usuario.Endereco = dto.Endereco;
+            usuario.Latitude = dto.Latitude;
+            usuario.Longitude = dto.Longitude;
 
             await _context.SaveChangesAsync();
 
@@ -246,6 +262,8 @@ namespace GestaoPiscina.Server.Controllers
             if (dto.Endereco != null)
             {
                 usuario.Endereco = dto.Endereco;
+                usuario.Latitude = dto.Latitude;
+                usuario.Longitude = dto.Longitude;
             }
 
             var perfilNomeFinal = usuario.Perfil.Nome;
@@ -321,6 +339,11 @@ namespace GestaoPiscina.Server.Controllers
         public string Nome { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Perfil { get; set; } = string.Empty;
+        // Usados pelo mapa de Gestão de Rota (ver GestaoPiscina.Client/Pages/Rotas.razor).
+        public string? FotoUrl { get; set; }
+        public string? Endereco { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
     }
 
     public class UsuarioAdminDTO
@@ -336,6 +359,8 @@ namespace GestaoPiscina.Server.Controllers
         public DateTime? UltimoAcesso { get; set; }
         public string? FotoUrl { get; set; }
         public string? Endereco { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
     }
 
     public class CriarUsuarioDTO
@@ -347,6 +372,8 @@ namespace GestaoPiscina.Server.Controllers
         [Required] public int IDPerfil { get; set; }
         [StringLength(500)] public string? FotoUrl { get; set; }
         [StringLength(300)] public string? Endereco { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
     }
 
     public class AtualizarUsuarioDTO
@@ -358,6 +385,8 @@ namespace GestaoPiscina.Server.Controllers
         public bool Ativo { get; set; } = true;
         [StringLength(500)] public string? FotoUrl { get; set; }
         [StringLength(300)] public string? Endereco { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
     }
 
     // Autoatendimento (ver AtualizarMeuPerfil): todos os campos são opcionais — Nome/Email/
@@ -371,6 +400,8 @@ namespace GestaoPiscina.Server.Controllers
         public int? IDPerfil { get; set; }
         [StringLength(500)] public string? FotoUrl { get; set; }
         [StringLength(300)] public string? Endereco { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
     }
 
     public class ResetarSenhaDTO

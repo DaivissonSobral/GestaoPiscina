@@ -5,6 +5,7 @@
 @inject ApiService ApiService
 @inject ClienteStateService StateService
 @inject IJSRuntime JSRuntime
+@inject IConfiguration Configuration
 
 <div class="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 pt-8 @(IsVisible ? "" : "hidden")" @onclick="HandleBackdropClick">
     <div class="bg-slate-800 rounded-xl p-6 w-full max-w-6xl mx-4 max-h-[90vh] overflow-y-auto" @onclick:stopPropagation="true">
@@ -791,6 +792,8 @@
         isLoading = true;
         try
         {
+            await GeocodificarEnderecoAsync(cliente);
+
             if (cliente.IDCliente > 0)
             {
                 await ApiService.UpdateClienteAsync(cliente);
@@ -833,4 +836,34 @@
             MainLayout.ShowToast(title, message, type);
         }
     }
-} 
+
+    // Geocodifica o endereço no navegador (Google) e grava Latitude/Longitude no próprio
+    // objeto antes de salvar, pro mapa de Gestão de Rota não precisar geocodificar de novo
+    // a cada abertura. Nunca lança — é um extra, não pode impedir o cliente de ser salvo.
+    private async Task GeocodificarEnderecoAsync(Cliente cliente)
+    {
+        if (string.IsNullOrWhiteSpace(cliente.Endereco))
+        {
+            return;
+        }
+
+        try
+        {
+            var apiKey = Configuration["GoogleMapsApiKey"];
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                return;
+            }
+
+            var resultado = await JSRuntime.InvokeAsync<GeoResultado?>("gestaoPiscinaMaps.geocode", apiKey, cliente.Endereco);
+            if (resultado != null)
+            {
+                cliente.Latitude = resultado.Lat;
+                cliente.Longitude = resultado.Lng;
+            }
+        }
+        catch
+        {
+        }
+    }
+}

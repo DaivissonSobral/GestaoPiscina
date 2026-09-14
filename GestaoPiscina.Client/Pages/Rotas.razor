@@ -1,0 +1,304 @@
+@page "/rotas"
+@using GestaoPiscina.Client.Services
+@using GestaoPiscina.Client.Models
+@using GestaoPiscina.Client.Shared
+@implements IAsyncDisposable
+@inject ApiService ApiService
+@inject IJSRuntime JSRuntime
+@inject IConfiguration Configuration
+
+<section class="p-4 space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="text-slate-300">
+            <span class="font-semibold text-slate-100">@DateTime.Today.ToString("dd/MM/yyyy")</span>
+            — @ordensHoje.Count OS hoje
+            @if (clientesSemLocalizacao > 0 || tecnicosSemLocalizacao > 0)
+            {
+                <span class="text-amber-400">· @(clientesSemLocalizacao + tecnicosSemLocalizacao) sem localização</span>
+            }
+        </div>
+        <button @onclick="AtualizarLocalizacoesAsync" disabled="@atualizandoLocalizacoes" class="bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 px-4 py-2 rounded-lg text-white text-sm transition-colors">
+            <i class="fas @(atualizandoLocalizacoes ? "fa-spinner fa-spin" : "fa-map-marker-alt") mr-2"></i>
+            @(atualizandoLocalizacoes ? "Atualizando..." : "Atualizar localizações")
+        </button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2 bg-slate-800 rounded-xl overflow-hidden border border-slate-700 relative">
+            <div id="mapa-rotas" style="height: 560px; width: 100%;"></div>
+            @if (carregando)
+            {
+                <div class="absolute inset-0 bg-slate-800 flex items-center justify-center">
+                    <LoadingSpinner IsVisible="true" Message="Carregando ordens de serviço do dia..." />
+                </div>
+            }
+        </div>
+
+        <div class="bg-slate-800 rounded-xl border border-slate-700 p-4 space-y-3 max-h-[560px] overflow-y-auto scroll-tema">
+            <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wider">Ordens de Serviço de Hoje</h3>
+            @if (!carregando && !ordensHoje.Any())
+            {
+                <p class="text-slate-500 text-sm">Nenhuma OS agendada para hoje.</p>
+            }
+            @foreach (var os in ordensHoje)
+            {
+                <div class="bg-slate-700 rounded-lg p-3 text-xs">
+                    <div class="flex items-start justify-between gap-2">
+                        <span class="text-white font-bold">#@os.IDOS</span>
+                        <span class="@GetStatusClass(os.Status) px-2 py-0.5 text-[10px] font-semibold rounded-full">@os.Status</span>
+                    </div>
+                    <div class="text-white font-medium truncate mt-1">@os.Piscina?.Cliente?.Nome</div>
+                    <div class="text-slate-400 truncate">@os.Piscina?.Tipo · @os.Piscina?.Cliente?.Tipo</div>
+                    @if (!string.IsNullOrEmpty(NomeTecnico(os)))
+                    {
+                        <div class="text-slate-400 truncate mt-1"><i class="fas fa-user-hard-hat mr-1"></i>@NomeTecnico(os)</div>
+                    }
+                    @if (os.Piscina?.Cliente != null && !TemLocalizacao(os.Piscina.Cliente))
+                    {
+                        <div class="text-amber-400 mt-1"><i class="fas fa-map-marker-alt mr-1"></i>Sem localização</div>
+                    }
+                </div>
+            }
+
+            @if (tecnicos.Any())
+            {
+                <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wider pt-2 border-t border-slate-700">Técnicos e Supervisores</h3>
+                @foreach (var tecnico in tecnicos)
+                {
+                    <div class="flex items-center gap-2 text-xs text-slate-300">
+                        @if (!string.IsNullOrEmpty(tecnico.FotoUrl))
+                        {
+                            <img src="@tecnico.FotoUrl" alt="@tecnico.Nome" class="w-6 h-6 rounded-full object-cover shrink-0" />
+                        }
+                        else
+                        {
+                            <i class="fas fa-user-circle text-slate-500"></i>
+                        }
+                        <span class="truncate">@tecnico.Nome</span>
+                        @if (!TemLocalizacao(tecnico))
+                        {
+                            <i class="fas fa-map-marker-alt text-amber-400 ml-auto" title="Sem localização"></i>
+                        }
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</section>
+
+@code {
+    private List<OrdemDeServico> ordensHoje = new();
+    private List<Usuario> tecnicos = new();
+    private bool carregando = true;
+    private bool mapaIniciado;
+    private bool atualizandoLocalizacoes;
+    private int clientesSemLocalizacao;
+    private int tecnicosSemLocalizacao;
+    private const string MapaId = "mapa-rotas";
+
+    // Centro padrão do mapa (Fortaleza-CE) usado quando ainda não há nenhum marcador
+    // posicionável — só serve de ponto de partida, o mapa se ajusta aos marcadores depois.
+    private const double CentroPadraoLat = -3.7319;
+    private const double CentroPadraoLng = -38.5267;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarDadosAsync();
+    }
+
+    private async Task CarregarDadosAsync()
+    {
+        carregando = true;
+        StateHasChanged();
+        try
+        {
+            var ordensTask = ApiService.GetOrdensDeServicoAsync();
+            var tecnicosTask = ApiService.GetUsuariosAsync("Técnico,Supervisor");
+            await Task.WhenAll(ordensTask, tecnicosTask);
+
+            ordensHoje = ordensTask.Result
+                .Where(os => os.DataExecucao.Date == DateTime.Today && os.Status != "Cancelada")
+                .OrderBy(os => os.HoraInicio)
+                .ToList();
+            tecnicos = tecnicosTask.Result;
+
+            clientesSemLocalizacao = ordensHoje
+                .Select(os => os.Piscina?.Cliente)
+                .Where(c => c != null)
+                .GroupBy(c => c!.IDCliente)
+                .Select(g => g.First()!)
+                .Count(c => !TemLocalizacao(c));
+            tecnicosSemLocalizacao = tecnicos.Count(t => !TemLocalizacao(t));
+        }
+        finally
+        {
+            carregando = false;
+            StateHasChanged();
+        }
+    }
+
+    private bool TemLocalizacao(Cliente cliente) => cliente.Latitude.HasValue && cliente.Longitude.HasValue;
+    private bool TemLocalizacao(Usuario usuario) => usuario.Latitude.HasValue && usuario.Longitude.HasValue;
+
+    // O <div id="mapa-rotas"> fica sempre montado no DOM (o estado "carregando" só desenha
+    // um overlay por cima, não substitui o próprio card) — de propósito, porque só existe
+    // uma janela segura pra chamar isso: depois que o elemento já está no DOM real, não no
+    // meio da mesma cadeia de OnInitializedAsync (StateHasChanged não é síncrono; se o mapa
+    // fosse escondido/recriado condicionalmente, mapaIniciado ficaria dessincronizado do
+    // elemento de verdade). Chamado depois de todo re-render enquanto não está carregando —
+    // idempotente (redesenha os marcadores do zero a cada chamada), então repetir é seguro.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!carregando)
+        {
+            await DesenharMapaAsync();
+        }
+    }
+
+    private async Task DesenharMapaAsync()
+    {
+        var apiKey = Configuration["GoogleMapsApiKey"];
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            return;
+        }
+
+        try
+        {
+            if (!mapaIniciado)
+            {
+                await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.initMap", MapaId, apiKey, CentroPadraoLat, CentroPadraoLng, 12);
+                mapaIniciado = true;
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.clearMarkers", MapaId);
+            }
+
+            var clientesJaAdicionados = new HashSet<int>();
+            foreach (var os in ordensHoje)
+            {
+                var cliente = os.Piscina?.Cliente;
+                if (cliente == null || !TemLocalizacao(cliente) || !clientesJaAdicionados.Add(cliente.IDCliente))
+                {
+                    continue;
+                }
+
+                await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.addInitialsMarker", MapaId,
+                    cliente.Latitude!.Value, cliente.Longitude!.Value, Iniciais(cliente.Nome), cliente.Nome, "#0891b2");
+            }
+
+            foreach (var tecnico in tecnicos.Where(TemLocalizacao))
+            {
+                await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.addPhotoMarker", MapaId,
+                    tecnico.Latitude!.Value, tecnico.Longitude!.Value, tecnico.FotoUrl, $"{tecnico.Nome} ({tecnico.Perfil})");
+            }
+
+            await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.fitToMarkers", MapaId);
+        }
+        catch
+        {
+            // Se o Google Maps falhar em carregar (chave inválida, sem internet etc.), a
+            // lista ao lado do mapa continua funcionando normalmente.
+        }
+    }
+
+    // Duas primeiras iniciais do nome do cliente (ex.: "Colégio Antares" -> "CA"; um nome só,
+    // ex.: "Neo" -> "NE"), sempre em maiúsculas, pro marcador no mapa.
+    private static string Iniciais(string nome)
+    {
+        var partes = (nome ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (partes.Length >= 2)
+        {
+            return $"{partes[0][0]}{partes[1][0]}".ToUpper();
+        }
+        if (partes.Length == 1 && partes[0].Length >= 2)
+        {
+            return partes[0].Substring(0, 2).ToUpper();
+        }
+        return (partes.FirstOrDefault() ?? "?").ToUpper();
+    }
+
+    private string? NomeTecnico(OrdemDeServico os) => tecnicos.FirstOrDefault(u => u.IDUsuario == os.IDUsuario)?.Nome;
+
+    private string GetStatusClass(string status) => status switch
+    {
+        "Em Aberto" => "bg-yellow-100 text-yellow-800",
+        "Em Andamento" => "bg-blue-100 text-blue-800",
+        "Finalizada" => "bg-green-100 text-green-800",
+        "Ocorrência" => "bg-purple-100 text-purple-800",
+        "Reagendada" => "bg-orange-100 text-orange-800",
+        _ => "bg-slate-100 text-slate-800"
+    };
+
+    // Faz o backfill de Latitude/Longitude pra clientes e técnicos/supervisores que já
+    // tinham endereço cadastrado antes deste recurso existir (por isso ainda não têm
+    // coordenadas salvas) — sem isso eles nunca apareceriam no mapa.
+    private async Task AtualizarLocalizacoesAsync()
+    {
+        var apiKey = Configuration["GoogleMapsApiKey"];
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            return;
+        }
+
+        atualizandoLocalizacoes = true;
+        StateHasChanged();
+
+        try
+        {
+            var clientes = await ApiService.GetClientesAsync();
+            foreach (var cliente in clientes.Where(c => !string.IsNullOrWhiteSpace(c.Endereco) && !TemLocalizacao(c)))
+            {
+                var resultado = await JSRuntime.InvokeAsync<GeoResultado?>("gestaoPiscinaMaps.geocode", apiKey, cliente.Endereco);
+                if (resultado == null)
+                {
+                    continue;
+                }
+
+                cliente.Latitude = resultado.Lat;
+                cliente.Longitude = resultado.Lng;
+                try
+                {
+                    await ApiService.UpdateClienteAsync(cliente);
+                }
+                catch
+                {
+                }
+            }
+
+            var usuariosAdmin = await ApiService.GetUsuariosAdminAsync();
+            var perfisAlvo = new HashSet<string> { "Técnico", "Supervisor" };
+            foreach (var usuario in usuariosAdmin.Where(u => perfisAlvo.Contains(u.Perfil) && !string.IsNullOrWhiteSpace(u.Endereco) && !u.Latitude.HasValue))
+            {
+                var resultado = await JSRuntime.InvokeAsync<GeoResultado?>("gestaoPiscinaMaps.geocode", apiKey, usuario.Endereco);
+                if (resultado == null)
+                {
+                    continue;
+                }
+
+                usuario.Latitude = resultado.Lat;
+                usuario.Longitude = resultado.Lng;
+                try
+                {
+                    await ApiService.UpdateUsuarioAsync(usuario);
+                }
+                catch
+                {
+                }
+            }
+
+            await CarregarDadosAsync();
+        }
+        finally
+        {
+            atualizandoLocalizacoes = false;
+            StateHasChanged();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await Task.CompletedTask;
+    }
+}

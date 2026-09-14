@@ -32,6 +32,12 @@ namespace GestaoPiscina.Server.Models
         [StringLength(18)]
         public string? CNPJ { get; set; }
 
+        // Preenchidos via geocodificação (no navegador, ver wwwroot/js/maps.js) sempre que
+        // o Endereco é salvo — usados para posicionar o cliente no mapa de Gestão de Rota,
+        // sem precisar geocodificar de novo a cada carregamento do mapa.
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+
         // Navegação
         public virtual ICollection<Piscina> Piscinas { get; set; } = new List<Piscina>();
         public virtual ICollection<EstoqueCliente> Estoques { get; set; } = new List<EstoqueCliente>();

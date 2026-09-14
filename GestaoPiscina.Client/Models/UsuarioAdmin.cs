@@ -42,6 +42,11 @@ namespace GestaoPiscina.Client.Models
         [StringLength(300)]
         public string? Endereco { get; set; }
 
+        // Preenchidos via geocodificação no navegador sempre que o Endereco é salvo — ver
+        // UsuarioModal.HandleSubmit e wwwroot/js/maps.js.
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+
         // Sem [StringLength(MinimumLength=...)] aqui de propósito: em modo de edição este
         // campo fica vazio (não é usado) e MinimumLength validaria a string vazia como
         // inválida mesmo sem [Required], bloqueando o submit do formulário de edição sem

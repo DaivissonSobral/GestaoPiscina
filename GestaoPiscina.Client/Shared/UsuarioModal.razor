@@ -2,6 +2,8 @@
 @using GestaoPiscina.Client.Services
 @using Microsoft.AspNetCore.Components.Forms
 @inject ApiService ApiService
+@inject IJSRuntime JSRuntime
+@inject IConfiguration Configuration
 
 <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 @(IsVisible ? "" : "hidden")">
     <div class="bg-slate-800 rounded-xl p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
@@ -205,6 +207,8 @@
             return;
         }
 
+        await GeocodificarEnderecoAsync();
+
         if (ModoPerfil)
         {
             salvandoPerfil = true;
@@ -240,5 +244,35 @@
         erroSenha = null;
         await OnSave.InvokeAsync(Usuario);
         await Close();
+    }
+
+    // Geocodifica o endereço no navegador e grava Latitude/Longitude no próprio Usuario
+    // antes de salvar, pro mapa de Gestão de Rota não precisar geocodificar de novo. Nunca
+    // lança — é um extra, não pode impedir o usuário de ser salvo.
+    private async Task GeocodificarEnderecoAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Usuario.Endereco))
+        {
+            return;
+        }
+
+        try
+        {
+            var apiKey = Configuration["GoogleMapsApiKey"];
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                return;
+            }
+
+            var resultado = await JSRuntime.InvokeAsync<GeoResultado?>("gestaoPiscinaMaps.geocode", apiKey, Usuario.Endereco);
+            if (resultado != null)
+            {
+                Usuario.Latitude = resultado.Lat;
+                Usuario.Longitude = resultado.Lng;
+            }
+        }
+        catch
+        {
+        }
     }
 }
