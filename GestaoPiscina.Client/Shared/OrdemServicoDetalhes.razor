@@ -255,18 +255,26 @@
         </div>
         </div>
 
-        <div class="flex space-x-3 p-6 pt-4 border-t border-slate-700 shrink-0">
-            <button @onclick="() => OnEdit.InvokeAsync(OrdemDeServico)" class="flex-1 bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
-                <i class="fas fa-edit mr-2"></i>@TextoBotaoEditar()
+        <div class="flex flex-nowrap items-center gap-1.5 sm:gap-3 px-3 sm:px-6 py-3 sm:py-4 border-t border-slate-700 shrink-0">
+            <button @onclick="() => OnEdit.InvokeAsync(OrdemDeServico)" class="flex-1 min-w-0 whitespace-nowrap bg-cyan-600 hover:bg-cyan-500 px-2 sm:px-4 py-2 rounded-lg text-white transition-colors">
+                <i class="fas fa-edit mr-1 sm:mr-2"></i>@TextoBotaoEditar()
             </button>
-            <button @onclick="AbrirRelatorio" disabled="@(!PodeVerRelatorio)" class="flex-1 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors" title="@(PodeVerRelatorio ? "" : "Disponível quando a OS estiver finalizada ou a ocorrência for aprovada")">
-                <i class="fas fa-file-alt mr-2"></i>Relatório
+            @if (OrdemDeServico.Status is not ("Finalizada" or "Cancelada"))
+            {
+                <button @onclick="() => cancelarModalVisible = true" class="flex-1 min-w-0 whitespace-nowrap bg-red-600 hover:bg-red-500 px-2 sm:px-4 py-2 rounded-lg text-white transition-colors">
+                    <i class="fas fa-ban mr-1 sm:mr-2"></i>Cancelar
+                </button>
+            }
+            <button @onclick="AbrirRelatorio" disabled="@(!PodeVerRelatorio)" class="shrink-0 w-11 h-11 flex items-center justify-center bg-teal-600 hover:bg-teal-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg text-white text-lg transition-colors" title="@(PodeVerRelatorio ? "Relatório" : "Disponível quando a OS estiver finalizada ou a ocorrência for aprovada")">
+                <i class="fas fa-print"></i>
             </button>
-            <button @onclick="Close" class="flex-1 bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded-lg text-white transition-colors">
-                Fechar
+            <button @onclick="Close" class="shrink-0 w-11 h-11 flex items-center justify-center bg-slate-600 hover:bg-slate-500 rounded-lg text-white text-lg transition-colors" title="Fechar">
+                <i class="fas fa-door-open"></i>
             </button>
         </div>
     </div>
+
+    <CancelarOSModal @bind-IsVisible="cancelarModalVisible" OrdemDeServico="OrdemDeServico" OnCancelado="OnOSCancelada" />
 </div>
 
 @code {
@@ -380,13 +388,24 @@
         Navigation.NavigateTo($"/relatorios/os/{OrdemDeServico.IDOS}");
     }
 
-    // Uma Ocorrência trava Salvar pro técnico responsável (ver EstaFinalizadaOuOcorrencia
-    // no OrdemServicoModal) — pra ele o botão diz "Abrir" (só visualização), igual a uma OS
-    // já finalizada. Quem não é o técnico (ex.: o aprovador/química) continua vendo "Continuar".
+    private bool cancelarModalVisible;
+
+    // O modal já deixa a OrdemDeServico (mesma instância usada pela lista/Kanban na tela
+    // pai) com Status "Cancelada" antes de fechar — só precisa mandar re-renderizar aqui.
+    private void OnOSCancelada()
+    {
+        StateHasChanged();
+    }
+
+    // Uma Ocorrência ou um Cancelamento trava Salvar pro técnico responsável (ver
+    // EstaBloqueadaParaEdicao no OrdemServicoModal) — pra ele o botão diz "Abrir" (só
+    // visualização), igual a uma OS já finalizada. Quem não é o técnico (ex.: o
+    // aprovador/química) continua vendo "Continuar" numa Ocorrência.
     private string TextoBotaoEditar() => OrdemDeServico.Status switch
     {
         "Em Aberto" => "Iniciar",
         "Finalizada" => "Abrir",
+        "Cancelada" => "Abrir",
         "Ocorrência" when currentUserId == OrdemDeServico.IDUsuario => "Abrir",
         _ => "Continuar"
     };

@@ -216,15 +216,10 @@
                 </div>
 
                 <div class="border border-purple-800 rounded-lg overflow-hidden">
-                    <div class="w-full flex justify-between items-center px-4 py-3 bg-purple-950/40 hover:bg-purple-950/60 transition-colors gap-3">
-                        <button type="button" @onclick="() => secaoOcorrenciaAberta = !secaoOcorrenciaAberta" class="flex-1 flex items-center justify-between text-left">
-                            <span class="text-sm font-semibold text-purple-300"><i class="fas fa-exclamation-triangle mr-2"></i>Ocorrência</span>
-                            <i class="fas @(secaoOcorrenciaAberta ? "fa-chevron-up" : "fa-chevron-down") text-purple-300 ml-2"></i>
-                        </button>
-                        <button type="button" @onclick="RegistrarOcorrencia" class="shrink-0 bg-purple-700 hover:bg-purple-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
-                            <i class="fas fa-plus mr-1"></i>Registrar Ocorrência
-                        </button>
-                    </div>
+                    <button type="button" @onclick="ToggleSecaoOcorrencia" class="w-full flex justify-between items-center px-4 py-3 bg-purple-950/40 hover:bg-purple-950/60 text-left transition-colors">
+                        <span class="text-sm font-semibold text-purple-300"><i class="fas fa-exclamation-triangle mr-2"></i>Ocorrência</span>
+                        <i class="fas @(secaoOcorrenciaAberta ? "fa-chevron-up" : "fa-chevron-down") text-purple-300"></i>
+                    </button>
                     @if (secaoOcorrenciaAberta)
                     {
                         <div class="p-4 space-y-4 bg-purple-950/20">
@@ -254,30 +249,26 @@
                 </div>
             </div>
 
-            <div class="flex space-x-3 p-6 pt-4 border-t border-slate-700 shrink-0">
-                <button type="submit" disabled="@EstaFinalizadaOuOcorrencia" class="flex-1 bg-slate-600 hover:bg-slate-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors" title="@(EstaFinalizadaOuOcorrencia ? "OS finalizada ou com ocorrência não pode mais ser salva por aqui" : "")">
+            <div class="flex flex-wrap gap-3 p-6 pt-4 border-t border-slate-700 shrink-0">
+                <button type="submit" disabled="@EstaBloqueadaParaEdicao" class="flex-1 min-w-[110px] bg-slate-600 hover:bg-slate-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors" title="@(EstaBloqueadaParaEdicao ? "OS finalizada, cancelada ou com ocorrência não pode mais ser salva por aqui" : "")">
                     <i class="fas fa-save mr-2"></i>Salvar
                 </button>
-                @* Os dois botões ficam sempre montados (só escondidos via CSS, não @if): o clique em
-                   "Finalizar" muda OrdemDeServico.Status pra "Finalizada" em PrepararFinalizar, e se
-                   esse mesmo clique destruísse/trocasse o botão (que é type="submit") por outro
-                   elemento no meio do próprio evento, o Blazor re-renderiza antes do navegador
-                   concluir o envio nativo do formulário — o submit nunca chega a acontecer. *@
-                <button type="button" @onclick="AbrirRelatorio" disabled="@(!PodeVerRelatorio)" class="flex-1 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors @(EstaFinalizadaOuOcorrencia && !PodeAprovarOcorrencia ? "" : "hidden")" title="@(PodeVerRelatorio ? "" : "Disponível quando a ocorrência for aprovada")">
-                    <i class="fas fa-file-alt mr-2"></i>Relatório
+                <button type="button" @onclick="AbrirRelatorio" disabled="@(!PodeVerRelatorio)" class="shrink-0 w-11 h-11 flex items-center justify-center bg-teal-600 hover:bg-teal-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg text-white text-lg transition-colors" title="@(PodeVerRelatorio ? "Relatório" : "Disponível quando a ocorrência for aprovada")">
+                    <i class="fas fa-print"></i>
                 </button>
-                @* Some ao "Registrar ocorrência" pra quem já era o Aprovador quando o modal abriu:
-                   troca o lugar do Relatório por "Aprovar" (mesma cor da área de Ocorrência) até a
-                   ocorrência ser aprovada — depois disso PodeAprovarOcorrencia vira falso e o
-                   Relatório acima volta a aparecer sozinho, sem precisar de mais um @if/else. *@
-                <button type="button" @onclick="AprovarOcorrenciaAsync" disabled="@aprovandoOcorrencia" class="flex-1 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 px-4 py-2 rounded-lg text-white transition-colors @(PodeAprovarOcorrencia ? "" : "hidden")">
+                @* Aprovar fica sempre montado, só escondido via CSS (não @if): o próprio clique em
+                   AprovarOcorrenciaAsync muda PodeAprovarOcorrencia pra falso, e mexer no DOM ao
+                   redor do Finalizar/Salvar (type="submit") no meio de um clique já causou o bug
+                   do Finalizar não salvar (ver commit 987b927) — manter tudo sempre montado evita
+                   repetir isso. *@
+                <button type="button" @onclick="AprovarOcorrenciaAsync" disabled="@aprovandoOcorrencia" class="flex-1 min-w-[110px] bg-purple-600 hover:bg-purple-500 disabled:opacity-50 px-4 py-2 rounded-lg text-white transition-colors @(PodeAprovarOcorrencia ? "" : "hidden")">
                     <i class="fas fa-check mr-2"></i>@(aprovandoOcorrencia ? "Aprovando..." : "Aprovar")
                 </button>
-                <button type="submit" @onclick="PrepararFinalizar" disabled="@(!PodeFinalizar)" class="flex-1 bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors @(EstaFinalizadaOuOcorrencia ? "hidden" : "")" title="@(PodeFinalizar ? "" : "Conclua o checklist, os parâmetros da água e as fotos de antes/depois para finalizar")">
+                <button type="submit" @onclick="PrepararFinalizar" disabled="@(!PodeFinalizar)" class="flex-1 min-w-[110px] bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white transition-colors" title="@(PodeFinalizar ? "" : "Conclua o checklist, os parâmetros da água e as fotos de antes/depois para finalizar")">
                     <i class="fas fa-check-circle mr-2"></i>Finalizar
                 </button>
-                <button type="button" @onclick="Close" class="flex-1 bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-white transition-colors">
-                    Cancelar
+                <button type="button" @onclick="Close" class="flex-1 min-w-[110px] bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-white transition-colors">
+                    Fechar
                 </button>
             </div>
             @if (!string.IsNullOrEmpty(erroAprovacaoOcorrencia))
@@ -433,21 +424,25 @@
     // no dropdown (senão nunca daria pra salvar o registro da ocorrência pela primeira vez).
     private string? statusOriginal;
 
-    private void RegistrarOcorrencia()
+    // Abrir o acordeão já registra a ocorrência (sem botão separado) — só ao ABRIR, não ao
+    // fechar de novo, senão colapsar a seção depois de preenchida desfaria o registro.
+    private void ToggleSecaoOcorrencia()
     {
-        OrdemDeServico.Status = "Ocorrência";
-        OnStatusAlterado();
-        secaoOcorrenciaAberta = true;
+        secaoOcorrenciaAberta = !secaoOcorrenciaAberta;
+        if (secaoOcorrenciaAberta && OrdemDeServico.Status != "Ocorrência")
+        {
+            OrdemDeServico.Status = "Ocorrência";
+            OnStatusAlterado();
+        }
     }
 
-    // "Finalizar" deixa de fazer sentido para uma OS já finalizada, e Salvar é bloqueado
-    // assim que a OS JÁ ESTAVA com ocorrência registrada quando o modal foi aberto (edições
-    // posteriores só acontecem via aprovação, não por aqui).
-    private bool EstaFinalizadaOuOcorrencia => OrdemDeServico.Status == "Finalizada" || statusOriginal == "Ocorrência";
+    // Salvar é bloqueado numa OS Finalizada, Cancelada (ambas feitas por ações dedicadas —
+    // Finalizar aqui mesmo, Cancelar OS só na tela de Detalhes), ou que JÁ ESTAVA com
+    // ocorrência registrada quando o modal foi aberto (edições posteriores só acontecem via
+    // aprovação, não por aqui).
+    private bool EstaBloqueadaParaEdicao => OrdemDeServico.Status is "Finalizada" or "Cancelada" || statusOriginal == "Ocorrência";
 
-    // O botão Relatório só aparece quando EstaFinalizadaOuOcorrencia é true (Finalizada ou
-    // Ocorrência pré-existente) — dentro desse contexto, só falta travar o caso de Ocorrência
-    // ainda não aprovada, já que Finalizada nunca depende de aprovação.
+    // Cancelada nunca libera o Relatório — só Finalizada (sempre) ou Ocorrência já aprovada.
     private bool PodeVerRelatorio => OrdemDeServico.Status == "Finalizada" || OrdemDeServico.OcorrenciaAprovada;
 
     private void AbrirRelatorio()

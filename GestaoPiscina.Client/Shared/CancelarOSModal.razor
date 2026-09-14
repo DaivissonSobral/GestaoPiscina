@@ -1,0 +1,108 @@
+@using GestaoPiscina.Client.Models
+@using GestaoPiscina.Client.Services
+@inject ApiService ApiService
+
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 @(IsVisible ? "" : "hidden")">
+    <div class="bg-slate-800 rounded-xl p-6 w-full max-w-md mx-4">
+        <div class="flex items-center mb-4">
+            <div class="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-ban text-red-600"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-lg font-semibold text-slate-100">Cancelar Ordem de Serviço</h3>
+            </div>
+        </div>
+
+        <p class="text-slate-300 text-sm mb-4">
+            A OS #@OrdemDeServico.IDOS será marcada como Cancelada e não poderá mais ser editada.
+        </p>
+
+        <div class="mb-2">
+            <label class="block text-sm font-medium text-slate-300 mb-2">Motivo do cancelamento *</label>
+            <textarea @bind="motivo" @bind:event="oninput" rows="3" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Descreva o motivo do cancelamento..."></textarea>
+        </div>
+
+        @if (!string.IsNullOrEmpty(erro))
+        {
+            <p class="text-red-400 text-sm mt-2"><i class="fas fa-exclamation-circle mr-1"></i>@erro</p>
+        }
+
+        <div class="flex space-x-3 mt-4">
+            <button @onclick="Confirmar" disabled="@enviando" class="flex-1 bg-red-600 hover:bg-red-500 disabled:opacity-50 px-4 py-2 rounded-lg text-white transition-colors">
+                <i class="fas @(enviando ? "fa-spinner fa-spin" : "fa-ban") mr-2"></i>Cancelar OS
+            </button>
+            <button @onclick="Fechar" class="flex-1 bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded-lg text-white transition-colors">
+                Voltar
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public OrdemDeServico OrdemDeServico { get; set; } = new();
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+    [Parameter] public EventCallback OnCancelado { get; set; }
+
+    private string motivo = "";
+    private string? erro;
+    private bool enviando;
+    private int? idCarregado;
+
+    // Pré-preenche com as Observações já existentes (nada se perde) só na primeira vez que
+    // o modal abre para esta OS — sem essa trava, digitar no textarea seria sobrescrito a
+    // cada re-render do componente pai.
+    protected override void OnParametersSet()
+    {
+        if (IsVisible && idCarregado != OrdemDeServico.IDOS)
+        {
+            motivo = OrdemDeServico.Observacoes ?? "";
+            erro = null;
+            idCarregado = OrdemDeServico.IDOS;
+        }
+    }
+
+    private async Task Confirmar()
+    {
+        if (string.IsNullOrWhiteSpace(motivo))
+        {
+            erro = "Informe o motivo do cancelamento.";
+            return;
+        }
+
+        erro = null;
+        enviando = true;
+
+        var statusAnterior = OrdemDeServico.Status;
+        var observacoesAnteriores = OrdemDeServico.Observacoes;
+        OrdemDeServico.Status = "Cancelada";
+        OrdemDeServico.Observacoes = motivo;
+
+        try
+        {
+            await ApiService.UpdateOrdemDeServicoAsync(OrdemDeServico);
+            await OnCancelado.InvokeAsync();
+            await Fechar();
+        }
+        catch (Exception ex)
+        {
+            // Desfaz a mutação local se o servidor recusou (ex.: OS com Ocorrência não pode
+            // mais ser alterada) — sem isso a tela ficaria mostrando "Cancelada" sem ter sido
+            // salvo de verdade.
+            OrdemDeServico.Status = statusAnterior;
+            OrdemDeServico.Observacoes = observacoesAnteriores;
+            erro = ex.Message;
+        }
+        finally
+        {
+            enviando = false;
+        }
+    }
+
+    private async Task Fechar()
+    {
+        idCarregado = null;
+        IsVisible = false;
+        await IsVisibleChanged.InvokeAsync(false);
+    }
+}
