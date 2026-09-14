@@ -88,7 +88,7 @@
             var uri = NavigationManager.Uri;
             return uri switch
             {
-                var u when u.EndsWith("/") || u.EndsWith("/index") => "Painel de Manutenção",
+                var u when u.EndsWith("/") || u.EndsWith("/index") => "Início",
                 var u when u.Contains("/clientes") => "Gestão de Clientes",
                 var u when u.Contains("/piscinas") => "Gestão de Piscinas",
                 var u when u.Contains("/produtos") => "Gestão de Produtos",
