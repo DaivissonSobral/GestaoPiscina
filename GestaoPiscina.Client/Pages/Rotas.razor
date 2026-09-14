@@ -122,20 +122,19 @@
 
                         @if (expandido && concluido)
                         {
+                            var visitasConfirmadas = rotasConfirmadas[tecnico.IDUsuario];
+                            var feitas = visitasConfirmadas.Count(v => v.Concluida);
                             <div class="px-3 pb-3 pt-1 space-y-2 border-t border-slate-600">
+                                <div class="text-slate-400 text-[11px]">@feitas de @visitasConfirmadas.Count visitas concluídas</div>
                                 <div class="space-y-1">
-                                    @{ var indiceConfirmado = 0; }
-                                    @foreach (var idCliente in rotasConfirmadas[tecnico.IDUsuario])
+                                    @foreach (var visita in visitasConfirmadas)
                                     {
-                                        var cliente = ClientesDoDia().FirstOrDefault(c => c.IDCliente == idCliente);
-                                        if (cliente == null) { continue; }
-                                        var numero = ++indiceConfirmado;
                                         <div class="flex items-center gap-2 bg-slate-800 rounded-lg px-2 py-1.5">
-                                            <span class="w-5 h-5 rounded-full bg-green-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">@numero</span>
+                                            <span class="w-5 h-5 rounded-full bg-green-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">@visita.Ordem</span>
                                             <div class="min-w-0 flex-1">
-                                                <span class="text-white text-xs font-medium truncate block">@cliente.Nome</span>
-                                                <span class="text-slate-400 text-[11px] truncate block">@PiscinasDoDia(cliente)</span>
+                                                <span class="text-white text-xs font-medium truncate block">@visita.NomeCliente</span>
                                             </div>
+                                            <i class="fas @(visita.Concluida ? "fa-check-circle text-green-400" : "fa-clock text-amber-400") text-xs shrink-0" title="@(visita.Concluida ? "Visita concluída" : "Visita pendente")"></i>
                                         </div>
                                     }
                                 </div>
@@ -253,17 +252,18 @@
     private bool confirmandoAtribuicao;
     private const int MetaClientesPorRota = 7;
 
-    // Rotas já confirmadas nesta sessão, pra data em exibição (idTecnico -> clientes, na
-    // ordem final). É só em memória (não existe campo "rota confirmada" no banco — o que
-    // persiste é a atribuição de cada OS/IDUsuario) e some ao trocar de data. Um técnico
-    // aqui dentro conta como "concluído" pra ordenação do acordeão, mostra a lista em modo
-    // resumo (com botão Editar) em vez do seletor, e seus clientes somem da lista de
-    // candidatos dos outros técnicos + ficam verdes no mapa permanentemente.
-    private readonly Dictionary<int, List<int>> rotasConfirmadas = new();
+    // Cache local das rotas confirmadas (persistidas via RotasController/RotaVisita — ver
+    // ApiService.GetRotasAsync/SalvarRotaAsync) pra data em exibição: idTecnico -> clientes,
+    // na ordem confirmada. Recarregado do servidor em CarregarDadosAsync a cada troca de
+    // data, então sobrevive a um F5. Um técnico aqui dentro conta como "concluído" pra
+    // ordenação do acordeão, mostra a lista em modo resumo (com botão Editar) em vez do
+    // seletor, e seus clientes somem da lista de candidatos dos outros técnicos + ficam
+    // verdes no mapa permanentemente.
+    private readonly Dictionary<int, List<VisitaRota>> rotasConfirmadas = new();
 
     private bool RotaConfirmada(int idTecnico) => rotasConfirmadas.ContainsKey(idTecnico);
 
-    private HashSet<int> TodosClientesConfirmados() => rotasConfirmadas.Values.SelectMany(ids => ids).ToHashSet();
+    private HashSet<int> TodosClientesConfirmados() => rotasConfirmadas.Values.SelectMany(vs => vs.Select(v => v.IDCliente)).ToHashSet();
 
     // Centro padrão do mapa (Fortaleza-CE) usado quando ainda não há nenhum marcador
     // posicionável — só serve de ponto de partida, o mapa se ajusta aos marcadores depois.
@@ -279,7 +279,6 @@
     private async Task DefinirDataAsync(DateTime data)
     {
         dataSelecionada = data.Date;
-        rotasConfirmadas.Clear();
         await CancelarSelecaoAsync();
         await CarregarDadosAsync();
     }
@@ -305,13 +304,23 @@
         {
             var ordensTask = ApiService.GetOrdensDeServicoAsync();
             var tecnicosTask = ApiService.GetUsuariosAsync("Técnico,Supervisor");
-            await Task.WhenAll(ordensTask, tecnicosTask);
+            var rotasTask = ApiService.GetRotasAsync(dataSelecionada);
+            await Task.WhenAll(ordensTask, tecnicosTask, rotasTask);
 
             ordensDoDia = ordensTask.Result
                 .Where(os => os.DataExecucao.Date == dataSelecionada.Date && os.Status != "Cancelada")
                 .OrderBy(os => os.HoraInicio)
                 .ToList();
             tecnicos = tecnicosTask.Result;
+
+            // Fonte de verdade das rotas confirmadas é o servidor (ver RotasController) —
+            // recarregado a cada troca de data/atualização, não só guardado em memória, pra
+            // sobreviver a um F5 e poder ser consultado depois.
+            rotasConfirmadas.Clear();
+            foreach (var rota in rotasTask.Result)
+            {
+                rotasConfirmadas[rota.IDUsuario] = rota.Visitas.OrderBy(v => v.Ordem).ToList();
+            }
 
             clientesSemLocalizacao = ClientesDoDia().Count(c => !TemLocalizacao(c));
             tecnicosSemLocalizacao = tecnicos.Count(t => !TemLocalizacao(t));
@@ -575,9 +584,9 @@
     // deixando editar como se estivesse montando a rota pela primeira vez.
     private async Task EditarRotaConfirmadaAsync(int idTecnico)
     {
-        if (rotasConfirmadas.TryGetValue(idTecnico, out var clientesConfirmados))
+        if (rotasConfirmadas.TryGetValue(idTecnico, out var visitasConfirmadas))
         {
-            clientesSelecionadosIds = new List<int>(clientesConfirmados);
+            clientesSelecionadosIds = visitasConfirmadas.Select(v => v.IDCliente).ToList();
             rotasConfirmadas.Remove(idTecnico);
         }
         modoAutomatico = false;
@@ -685,8 +694,10 @@
         }
     }
 
-    // Grava a atribuição decidida no mapa: todas as OS dos clientes selecionados (na data em
-    // exibição) passam a ser do técnico escolhido.
+    // Grava a atribuição decidida no mapa: as OS dos clientes selecionados (na data em
+    // exibição) passam a ser do técnico escolhido, e a sequência de visita é persistida via
+    // RotasController (RotaVisita) — permite consultar depois e acompanhar o andamento
+    // comparando com o status das OS de cada cliente na mesma data.
     private async Task ConfirmarAtribuicaoAsync()
     {
         var tecnico = TecnicoSelecionado;
@@ -699,9 +710,15 @@
         StateHasChanged();
         try
         {
-            var osParaAtualizar = ordensDoDia
+            // Uma OS com ocorrência registrada não pode mais trocar de técnico (regra do
+            // servidor — ver OrdensDeServicoController.PutOrdemDeServico): pula essas em vez
+            // de tentar e contar como falha, mas o cliente continua fazendo parte da rota
+            // (a sequência de visita não depende de todas as OS dele estarem editáveis).
+            var osDosSelecionados = ordensDoDia
                 .Where(os => os.Piscina?.Cliente != null && clientesSelecionadosIds.Contains(os.Piscina.Cliente.IDCliente))
                 .ToList();
+            var osParaAtualizar = osDosSelecionados.Where(os => os.Status != "Ocorrência").ToList();
+            var osBloqueadas = osDosSelecionados.Count - osParaAtualizar.Count;
 
             var falhas = 0;
             foreach (var os in osParaAtualizar)
@@ -717,14 +734,32 @@
                 }
             }
 
-            if (falhas == 0)
+            try
             {
-                rotasConfirmadas[tecnico.IDUsuario] = new List<int>(clientesSelecionadosIds);
+                await ApiService.SalvarRotaAsync(tecnico.IDUsuario, dataSelecionada, clientesSelecionadosIds);
+            }
+            catch (Exception ex)
+            {
+                ShowToast("Erro", $"OS atualizadas, mas não foi possível salvar a rota: {ex.Message}", "error");
+                return;
+            }
+
+            if (falhas == 0 && osBloqueadas == 0)
+            {
                 ShowToast("Sucesso", $"Rota com {osParaAtualizar.Count} OS atribuída a {tecnico.Nome}.", "success");
             }
             else
             {
-                ShowToast("Atenção", $"{osParaAtualizar.Count - falhas} de {osParaAtualizar.Count} OS atribuídas. {falhas} falharam.", "warning");
+                var partes = new List<string>();
+                if (falhas > 0)
+                {
+                    partes.Add($"{falhas} OS falharam ao atualizar");
+                }
+                if (osBloqueadas > 0)
+                {
+                    partes.Add($"{osBloqueadas} OS com ocorrência registrada não puderam trocar de técnico");
+                }
+                ShowToast("Atenção", $"Rota salva. {string.Join("; ", partes)}.", "warning");
             }
 
             await CancelarSelecaoAsync();

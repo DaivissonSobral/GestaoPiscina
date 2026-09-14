@@ -913,6 +913,42 @@ namespace GestaoPiscina.Client.Services
             }
         }
 
+        // Rotas confirmadas (ver Pages/Rotas.razor)
+        public async Task<List<RotaTecnico>> GetRotasAsync(DateTime data)
+        {
+            try
+            {
+                var query = data.ToString("yyyy-MM-dd");
+                return await _httpClient.GetFromJsonAsync<List<RotaTecnico>>($"{_baseUrl}rotas?data={query}") ?? new List<RotaTecnico>();
+            }
+            catch
+            {
+                return new List<RotaTecnico>();
+            }
+        }
+
+        public async Task<RotaTecnico> SalvarRotaAsync(int idUsuario, DateTime data, List<int> clientesIds)
+        {
+            try
+            {
+                var payload = new { idUsuario, data = data.ToString("yyyy-MM-dd"), clientesIds };
+                var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}rotas", payload);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await GetErrorMessageAsync(response);
+                    throw new Exception(errorMessage);
+                }
+
+                var rota = await response.Content.ReadFromJsonAsync<RotaTecnico>();
+                return rota ?? throw new Exception("Resposta vazia ao salvar a rota.");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao salvar rota: {ex.Message}");
+            }
+        }
+
         // Push Notifications
         public async Task<string?> GetVapidPublicKeyAsync()
         {

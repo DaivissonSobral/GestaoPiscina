@@ -24,6 +24,7 @@ namespace GestaoPiscina.Server.Data
         public DbSet<MovimentacaoEstoque> MovimentacoesEstoque { get; set; }
         public DbSet<ChecklistItem> ChecklistItens { get; set; }
         public DbSet<PushSubscriptionRegistro> PushSubscriptionRegistros { get; set; }
+        public DbSet<RotaVisita> RotaVisitas { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -223,6 +224,26 @@ namespace GestaoPiscina.Server.Data
                 entity.HasOne(e => e.Usuario)
                     .WithMany()
                     .HasForeignKey(e => e.IDUsuario)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<RotaVisita>(entity =>
+            {
+                entity.HasKey(e => e.IDRotaVisita);
+                entity.Property(e => e.Data).IsRequired();
+                entity.Property(e => e.Ordem).IsRequired();
+                entity.Property(e => e.DataConfirmacao).IsRequired();
+                // Uma linha por cliente/técnico/dia — "Confirmar atribuição" sempre apaga e
+                // recria as linhas do técnico+dia (ver RotasController), então isso só
+                // protege contra alguma dupla-inserção acidental.
+                entity.HasIndex(e => new { e.IDUsuario, e.Data, e.IDCliente }).IsUnique();
+                entity.HasOne(e => e.Usuario)
+                    .WithMany()
+                    .HasForeignKey(e => e.IDUsuario)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Cliente)
+                    .WithMany()
+                    .HasForeignKey(e => e.IDCliente)
                     .OnDelete(DeleteBehavior.Cascade);
             });
         }
