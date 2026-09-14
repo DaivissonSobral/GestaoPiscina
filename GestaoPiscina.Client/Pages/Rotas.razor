@@ -51,127 +51,163 @@
         </div>
 
         <div class="bg-slate-800 rounded-xl border border-slate-700 p-4 space-y-3 max-h-[560px] overflow-y-auto scroll-tema">
-            @if (tecnicoSelecionadoId != null)
+            @if (ExibirListaOrdensServico)
             {
-                <div class="bg-slate-700 rounded-lg p-3 space-y-2">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-xs font-semibold text-slate-200 uppercase tracking-wider truncate">Rota de @TecnicoSelecionado?.Nome</h3>
-                        <button @onclick="CancelarSelecaoAsync" class="text-slate-400 hover:text-white shrink-0" title="Cancelar"><i class="fas fa-times"></i></button>
-                    </div>
-
-                    <div class="flex gap-2">
-                        <button @onclick="() => DefinirModoAsync(true)" class="@BotaoModoClasse(true) flex-1 text-xs py-1.5 rounded-md transition-colors">
-                            <i class="fas fa-magic mr-1"></i>Automática
-                        </button>
-                        <button @onclick="() => DefinirModoAsync(false)" class="@BotaoModoClasse(false) flex-1 text-xs py-1.5 rounded-md transition-colors">
-                            <i class="fas fa-hand-pointer mr-1"></i>Manual
-                        </button>
-                    </div>
-
-                    @{ var candidatos = CandidatosOrdenados(); }
-                    @if (!candidatos.Any())
-                    {
-                        <p class="text-slate-500 text-xs">Nenhum cliente com localização nesta data.</p>
-                    }
-                    else
-                    {
-                        <div class="space-y-1">
-                            @foreach (var cliente in candidatos)
-                            {
-                                var selecionado = clientesSelecionadosIds.Contains(cliente.IDCliente);
-                                var ordem = selecionado && rotaCalculada?.Sucesso == true ? clientesSelecionadosIds.IndexOf(cliente.IDCliente) + 1 : (int?)null;
-                                <label class="flex items-center justify-between gap-2 bg-slate-800 rounded-lg px-2 py-1.5 cursor-pointer hover:bg-slate-600/50 transition-colors">
-                                    <div class="min-w-0 flex-1">
-                                        <div class="flex items-center gap-2">
-                                            <span class="w-5 h-5 rounded-full bg-cyan-700 text-white text-[10px] font-bold flex items-center justify-center shrink-0">@Iniciais(cliente.Nome)</span>
-                                            <span class="text-white text-xs font-medium truncate">@cliente.Nome</span>
-                                        </div>
-                                        <div class="text-slate-400 text-[11px] truncate ml-7">@PiscinasDoDia(cliente)</div>
-                                    </div>
-                                    <div class="flex items-center gap-2 shrink-0">
-                                        @if (ordem != null)
-                                        {
-                                            <span class="w-5 h-5 rounded-full bg-cyan-600 text-white text-[10px] font-bold flex items-center justify-center">@ordem</span>
-                                        }
-                                        <input type="checkbox" checked="@selecionado"
-                                               @onchange="@(e => DefinirSelecaoClienteAsync(cliente.IDCliente, Convert.ToBoolean(e.Value)))"
-                                               class="w-4 h-4 accent-cyan-500 cursor-pointer" />
-                                    </div>
-                                </label>
-                            }
+                <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wider">Ordens de Serviço</h3>
+                @if (!carregando && !ordensDoDia.Any())
+                {
+                    <p class="text-slate-500 text-sm">Nenhuma OS agendada para esta data.</p>
+                }
+                @foreach (var os in ordensDoDia)
+                {
+                    <div class="bg-slate-700 rounded-lg p-3 text-xs">
+                        <div class="flex items-start justify-between gap-2">
+                            <span class="text-white font-bold">#@os.IDOS</span>
+                            <span class="@GetStatusClass(os.Status) px-2 py-0.5 text-[10px] font-semibold rounded-full">@os.Status</span>
                         </div>
-
-                        @if (clientesSelecionadosIds.Any())
+                        <div class="text-white font-medium truncate mt-1">@os.Piscina?.Cliente?.Nome</div>
+                        <div class="text-slate-400 truncate">@os.Piscina?.Tipo · @os.Piscina?.Cliente?.Tipo</div>
+                        @if (!string.IsNullOrEmpty(NomeTecnico(os)))
                         {
-                            <button @onclick="MontarRotaAsync" disabled="@calculandoRota" class="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-xs py-1.5 rounded-md transition-colors">
-                                <i class="fas @(calculandoRota ? "fa-spinner fa-spin" : "fa-route") mr-1"></i>
-                                @(calculandoRota ? "Calculando..." : "Montar rota")
-                            </button>
-
-                            @if (rotaCalculada != null)
-                            {
-                                @if (rotaCalculada.Sucesso)
-                                {
-                                    <div class="text-slate-300 text-xs">
-                                        <i class="fas fa-road mr-1"></i>@FormatarDistancia(rotaCalculada.DistanciaMetros) · @FormatarDuracao(rotaCalculada.DuracaoSegundos)
-                                    </div>
-                                    <button @onclick="ConfirmarAtribuicaoAsync" disabled="@confirmandoAtribuicao" class="w-full bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white text-xs py-1.5 rounded-md transition-colors">
-                                        @(confirmandoAtribuicao ? "Salvando..." : "Confirmar atribuição")
-                                    </button>
-                                }
-                                else
-                                {
-                                    <p class="text-red-400 text-xs">Não foi possível montar a rota (@rotaCalculada.Erro).</p>
-                                }
-                            }
+                            <div class="text-slate-400 truncate mt-1"><i class="fas fa-user-hard-hat mr-1"></i>@NomeTecnico(os)</div>
                         }
-                    }
-                </div>
-            }
-
-            <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wider">Ordens de Serviço</h3>
-            @if (!carregando && !ordensDoDia.Any())
-            {
-                <p class="text-slate-500 text-sm">Nenhuma OS agendada para esta data.</p>
-            }
-            @foreach (var os in ordensDoDia)
-            {
-                <div class="bg-slate-700 rounded-lg p-3 text-xs">
-                    <div class="flex items-start justify-between gap-2">
-                        <span class="text-white font-bold">#@os.IDOS</span>
-                        <span class="@GetStatusClass(os.Status) px-2 py-0.5 text-[10px] font-semibold rounded-full">@os.Status</span>
+                        @if (os.Piscina?.Cliente != null && !TemLocalizacao(os.Piscina.Cliente))
+                        {
+                            <div class="text-amber-400 mt-1"><i class="fas fa-map-marker-alt mr-1"></i>Sem localização</div>
+                        }
                     </div>
-                    <div class="text-white font-medium truncate mt-1">@os.Piscina?.Cliente?.Nome</div>
-                    <div class="text-slate-400 truncate">@os.Piscina?.Tipo · @os.Piscina?.Cliente?.Tipo</div>
-                    @if (!string.IsNullOrEmpty(NomeTecnico(os)))
-                    {
-                        <div class="text-slate-400 truncate mt-1"><i class="fas fa-user-hard-hat mr-1"></i>@NomeTecnico(os)</div>
-                    }
-                    @if (os.Piscina?.Cliente != null && !TemLocalizacao(os.Piscina.Cliente))
-                    {
-                        <div class="text-amber-400 mt-1"><i class="fas fa-map-marker-alt mr-1"></i>Sem localização</div>
-                    }
-                </div>
+                }
             }
 
             @if (tecnicos.Any())
             {
                 <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wider pt-2 border-t border-slate-700">Técnicos e Supervisores</h3>
-                @foreach (var tecnico in tecnicos)
+                @foreach (var tecnico in TecnicosOrdenados())
                 {
-                    <div class="flex items-center gap-2 text-xs text-slate-300">
-                        @if (!string.IsNullOrEmpty(tecnico.FotoUrl))
+                    var expandido = tecnicoSelecionadoId == tecnico.IDUsuario;
+                    var concluido = RotaConfirmada(tecnico.IDUsuario);
+                    <div class="bg-slate-700 rounded-lg overflow-hidden">
+                        <button @onclick="() => AlternarAccordionTecnicoAsync(tecnico.IDUsuario)" class="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-slate-600/50 transition-colors">
+                            @if (!string.IsNullOrEmpty(tecnico.FotoUrl))
+                            {
+                                <img src="@tecnico.FotoUrl" alt="@tecnico.Nome" class="w-8 h-8 rounded-full object-cover shrink-0" />
+                            }
+                            else
+                            {
+                                <i class="fas fa-user-circle text-slate-500 text-2xl shrink-0"></i>
+                            }
+                            <div class="min-w-0 flex-1">
+                                <div class="text-white text-sm font-medium truncate">@tecnico.Nome</div>
+                                <div class="text-slate-400 text-xs truncate">
+                                    @tecnico.Perfil
+                                    @if (concluido)
+                                    {
+                                        <span class="text-green-400">· Concluído</span>
+                                    }
+                                </div>
+                            </div>
+                            @if (!TemLocalizacao(tecnico))
+                            {
+                                <i class="fas fa-map-marker-alt text-amber-400 shrink-0" title="Sem localização"></i>
+                            }
+                            <i class="fas @(expandido ? "fa-chevron-up" : "fa-chevron-down") text-slate-400 text-xs shrink-0"></i>
+                        </button>
+
+                        @if (expandido && concluido)
                         {
-                            <img src="@tecnico.FotoUrl" alt="@tecnico.Nome" class="w-6 h-6 rounded-full object-cover shrink-0" />
+                            <div class="px-3 pb-3 pt-1 space-y-2 border-t border-slate-600">
+                                <div class="space-y-1">
+                                    @{ var indiceConfirmado = 0; }
+                                    @foreach (var idCliente in rotasConfirmadas[tecnico.IDUsuario])
+                                    {
+                                        var cliente = ClientesDoDia().FirstOrDefault(c => c.IDCliente == idCliente);
+                                        if (cliente == null) { continue; }
+                                        var numero = ++indiceConfirmado;
+                                        <div class="flex items-center gap-2 bg-slate-800 rounded-lg px-2 py-1.5">
+                                            <span class="w-5 h-5 rounded-full bg-green-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">@numero</span>
+                                            <div class="min-w-0 flex-1">
+                                                <span class="text-white text-xs font-medium truncate block">@cliente.Nome</span>
+                                                <span class="text-slate-400 text-[11px] truncate block">@PiscinasDoDia(cliente)</span>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                                <button @onclick="() => EditarRotaConfirmadaAsync(tecnico.IDUsuario)" class="w-full bg-slate-600 hover:bg-slate-500 text-white text-xs py-1.5 rounded-md transition-colors">
+                                    <i class="fas fa-pen mr-1"></i>Editar
+                                </button>
+                            </div>
                         }
-                        else
+                        else if (expandido)
                         {
-                            <i class="fas fa-user-circle text-slate-500"></i>
-                        }
-                        <span class="truncate">@tecnico.Nome</span>
-                        @if (!TemLocalizacao(tecnico))
-                        {
-                            <i class="fas fa-map-marker-alt text-amber-400 ml-auto" title="Sem localização"></i>
+                            <div class="px-3 pb-3 pt-1 space-y-2 border-t border-slate-600">
+                                <div class="flex gap-2">
+                                    <button @onclick="() => DefinirModoAsync(true)" class="@BotaoModoClasse(true) flex-1 text-xs py-1.5 rounded-md transition-colors">
+                                        <i class="fas fa-magic mr-1"></i>Automática
+                                    </button>
+                                    <button @onclick="() => DefinirModoAsync(false)" class="@BotaoModoClasse(false) flex-1 text-xs py-1.5 rounded-md transition-colors">
+                                        <i class="fas fa-hand-pointer mr-1"></i>Manual
+                                    </button>
+                                </div>
+
+                                @{ var candidatos = CandidatosOrdenados(); }
+                                @if (!candidatos.Any())
+                                {
+                                    <p class="text-slate-500 text-xs">Nenhum cliente com localização nesta data.</p>
+                                }
+                                else
+                                {
+                                    <div class="space-y-1">
+                                        @foreach (var cliente in candidatos)
+                                        {
+                                            var selecionado = clientesSelecionadosIds.Contains(cliente.IDCliente);
+                                            var ordem = selecionado && rotaCalculada?.Sucesso == true ? clientesSelecionadosIds.IndexOf(cliente.IDCliente) + 1 : (int?)null;
+                                            <label class="flex items-center justify-between gap-2 bg-slate-800 rounded-lg px-2 py-1.5 cursor-pointer hover:bg-slate-600/50 transition-colors">
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="w-5 h-5 rounded-full @(selecionado ? "bg-orange-500" : "bg-cyan-700") text-white text-[10px] font-bold flex items-center justify-center shrink-0">@Iniciais(cliente.Nome)</span>
+                                                        <span class="text-white text-xs font-medium truncate">@cliente.Nome</span>
+                                                    </div>
+                                                    <div class="text-slate-400 text-[11px] truncate ml-7">@PiscinasDoDia(cliente)</div>
+                                                </div>
+                                                <div class="flex items-center gap-2 shrink-0">
+                                                    @if (ordem != null)
+                                                    {
+                                                        <span class="w-5 h-5 rounded-full bg-cyan-600 text-white text-[10px] font-bold flex items-center justify-center">@ordem</span>
+                                                    }
+                                                    <input type="checkbox" checked="@selecionado"
+                                                           @onchange="@(e => DefinirSelecaoClienteAsync(cliente.IDCliente, Convert.ToBoolean(e.Value)))"
+                                                           class="w-4 h-4 accent-orange-500 cursor-pointer" />
+                                                </div>
+                                            </label>
+                                        }
+                                    </div>
+
+                                    @if (clientesSelecionadosIds.Any())
+                                    {
+                                        <button @onclick="MontarRotaAsync" disabled="@calculandoRota" class="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-xs py-1.5 rounded-md transition-colors">
+                                            <i class="fas @(calculandoRota ? "fa-spinner fa-spin" : "fa-route") mr-1"></i>
+                                            @(calculandoRota ? "Calculando..." : "Montar rota")
+                                        </button>
+
+                                        @if (rotaCalculada != null)
+                                        {
+                                            @if (rotaCalculada.Sucesso)
+                                            {
+                                                <div class="text-slate-300 text-xs">
+                                                    <i class="fas fa-road mr-1"></i>@FormatarDistancia(rotaCalculada.DistanciaMetros) · @FormatarDuracao(rotaCalculada.DuracaoSegundos)
+                                                </div>
+                                                <button @onclick="ConfirmarAtribuicaoAsync" disabled="@confirmandoAtribuicao" class="w-full bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white text-xs py-1.5 rounded-md transition-colors">
+                                                    @(confirmandoAtribuicao ? "Salvando..." : "Confirmar atribuição")
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <p class="text-red-400 text-xs">Não foi possível montar a rota (@rotaCalculada.Erro).</p>
+                                            }
+                                        }
+                                    }
+                                }
+                            </div>
                         }
                     </div>
                 }
@@ -194,6 +230,10 @@
     private DateTime dataSelecionada = DateTime.Today;
     private const string MapaId = "mapa-rotas";
 
+    // Escondido por pedido do usuário — a lista de acordeões por técnico cobre o mesmo caso
+    // de uso de forma mais direta. Mantido como flag (não removido) pra ser fácil reativar.
+    private readonly bool ExibirListaOrdensServico = false;
+
     // Montagem de rota manual/automática por técnico. Os dois modos usam exatamente a mesma
     // lista de candidatos e o mesmo card de seleção (ver CandidatosOrdenados/markup) — a
     // única diferença é só qual conjunto de clientes já vem marcado ao entrar no modo.
@@ -205,6 +245,18 @@
     private bool calculandoRota;
     private bool confirmandoAtribuicao;
     private const int MetaClientesPorRota = 7;
+
+    // Rotas já confirmadas nesta sessão, pra data em exibição (idTecnico -> clientes, na
+    // ordem final). É só em memória (não existe campo "rota confirmada" no banco — o que
+    // persiste é a atribuição de cada OS/IDUsuario) e some ao trocar de data. Um técnico
+    // aqui dentro conta como "concluído" pra ordenação do acordeão, mostra a lista em modo
+    // resumo (com botão Editar) em vez do seletor, e seus clientes somem da lista de
+    // candidatos dos outros técnicos + ficam verdes no mapa permanentemente.
+    private readonly Dictionary<int, List<int>> rotasConfirmadas = new();
+
+    private bool RotaConfirmada(int idTecnico) => rotasConfirmadas.ContainsKey(idTecnico);
+
+    private HashSet<int> TodosClientesConfirmados() => rotasConfirmadas.Values.SelectMany(ids => ids).ToHashSet();
 
     // Centro padrão do mapa (Fortaleza-CE) usado quando ainda não há nenhum marcador
     // posicionável — só serve de ponto de partida, o mapa se ajusta aos marcadores depois.
@@ -220,6 +272,7 @@
     private async Task DefinirDataAsync(DateTime data)
     {
         dataSelecionada = data.Date;
+        rotasConfirmadas.Clear();
         await CancelarSelecaoAsync();
         await CarregarDadosAsync();
     }
@@ -272,12 +325,25 @@
 
     private Usuario? TecnicoSelecionado => tecnicos.FirstOrDefault(t => t.IDUsuario == tecnicoSelecionadoId);
 
-    // Candidatos do dia (com localização), ordenados do mais próximo pro mais distante do
-    // técnico em montagem — usado tanto pelo modo manual (lista completa pra marcar) quanto
-    // pelo automático (mesma lista, só que com os mais próximos já vindo marcados).
+    // Pendentes (rota ainda não confirmada hoje, mesmo que já tenha OS) ficam no topo do
+    // acordeão; quem já teve a rota confirmada nesta sessão desce pro final.
+    private List<Usuario> TecnicosOrdenados() => tecnicos
+        .OrderBy(t => RotaConfirmada(t.IDUsuario) ? 1 : 0)
+        .ThenBy(t => t.Nome)
+        .ToList();
+
+    // Candidatos do dia (com localização) que ainda não foram confirmados pra outro técnico,
+    // ordenados do mais próximo pro mais distante do técnico em montagem — usado tanto pelo
+    // modo manual (lista completa pra marcar) quanto pelo automático (mesma lista, só que
+    // com os mais próximos já vindo marcados). Um cliente já confirmado só continua
+    // aparecendo pro próprio técnico dele (fluxo de "Editar").
     private List<Cliente> CandidatosOrdenados()
     {
-        var candidatos = ClientesDoDia().Where(TemLocalizacao).ToList();
+        var confirmados = TodosClientesConfirmados();
+        var candidatos = ClientesDoDia()
+            .Where(TemLocalizacao)
+            .Where(c => !confirmados.Contains(c.IDCliente) || clientesSelecionadosIds.Contains(c.IDCliente))
+            .ToList();
         var tecnico = TecnicoSelecionado;
         if (tecnico != null && TemLocalizacao(tecnico))
         {
@@ -368,10 +434,14 @@
                 await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.clearMarkers", MapaId);
             }
 
+            var confirmados = TodosClientesConfirmados();
             foreach (var cliente in ClientesDoDia().Where(TemLocalizacao))
             {
-                var selecionado = clientesSelecionadosIds.Contains(cliente.IDCliente);
-                var cor = selecionado ? "#16a34a" : "#0891b2";
+                // Verde = rota já confirmada (permanente); laranja = marcado na seleção em
+                // andamento, ainda não confirmado; ciano = sem seleção nenhuma.
+                var cor = confirmados.Contains(cliente.IDCliente) ? "#16a34a"
+                    : clientesSelecionadosIds.Contains(cliente.IDCliente) ? "#f97316"
+                    : "#0891b2";
                 await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.addSelectableInitialsMarker", MapaId,
                     cliente.Latitude!.Value, cliente.Longitude!.Value, Iniciais(cliente.Nome), cliente.Nome, cor, dotNetRef, cliente.IDCliente);
             }
@@ -437,6 +507,13 @@
             return;
         }
 
+        // Cliente já confirmado pra outro técnico: não deixa reatribuir clicando no mapa
+        // (precisa abrir a rota dele e usar "Editar" primeiro).
+        if (TodosClientesConfirmados().Contains(idCliente) && !clientesSelecionadosIds.Contains(idCliente))
+        {
+            return;
+        }
+
         await DefinirSelecaoClienteAsync(idCliente, !clientesSelecionadosIds.Contains(idCliente));
     }
 
@@ -462,18 +539,44 @@
     private async Task OnTecnicoSelecionadoChangedAsync(ChangeEventArgs e)
     {
         var valor = e.Value?.ToString();
-        tecnicoSelecionadoId = string.IsNullOrEmpty(valor) ? (int?)null : int.Parse(valor);
+        await SelecionarTecnicoAsync(string.IsNullOrEmpty(valor) ? (int?)null : int.Parse(valor));
+    }
+
+    // Cabeçalho do acordeão do técnico (ver markup): clicar de novo em quem já está expandido
+    // fecha; clicar em outro troca — só um técnico fica com a rota em montagem por vez, tanto
+    // faz se foi escolhido pelo campo de cima ou clicando no próprio acordeão.
+    private async Task AlternarAccordionTecnicoAsync(int idTecnico)
+    {
+        await SelecionarTecnicoAsync(tecnicoSelecionadoId == idTecnico ? (int?)null : idTecnico);
+    }
+
+    private async Task SelecionarTecnicoAsync(int? idTecnico)
+    {
+        tecnicoSelecionadoId = idTecnico;
         modoAutomatico = false;
         clientesSelecionadosIds.Clear();
         await LimparRotaAsync();
+        StateHasChanged();
     }
 
     private async Task CancelarSelecaoAsync()
     {
-        tecnicoSelecionadoId = null;
+        await SelecionarTecnicoAsync(null);
+    }
+
+    // Tira o técnico do estado "confirmado" e devolve os clientes dele pra seleção ativa,
+    // deixando editar como se estivesse montando a rota pela primeira vez.
+    private async Task EditarRotaConfirmadaAsync(int idTecnico)
+    {
+        if (rotasConfirmadas.TryGetValue(idTecnico, out var clientesConfirmados))
+        {
+            clientesSelecionadosIds = new List<int>(clientesConfirmados);
+            rotasConfirmadas.Remove(idTecnico);
+        }
         modoAutomatico = false;
-        clientesSelecionadosIds.Clear();
+        tecnicoSelecionadoId = idTecnico;
         await LimparRotaAsync();
+        StateHasChanged();
     }
 
     // Alterna entre montar a rota escolhendo manualmente (lista/mapa em branco, você marca)
@@ -609,6 +712,7 @@
 
             if (falhas == 0)
             {
+                rotasConfirmadas[tecnico.IDUsuario] = new List<int>(clientesSelecionadosIds);
                 ShowToast("Sucesso", $"Rota com {osParaAtualizar.Count} OS atribuída a {tecnico.Nome}.", "success");
             }
             else
