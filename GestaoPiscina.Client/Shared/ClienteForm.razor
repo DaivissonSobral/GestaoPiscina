@@ -22,16 +22,21 @@
         </div>
         <div class="space-y-3">
             <label class="block text-sm font-medium text-slate-300 mb-2">Gestor Responsável</label>
-            <InputSelect TValue="int" Value="SelectedGestorId" ValueChanged="OnGestorSelected" ValueExpression="() => SelectedGestorId" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500">
-                <option value="0">Nenhum</option>
-                @if (Gestores != null)
-                {
-                    @foreach (var gestor in Gestores)
+            <div class="flex items-center gap-2">
+                <InputSelect TValue="int" Value="SelectedGestorId" ValueChanged="OnGestorSelected" ValueExpression="() => SelectedGestorId" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500">
+                    <option value="0">Nenhum</option>
+                    @if (Gestores != null)
                     {
-                        <option value="@gestor.IDGestor">@gestor.Nome</option>
+                        @foreach (var gestor in Gestores)
+                        {
+                            <option value="@gestor.IDGestor">@gestor.Nome</option>
+                        }
                     }
-                }
-            </InputSelect>
+                </InputSelect>
+                <button type="button" @onclick="OnNovoGestor" title="Adicionar novo gestor" class="shrink-0 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg px-3 py-2 text-slate-300 hover:text-cyan-400 transition-colors">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
         </div>
         <div class="space-y-3">
             <label class="block text-sm font-medium text-slate-300 mb-2">Telefone</label>
@@ -64,4 +69,5 @@
     [Parameter] public List<Gestor>? Gestores { get; set; }
     [Parameter] public int SelectedGestorId { get; set; }
     [Parameter] public EventCallback<int> OnGestorSelected { get; set; }
+    [Parameter] public EventCallback OnNovoGestor { get; set; }
 }
