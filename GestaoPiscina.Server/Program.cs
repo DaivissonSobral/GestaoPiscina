@@ -34,7 +34,12 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowBlazorApp",
         policy =>
         {
-            policy.WithOrigins("http://localhost:7000", "https://localhost:7000", "http://localhost:5000")
+            // Além do localhost, libera qualquer túnel *.trycloudflare.com: a URL do túnel
+            // muda a cada sessão (ver appsettings.json/ApiBaseUrl), então travar num
+            // hostname fixo aqui sempre quebra de novo assim que o túnel é recriado.
+            policy.SetIsOriginAllowed(origin =>
+                      origin is "http://localhost:7000" or "https://localhost:7000" or "http://localhost:5000"
+                      || (Uri.TryCreate(origin, UriKind.Absolute, out var uri) && uri.Host.EndsWith(".trycloudflare.com")))
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });

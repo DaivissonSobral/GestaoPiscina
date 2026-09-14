@@ -141,6 +141,33 @@ window.gestaoPiscinaMaps = (function () {
     // Recorta a foto em círculo via canvas; se a imagem for de outra origem sem CORS
     // liberado, o canvas fica "contaminado" (toDataURL lança SecurityError) — nesse caso,
     // cai de volta pra usar a URL da foto direto (sem recorte), em vez de falhar o marcador.
+    function drawCircularCrop(img, size) {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, size / 2 - 2, 0, 2 * Math.PI);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(img, 0, 0, size, size);
+        ctx.restore();
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, size / 2 - 2, 0, 2 * Math.PI);
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        return canvas.toDataURL();
+    }
+
+    // Carrega a foto em duas etapas: primeiro com crossOrigin "anonymous", pra poder
+    // recortar em círculo via canvas; se o servidor da foto não enviar cabeçalhos CORS
+    // (ex.: acesso via um túnel ainda não liberado em Program.cs), o navegador REJEITA
+    // esse carregamento (onerror, nunca onload) em vez de só "contaminar" o canvas — nesse
+    // caso caímos pra uma segunda tentativa sem crossOrigin, que sempre carrega (é assim
+    // que a foto já aparece em outras telas do sistema), só que sem o recorte circular.
+    // Só cai no "?" de iniciais se a foto realmente não existir/carregar de jeito nenhum.
     function addPhotoMarker(elementId, lat, lng, photoUrl, title) {
         if (!photoUrl) {
             addInitialsMarker(elementId, lat, lng, '?', title, '#7c3aed');
@@ -149,37 +176,19 @@ window.gestaoPiscinaMaps = (function () {
 
         const size = 44;
         const img = new Image();
-        // Sem crossOrigin: o servidor de uploads não envia cabeçalhos CORS, então pedir
-        // "anonymous" faz o navegador REJEITAR o carregamento da imagem (dispara onerror,
-        // nunca onload) em vez de só "contaminar" o canvas — o que fazia toda foto cair
-        // no fallback de iniciais "?". Sem crossOrigin a imagem sempre carrega (é assim que
-        // ela já aparece em outras telas do sistema); só o recorte em canvas pode falhar,
-        // e nesse caso caímos no fallback de usar a foto sem recorte (catch abaixo).
+        img.crossOrigin = 'anonymous';
         img.onload = () => {
             try {
-                const canvas = document.createElement('canvas');
-                canvas.width = size;
-                canvas.height = size;
-                const ctx = canvas.getContext('2d');
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(size / 2, size / 2, size / 2 - 2, 0, 2 * Math.PI);
-                ctx.closePath();
-                ctx.clip();
-                ctx.drawImage(img, 0, 0, size, size);
-                ctx.restore();
-                ctx.beginPath();
-                ctx.arc(size / 2, size / 2, size / 2 - 2, 0, 2 * Math.PI);
-                ctx.strokeStyle = '#0f172a';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-                addMarkerWithIcon(elementId, lat, lng, canvas.toDataURL(), title, size);
+                addMarkerWithIcon(elementId, lat, lng, drawCircularCrop(img, size), title, size);
             } catch (e) {
                 addMarkerWithIcon(elementId, lat, lng, photoUrl, title, size);
             }
         };
         img.onerror = () => {
-            addInitialsMarker(elementId, lat, lng, '?', title, '#7c3aed');
+            const fallbackImg = new Image();
+            fallbackImg.onload = () => addMarkerWithIcon(elementId, lat, lng, photoUrl, title, size);
+            fallbackImg.onerror = () => addInitialsMarker(elementId, lat, lng, '?', title, '#7c3aed');
+            fallbackImg.src = photoUrl;
         };
         img.src = photoUrl;
     }
