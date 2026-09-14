@@ -59,50 +59,72 @@
                         <button @onclick="CancelarSelecaoAsync" class="text-slate-400 hover:text-white shrink-0" title="Cancelar"><i class="fas fa-times"></i></button>
                     </div>
 
-                    <button @onclick="SugerirAutomaticamente" class="w-full bg-slate-600 hover:bg-slate-500 text-white text-xs py-1.5 rounded-md transition-colors">
-                        <i class="fas fa-magic mr-1"></i> Sugerir automaticamente (~@MetaClientesPorRota mais próximos)
-                    </button>
-
-                    @if (clientesSelecionadosIds.Any())
-                    {
-                        <div class="space-y-1">
-                            @{ var indice = 0; }
-                            @foreach (var idCliente in clientesSelecionadosIds)
-                            {
-                                var cliente = ClientesDoDia().FirstOrDefault(c => c.IDCliente == idCliente);
-                                var numero = ++indice;
-                                <div class="flex items-center justify-between gap-2 bg-slate-800 rounded px-2 py-1 text-xs">
-                                    <span class="text-white truncate"><span class="text-cyan-400 font-bold">@numero.</span> @cliente?.Nome</span>
-                                    <button @onclick="() => RemoverDaSelecaoAsync(idCliente)" class="text-slate-400 hover:text-red-400 shrink-0"><i class="fas fa-times"></i></button>
-                                </div>
-                            }
-                        </div>
-
-                        <button @onclick="MontarRotaAsync" disabled="@calculandoRota" class="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-xs py-1.5 rounded-md transition-colors">
-                            <i class="fas @(calculandoRota ? "fa-spinner fa-spin" : "fa-route") mr-1"></i>
-                            @(calculandoRota ? "Calculando..." : "Montar rota")
+                    <div class="flex gap-2">
+                        <button @onclick="() => DefinirModoAsync(true)" class="@BotaoModoClasse(true) flex-1 text-xs py-1.5 rounded-md transition-colors">
+                            <i class="fas fa-magic mr-1"></i>Automática
                         </button>
+                        <button @onclick="() => DefinirModoAsync(false)" class="@BotaoModoClasse(false) flex-1 text-xs py-1.5 rounded-md transition-colors">
+                            <i class="fas fa-hand-pointer mr-1"></i>Manual
+                        </button>
+                    </div>
 
-                        @if (rotaCalculada != null)
-                        {
-                            @if (rotaCalculada.Sucesso)
-                            {
-                                <div class="text-slate-300 text-xs">
-                                    <i class="fas fa-road mr-1"></i>@FormatarDistancia(rotaCalculada.DistanciaMetros) · @FormatarDuracao(rotaCalculada.DuracaoSegundos)
-                                </div>
-                                <button @onclick="ConfirmarAtribuicaoAsync" disabled="@confirmandoAtribuicao" class="w-full bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white text-xs py-1.5 rounded-md transition-colors">
-                                    @(confirmandoAtribuicao ? "Salvando..." : "Confirmar atribuição")
-                                </button>
-                            }
-                            else
-                            {
-                                <p class="text-red-400 text-xs">Não foi possível montar a rota (@rotaCalculada.Erro).</p>
-                            }
-                        }
+                    @{ var candidatos = CandidatosOrdenados(); }
+                    @if (!candidatos.Any())
+                    {
+                        <p class="text-slate-500 text-xs">Nenhum cliente com localização nesta data.</p>
                     }
                     else
                     {
-                        <p class="text-slate-500 text-xs">Clique nos clientes do mapa pra adicionar à rota, ou use "Sugerir automaticamente".</p>
+                        <div class="space-y-1">
+                            @foreach (var cliente in candidatos)
+                            {
+                                var selecionado = clientesSelecionadosIds.Contains(cliente.IDCliente);
+                                var ordem = selecionado && rotaCalculada?.Sucesso == true ? clientesSelecionadosIds.IndexOf(cliente.IDCliente) + 1 : (int?)null;
+                                <label class="flex items-center justify-between gap-2 bg-slate-800 rounded-lg px-2 py-1.5 cursor-pointer hover:bg-slate-600/50 transition-colors">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-5 h-5 rounded-full bg-cyan-700 text-white text-[10px] font-bold flex items-center justify-center shrink-0">@Iniciais(cliente.Nome)</span>
+                                            <span class="text-white text-xs font-medium truncate">@cliente.Nome</span>
+                                        </div>
+                                        <div class="text-slate-400 text-[11px] truncate ml-7">@PiscinasDoDia(cliente)</div>
+                                    </div>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        @if (ordem != null)
+                                        {
+                                            <span class="w-5 h-5 rounded-full bg-cyan-600 text-white text-[10px] font-bold flex items-center justify-center">@ordem</span>
+                                        }
+                                        <input type="checkbox" checked="@selecionado"
+                                               @onchange="@(e => DefinirSelecaoClienteAsync(cliente.IDCliente, Convert.ToBoolean(e.Value)))"
+                                               class="w-4 h-4 accent-cyan-500 cursor-pointer" />
+                                    </div>
+                                </label>
+                            }
+                        </div>
+
+                        @if (clientesSelecionadosIds.Any())
+                        {
+                            <button @onclick="MontarRotaAsync" disabled="@calculandoRota" class="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-xs py-1.5 rounded-md transition-colors">
+                                <i class="fas @(calculandoRota ? "fa-spinner fa-spin" : "fa-route") mr-1"></i>
+                                @(calculandoRota ? "Calculando..." : "Montar rota")
+                            </button>
+
+                            @if (rotaCalculada != null)
+                            {
+                                @if (rotaCalculada.Sucesso)
+                                {
+                                    <div class="text-slate-300 text-xs">
+                                        <i class="fas fa-road mr-1"></i>@FormatarDistancia(rotaCalculada.DistanciaMetros) · @FormatarDuracao(rotaCalculada.DuracaoSegundos)
+                                    </div>
+                                    <button @onclick="ConfirmarAtribuicaoAsync" disabled="@confirmandoAtribuicao" class="w-full bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white text-xs py-1.5 rounded-md transition-colors">
+                                        @(confirmandoAtribuicao ? "Salvando..." : "Confirmar atribuição")
+                                    </button>
+                                }
+                                else
+                                {
+                                    <p class="text-red-400 text-xs">Não foi possível montar a rota (@rotaCalculada.Erro).</p>
+                                }
+                            }
+                        }
                     }
                 </div>
             }
@@ -172,9 +194,12 @@
     private DateTime dataSelecionada = DateTime.Today;
     private const string MapaId = "mapa-rotas";
 
-    // Montagem de rota manual/automática por técnico.
+    // Montagem de rota manual/automática por técnico. Os dois modos usam exatamente a mesma
+    // lista de candidatos e o mesmo card de seleção (ver CandidatosOrdenados/markup) — a
+    // única diferença é só qual conjunto de clientes já vem marcado ao entrar no modo.
     private DotNetObjectReference<Rotas>? dotNetRef;
     private int? tecnicoSelecionadoId;
+    private bool modoAutomatico;
     private List<int> clientesSelecionadosIds = new();
     private RotaResultado? rotaCalculada;
     private bool calculandoRota;
@@ -246,6 +271,35 @@
         .ToList();
 
     private Usuario? TecnicoSelecionado => tecnicos.FirstOrDefault(t => t.IDUsuario == tecnicoSelecionadoId);
+
+    // Candidatos do dia (com localização), ordenados do mais próximo pro mais distante do
+    // técnico em montagem — usado tanto pelo modo manual (lista completa pra marcar) quanto
+    // pelo automático (mesma lista, só que com os mais próximos já vindo marcados).
+    private List<Cliente> CandidatosOrdenados()
+    {
+        var candidatos = ClientesDoDia().Where(TemLocalizacao).ToList();
+        var tecnico = TecnicoSelecionado;
+        if (tecnico != null && TemLocalizacao(tecnico))
+        {
+            return candidatos
+                .OrderBy(c => DistanciaKm(tecnico.Latitude!.Value, tecnico.Longitude!.Value, c.Latitude!.Value, c.Longitude!.Value))
+                .ToList();
+        }
+        return candidatos.OrderBy(c => c.Nome).ToList();
+    }
+
+    // Tipos de piscina que esse cliente tem hoje (ex.: "infantil, adulto") — mostrado no
+    // card de seleção da rota pra ajudar a decidir sem precisar abrir a lista de OS ao lado.
+    private string PiscinasDoDia(Cliente cliente)
+    {
+        var tipos = ordensDoDia
+            .Where(os => os.Piscina?.Cliente?.IDCliente == cliente.IDCliente)
+            .Select(os => os.Piscina?.Tipo)
+            .Where(t => !string.IsNullOrWhiteSpace(t))
+            .Distinct()
+            .ToList();
+        return tipos.Any() ? string.Join(", ", tipos) : "—";
+    }
 
     private bool TemLocalizacao(Cliente cliente) => cliente.Latitude.HasValue && cliente.Longitude.HasValue;
     private bool TemLocalizacao(Usuario usuario) => usuario.Latitude.HasValue && usuario.Longitude.HasValue;
@@ -383,24 +437,33 @@
             return;
         }
 
-        if (!clientesSelecionadosIds.Remove(idCliente))
+        await DefinirSelecaoClienteAsync(idCliente, !clientesSelecionadosIds.Contains(idCliente));
+    }
+
+    // Único caminho que marca/desmarca um cliente na rota — usado tanto pelo clique no mapa
+    // quanto pela caixa de seleção do card na lista, então os dois ficam sempre em sincronia.
+    private async Task DefinirSelecaoClienteAsync(int idCliente, bool selecionado)
+    {
+        if (selecionado)
         {
-            clientesSelecionadosIds.Add(idCliente);
+            if (!clientesSelecionadosIds.Contains(idCliente))
+            {
+                clientesSelecionadosIds.Add(idCliente);
+            }
+        }
+        else
+        {
+            clientesSelecionadosIds.Remove(idCliente);
         }
         await LimparRotaAsync();
         StateHasChanged();
-    }
-
-    private async Task RemoverDaSelecaoAsync(int idCliente)
-    {
-        clientesSelecionadosIds.Remove(idCliente);
-        await LimparRotaAsync();
     }
 
     private async Task OnTecnicoSelecionadoChangedAsync(ChangeEventArgs e)
     {
         var valor = e.Value?.ToString();
         tecnicoSelecionadoId = string.IsNullOrEmpty(valor) ? (int?)null : int.Parse(valor);
+        modoAutomatico = false;
         clientesSelecionadosIds.Clear();
         await LimparRotaAsync();
     }
@@ -408,9 +471,28 @@
     private async Task CancelarSelecaoAsync()
     {
         tecnicoSelecionadoId = null;
+        modoAutomatico = false;
         clientesSelecionadosIds.Clear();
         await LimparRotaAsync();
     }
+
+    // Alterna entre montar a rota escolhendo manualmente (lista/mapa em branco, você marca)
+    // ou automaticamente (mesma lista, só que já vem com os mais próximos marcados).
+    private async Task DefinirModoAsync(bool automatico)
+    {
+        modoAutomatico = automatico;
+        clientesSelecionadosIds.Clear();
+        if (automatico)
+        {
+            SugerirAutomaticamente();
+        }
+        await LimparRotaAsync();
+        StateHasChanged();
+    }
+
+    private string BotaoModoClasse(bool automatico) => modoAutomatico == automatico
+        ? "bg-cyan-600 text-white"
+        : "bg-slate-600 text-slate-300 hover:bg-slate-500";
 
     private async Task LimparRotaAsync()
     {
@@ -424,10 +506,10 @@
         }
     }
 
-    // Escolhe, entre os clientes do dia ainda não selecionados, os mais próximos do técnico
-    // em linha reta (fórmula de Haversine) até completar a meta de ~7 clientes por rota —
-    // só uma sugestão de partida; o usuário pode ajustar clicando no mapa antes de montar a
-    // rota de verdade (que aí sim usa a distância real de trajeto via Directions API).
+    // Marca, entre os candidatos do dia, os ~7 mais próximos do técnico em linha reta
+    // (fórmula de Haversine) — só uma sugestão de partida; o usuário pode desmarcar/marcar
+    // outros (checkbox do card ou clique no mapa) antes de montar a rota de verdade (que aí
+    // sim usa a distância real de trajeto via Directions API).
     private void SugerirAutomaticamente()
     {
         var tecnico = TecnicoSelecionado;
@@ -436,21 +518,10 @@
             return;
         }
 
-        var vagas = MetaClientesPorRota - clientesSelecionadosIds.Count;
-        if (vagas <= 0)
-        {
-            return;
-        }
-
-        var candidatos = ClientesDoDia()
-            .Where(c => TemLocalizacao(c) && !clientesSelecionadosIds.Contains(c.IDCliente))
-            .OrderBy(c => DistanciaKm(tecnico.Latitude!.Value, tecnico.Longitude!.Value, c.Latitude!.Value, c.Longitude!.Value))
-            .Take(vagas);
-
-        foreach (var cliente in candidatos)
-        {
-            clientesSelecionadosIds.Add(cliente.IDCliente);
-        }
+        clientesSelecionadosIds = CandidatosOrdenados()
+            .Take(MetaClientesPorRota)
+            .Select(c => c.IDCliente)
+            .ToList();
     }
 
     private static double DistanciaKm(double lat1, double lng1, double lat2, double lng2)
