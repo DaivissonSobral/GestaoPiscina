@@ -259,6 +259,58 @@ window.gestaoPiscinaMaps = (function () {
         }
     }
 
+    // Rota simples, de um ponto A até um ponto B (sem waypoints, sem ida-e-volta) — usada
+    // pelo RotaOSWidget (Shared/RotaOSWidget.razor) pra mostrar o trajeto do técnico até o
+    // cliente na tela de cadastro/detalhes de uma OS específica.
+    function tracarRotaSimples(elementId, apiKey, origemLat, origemLng, destinoLat, destinoLng) {
+        return loadScript(apiKey).then(() => new Promise((resolve) => {
+            const entry = maps[elementId];
+            if (!entry) {
+                resolve({ sucesso: false, erro: 'Mapa não iniciado' });
+                return;
+            }
+            if (!entry.directionsRenderer) {
+                entry.directionsRenderer = new google.maps.DirectionsRenderer({ map: entry.map, suppressMarkers: true, preserveViewport: true });
+            }
+            const directionsService = new google.maps.DirectionsService();
+            directionsService.route({
+                origin: { lat: origemLat, lng: origemLng },
+                destination: { lat: destinoLat, lng: destinoLng },
+                travelMode: google.maps.TravelMode.DRIVING
+            }, (result, status) => {
+                if (status === 'OK' && result) {
+                    entry.directionsRenderer.setDirections(result);
+                    let distanciaMetros = 0;
+                    let duracaoSegundos = 0;
+                    result.routes[0].legs.forEach((leg) => {
+                        distanciaMetros += leg.distance ? leg.distance.value : 0;
+                        duracaoSegundos += leg.duration ? leg.duration.value : 0;
+                    });
+                    resolve({ sucesso: true, distanciaMetros: distanciaMetros, duracaoSegundos: duracaoSegundos });
+                } else {
+                    resolve({ sucesso: false, erro: status });
+                }
+            });
+        }));
+    }
+
+    // Geolocalização do navegador/celular (ver OrdemServicoDetalhes.IniciarAsync) — resolve
+    // null em vez de rejeitar sempre que não conseguir (sem suporte, permissão negada,
+    // timeout etc.), porque isso nunca deve impedir o usuário de iniciar a OS.
+    function obterLocalizacaoAtual() {
+        return new Promise((resolve) => {
+            if (!navigator.geolocation) {
+                resolve(null);
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                () => resolve(null),
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        });
+    }
+
     return {
         geocode: geocode,
         initMap: initMap,
@@ -268,6 +320,8 @@ window.gestaoPiscinaMaps = (function () {
         addSelectableInitialsMarker: addSelectableInitialsMarker,
         addPhotoMarker: addPhotoMarker,
         calculateRoute: calculateRoute,
+        tracarRotaSimples: tracarRotaSimples,
+        obterLocalizacaoAtual: obterLocalizacaoAtual,
         limparRota: limparRota
     };
 })();

@@ -1,0 +1,138 @@
+@using GestaoPiscina.Client.Models
+@implements IAsyncDisposable
+@inject IJSRuntime JSRuntime
+@inject IConfiguration Configuration
+
+@if (TecnicoLat == null || TecnicoLng == null || ClienteLat == null || ClienteLng == null)
+{
+    <p class="text-slate-500 text-sm">
+        @((TecnicoLat == null || TecnicoLng == null) ? "Técnico sem localização cadastrada." : "Cliente sem localização cadastrada.")
+    </p>
+}
+else
+{
+    <div class="space-y-2">
+        <div id="@MapaId" style="height: 220px; width: 100%;" class="rounded-lg overflow-hidden"></div>
+        @if (resultado != null)
+        {
+            @if (resultado.Sucesso)
+            {
+                <div class="text-slate-300 text-xs">
+                    <i class="fas fa-road mr-1"></i>@FormatarDistancia(resultado.DistanciaMetros) · @FormatarDuracao(resultado.DuracaoSegundos)
+                </div>
+            }
+            else
+            {
+                <p class="text-red-400 text-xs">Não foi possível calcular a rota (@resultado.Erro).</p>
+            }
+        }
+    </div>
+}
+
+@code {
+    // Localização do técnico (de preferência a capturada ao clicar "Iniciar" — ver
+    // OrdemServico.LatitudeInicio/LongitudeInicio — com o endereço cadastrado dele como
+    // estimativa antes disso) e do cliente da OS. Componente só desenha algo quando os dois
+    // pontos existem; senão mostra um aviso do que está faltando.
+    [Parameter] public double? TecnicoLat { get; set; }
+    [Parameter] public double? TecnicoLng { get; set; }
+    [Parameter] public string? TecnicoNome { get; set; }
+    [Parameter] public string? TecnicoFotoUrl { get; set; }
+    [Parameter] public double? ClienteLat { get; set; }
+    [Parameter] public double? ClienteLng { get; set; }
+    [Parameter] public string? ClienteNome { get; set; }
+
+    // Precisa ser único por instância na tela — os modais de Cadastro e Detalhes de OS
+    // ficam sempre montados no DOM (só escondidos via CSS), então duas instâncias com o
+    // mesmo id colidiriam (document.getElementById só acha a primeira).
+    [Parameter, EditorRequired] public string MapaId { get; set; } = string.Empty;
+
+    // Só desenha quando a tela realmente está visível pro usuário — os modais que hospedam
+    // esse widget nunca são desmontados (só escondidos via CSS "hidden"), e iniciar o mapa
+    // num elemento escondido (display:none) faz o Google Maps calcular tamanho 0x0. Também
+    // evita gastar chamada da Directions API à toa num widget que o usuário nunca abriu.
+    [Parameter] public bool Visivel { get; set; }
+
+    private bool mapaIniciado;
+    private RotaResultado? resultado;
+    private (double, double, double, double)? ultimaCombinacao;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!Visivel || TecnicoLat == null || TecnicoLng == null || ClienteLat == null || ClienteLng == null)
+        {
+            return;
+        }
+
+        var combinacaoAtual = (TecnicoLat.Value, TecnicoLng.Value, ClienteLat.Value, ClienteLng.Value);
+        if (mapaIniciado && ultimaCombinacao == combinacaoAtual)
+        {
+            return;
+        }
+
+        var apiKey = Configuration["GoogleMapsApiKey"];
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            return;
+        }
+
+        try
+        {
+            if (!mapaIniciado)
+            {
+                await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.initMap", MapaId, apiKey, TecnicoLat.Value, TecnicoLng.Value, 12);
+                mapaIniciado = true;
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.clearMarkers", MapaId);
+            }
+
+            await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.addPhotoMarker", MapaId, TecnicoLat.Value, TecnicoLng.Value, TecnicoFotoUrl, TecnicoNome ?? "Técnico");
+            await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.addInitialsMarker", MapaId, ClienteLat.Value, ClienteLng.Value, Iniciais(ClienteNome), ClienteNome ?? "Cliente", "#0891b2");
+
+            resultado = await JSRuntime.InvokeAsync<RotaResultado>("gestaoPiscinaMaps.tracarRotaSimples", MapaId, apiKey, TecnicoLat.Value, TecnicoLng.Value, ClienteLat.Value, ClienteLng.Value);
+            await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.fitToMarkers", MapaId);
+            ultimaCombinacao = combinacaoAtual;
+            StateHasChanged();
+        }
+        catch
+        {
+            // Se o Google Maps falhar (chave inválida, sem internet etc.), o resto da tela
+            // de cadastro/detalhes continua funcionando normalmente.
+        }
+    }
+
+    private static string Iniciais(string? nome)
+    {
+        var partes = (nome ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (partes.Length >= 2)
+        {
+            return $"{partes[0][0]}{partes[1][0]}".ToUpper();
+        }
+        if (partes.Length == 1 && partes[0].Length >= 2)
+        {
+            return partes[0].Substring(0, 2).ToUpper();
+        }
+        return (partes.FirstOrDefault() ?? "?").ToUpper();
+    }
+
+    private static string FormatarDistancia(double metros) => metros >= 1000 ? $"{metros / 1000:0.0} km" : $"{metros:0} m";
+
+    private static string FormatarDuracao(double segundos)
+    {
+        var tempo = TimeSpan.FromSeconds(segundos);
+        return tempo.TotalHours >= 1 ? $"{(int)tempo.TotalHours}h{tempo.Minutes:00}min" : $"{tempo.Minutes}min";
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("gestaoPiscinaMaps.limparRota", MapaId);
+        }
+        catch
+        {
+        }
+    }
+}

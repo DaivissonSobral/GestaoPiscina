@@ -44,6 +44,13 @@ namespace GestaoPiscina.Server.Models
         [Required]
         public int IDUsuario { get; set; } // Técnico responsável
 
+        // Localização exata do técnico (geolocalização do navegador/celular) no momento em
+        // que ele clicou "Iniciar" nesta OS — usada pra traçar a rota até o cliente na tela
+        // de cadastro/detalhes (ver RotaOSWidget no cliente). Diferente de Usuario.Latitude/
+        // Longitude (endereço cadastrado do técnico), que é só uma estimativa de partida.
+        public double? LatitudeInicio { get; set; }
+        public double? LongitudeInicio { get; set; }
+
         [Required]
         [Range(0, double.MaxValue)]
         public decimal pH { get; set; }

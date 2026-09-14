@@ -115,6 +115,27 @@
                 </div>
 
                 <div class="border border-slate-700 rounded-lg overflow-hidden">
+                    <button type="button" @onclick="() => secaoRotaAberta = !secaoRotaAberta" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
+                        <span class="text-sm font-semibold text-slate-200"><i class="fas fa-route mr-2 text-cyan-400"></i>Rota</span>
+                        <i class="fas @(secaoRotaAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                    </button>
+                    @if (secaoRotaAberta)
+                    {
+                        <div class="p-4">
+                            <RotaOSWidget MapaId="mapa-rota-os-cadastro"
+                                          Visivel="@(IsVisible && secaoRotaAberta)"
+                                          TecnicoLat="RotaTecnicoLat"
+                                          TecnicoLng="RotaTecnicoLng"
+                                          TecnicoNome="TecnicoSelecionado?.Nome"
+                                          TecnicoFotoUrl="TecnicoSelecionado?.FotoUrl"
+                                          ClienteLat="ClienteSelecionadoParaRota?.Latitude"
+                                          ClienteLng="ClienteSelecionadoParaRota?.Longitude"
+                                          ClienteNome="ClienteSelecionadoParaRota?.Nome" />
+                        </div>
+                    }
+                </div>
+
+                <div class="border border-slate-700 rounded-lg overflow-hidden">
                     <button type="button" @onclick="() => secaoAguaAberta = !secaoAguaAberta" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
                         <span class="text-sm font-semibold text-slate-200"><i class="fas fa-tint mr-2 text-cyan-400"></i>Parâmetros da Água</span>
                         <i class="fas @(secaoAguaAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
@@ -318,6 +339,7 @@
     // Seções do acordeão — "Dados Gerais" começa aberta (é onde ficam quase todos os
     // campos obrigatórios); as demais começam fechadas para reduzir a rolagem inicial.
     private bool secaoDadosAberta = true;
+    private bool secaoRotaAberta = false;
     private bool secaoAguaAberta = false;
     private bool secaoDosagemAberta = false;
     private bool secaoFotosAberta = false;
@@ -340,6 +362,14 @@
 
     private IEnumerable<Piscina> PiscinasDoCliente =>
         (Piscinas ?? new List<Piscina>()).Where(p => p.IDCliente == clienteSelecionadoId);
+
+    // Dados usados pelo acordeão "Rota" (ver RotaOSWidget). Prefere a localização exata
+    // capturada ao clicar "Iniciar" (LatitudeInicio/LongitudeInicio) — quando ainda não
+    // existe (OS nem começou), cai pro endereço cadastrado do técnico, como estimativa.
+    private Usuario? TecnicoSelecionado => Tecnicos?.FirstOrDefault(t => t.IDUsuario == OrdemDeServico.IDUsuario);
+    private double? RotaTecnicoLat => OrdemDeServico.LatitudeInicio ?? TecnicoSelecionado?.Latitude;
+    private double? RotaTecnicoLng => OrdemDeServico.LongitudeInicio ?? TecnicoSelecionado?.Longitude;
+    private Cliente? ClienteSelecionadoParaRota => ClientesDisponiveis.FirstOrDefault(c => c.IDCliente == clienteSelecionadoId);
 
     private void OnClienteMudou(ChangeEventArgs e)
     {

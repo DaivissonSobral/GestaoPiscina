@@ -251,6 +251,7 @@
 <OrdemServicoDetalhes @bind-IsVisible="modalDetalhesVisible"
                       OrdemDeServico="osSelecionada"
                       Aprovadores="quimicos"
+                      Tecnicos="tecnicos"
                       ChecklistItensDisponiveis="checklistItens"
                       OnEdit="EditarOS" />
 
@@ -635,6 +636,8 @@
             FotosOcorrencias = os.FotosOcorrencias,
             RelatorioGerado = os.RelatorioGerado,
             IDUsuario = os.IDUsuario,
+            LatitudeInicio = os.LatitudeInicio,
+            LongitudeInicio = os.LongitudeInicio,
             Aprovador = os.Aprovador,
             pH = os.pH,
             Alcalinidade = os.Alcalinidade,

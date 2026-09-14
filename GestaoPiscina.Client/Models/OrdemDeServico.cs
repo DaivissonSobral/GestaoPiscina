@@ -48,6 +48,11 @@ namespace GestaoPiscina.Client.Models
         [Range(1, int.MaxValue, ErrorMessage = "Selecione um técnico")]
         public int IDUsuario { get; set; }
 
+        // Localização exata do técnico (geolocalização do navegador) no momento em que ele
+        // clicou "Iniciar" nesta OS — ver OrdemServicoDetalhes.IniciarAsync.
+        public double? LatitudeInicio { get; set; }
+        public double? LongitudeInicio { get; set; }
+
         [Required(ErrorMessage = "pH é obrigatório")]
         [Range(0, double.MaxValue, ErrorMessage = "pH deve ser maior ou igual a zero")]
         public decimal pH { get; set; }
