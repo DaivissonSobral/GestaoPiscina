@@ -6,9 +6,15 @@
     <div class="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden" @onclick="() => MainLayout.CloseMobileMenu()"></div>
 }
 
-<aside class="w-64 shrink-0 bg-slate-900 p-6 flex-col min-h-screen border-r border-slate-800 fixed md:static inset-y-0 left-0 z-40 overflow-y-auto md:flex @(MainLayout?.MobileMenuOpen == true ? "flex" : "hidden") @(Collapsed ? "md:w-20 md:p-3" : "")">
-    <div class="flex items-center justify-center mb-10 @(Collapsed ? "md:hidden" : "")">
-        <img src="images/logo-fort-piscina.png" alt="Fort Piscina" class="max-w-full h-auto" />
+<aside class="w-64 shrink-0 bg-slate-900 px-6 pb-6 flex-col min-h-screen border-r border-slate-800 fixed md:static inset-y-0 left-0 z-40 overflow-y-auto md:flex @(MainLayout?.MobileMenuOpen == true ? "flex" : "hidden") @(Collapsed ? "md:w-20 md:px-3 md:pb-3" : "")">
+    <div class="pt-3 mb-10">
+        <div class="h-10 flex items-center justify-between @(Collapsed ? "md:justify-center" : "")">
+            <img src="images/logo-fort-piscina.png" alt="Fort Piscina" class="h-10 w-auto @(Collapsed ? "md:hidden" : "")" />
+            <button type="button" @onclick="() => MainLayout?.ToggleSidebar()" class="inline-flex items-center justify-center shrink-0 text-slate-300 hover:text-white transition-colors" title="@(MainLayout?.MobileMenuOpen == true ? "Fechar menu" : "Recolher/expandir menu")">
+                <i class="fas fa-bars text-xl !hidden md:!inline"></i>
+                <i class="fas fa-times text-xl md:!hidden"></i>
+            </button>
+        </div>
     </div>
     <nav class="flex flex-col gap-1">
         @foreach (var item in menuItems.Where(i => !i.Hidden))
@@ -29,10 +35,10 @@
 
         <div>
             <button type="button" @onclick="ToggleConfiguracoes" title="@grupoConfiguracoes.Label" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150 font-medium text-base @(Collapsed ? "md:justify-center" : "")">
-                <span class="flex items-center">
-                    <i class="fas @grupoConfiguracoes.Icon text-lg @(Collapsed ? "md:mr-0" : "mr-2")"></i><span class="@(Collapsed ? "md:hidden" : "")">@grupoConfiguracoes.Label</span>
+                <span class="flex items-center min-w-0">
+                    <span class="w-6 shrink-0 text-center"><i class="fas @grupoConfiguracoes.Icon text-lg"></i></span><span class="ml-3 text-left truncate @(Collapsed ? "md:hidden" : "")">@grupoConfiguracoes.Label</span>
                 </span>
-                <i class="fas @(configuracoesExpandido ? "fa-chevron-up" : "fa-chevron-down") text-sm text-slate-500 @(Collapsed ? "md:hidden" : "")"></i>
+                <i class="fas @(configuracoesExpandido ? "fa-chevron-up" : "fa-chevron-down") text-sm text-slate-500 @(Collapsed ? "md:!hidden" : "")"></i>
             </button>
 
             @if (configuracoesExpandido)
@@ -127,7 +133,7 @@
     private RenderFragment RenderLink(MenuItem item) => @<NavLink href="@item.Href" title="@item.Label" class="@($"flex items-center px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150 font-medium text-base{(Collapsed ? " md:justify-center" : "")}")"
                 ActiveClass="bg-cyan-600 text-white font-semibold shadow-lg"
                 Match="@(item.Href == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)">
-        <i class="fas @item.Icon text-lg @(Collapsed ? "md:mr-0" : "mr-2")"></i><span class="@(Collapsed ? "md:hidden" : "")">@item.Label</span>
+        <span class="w-6 shrink-0 text-center"><i class="fas @item.Icon text-lg"></i></span><span class="ml-3 text-left truncate @(Collapsed ? "md:hidden" : "")">@item.Label</span>
     </NavLink>;
 
     public void Dispose()
