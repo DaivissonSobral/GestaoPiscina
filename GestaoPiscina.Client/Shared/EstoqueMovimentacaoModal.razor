@@ -1,15 +1,15 @@
 @using GestaoPiscina.Client.Models
 
-<div class="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 pt-8 @(IsVisible ? "" : "hidden")">
-    <div class="bg-slate-800 rounded-xl p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-4">
+<div class="fixed inset-0 bg-black bg-opacity-50 flex sm:items-start justify-center z-50 sm:pt-8 @(IsVisible ? "" : "hidden")">
+    <div class="bg-slate-800 w-full h-full sm:h-auto sm:rounded-xl sm:max-w-md sm:mx-4 sm:max-h-[90vh] flex flex-col">
+        <div class="flex justify-between items-center p-6 pb-4 shrink-0">
             <h3 class="text-lg font-semibold text-slate-100">Nova Movimentação de Estoque</h3>
             <button type="button" @onclick="Close" class="text-slate-400 hover:text-slate-200">
                 <i class="fas fa-times"></i>
             </button>
         </div>
 
-        <div class="space-y-4">
+        <div class="flex-1 overflow-y-auto px-6 pb-4 space-y-4 scroll-tema">
             <div>
                 <label class="block text-sm font-medium text-slate-300 mb-2">Tipo *</label>
                 <select @bind="tipo" @bind:after="OnTipoChanged" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
@@ -89,7 +89,7 @@
             }
         </div>
 
-        <div class="flex space-x-3 mt-6">
+        <div class="flex space-x-3 p-6 pt-4 border-t border-slate-700 shrink-0">
             <button type="button" @onclick="Salvar" class="flex-1 bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
                 <i class="fas fa-save mr-2"></i>Salvar
             </button>

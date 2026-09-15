@@ -7,9 +7,9 @@
 @inject IJSRuntime JSRuntime
 @inject IConfiguration Configuration
 
-<div class="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 pt-8 @(IsVisible ? "" : "hidden")" @onclick="HandleBackdropClick">
-    <div class="bg-slate-800 rounded-xl p-6 w-full max-w-6xl mx-4 max-h-[90vh] overflow-y-auto" @onclick:stopPropagation="true">
-        <div class="flex items-center justify-between mb-6">
+<div class="fixed inset-0 bg-black bg-opacity-50 flex sm:items-start justify-center z-50 sm:pt-8 @(IsVisible ? "" : "hidden")" @onclick="HandleBackdropClick">
+    <div class="bg-slate-800 w-full h-full sm:h-auto sm:rounded-xl sm:max-w-6xl sm:mx-4 sm:max-h-[90vh] flex flex-col" @onclick:stopPropagation="true">
+        <div class="flex items-center justify-between p-6 pb-4 shrink-0">
             <h4 class="text-lg font-semibold text-slate-100 flex items-center">
                 <i class="fas fa-user-plus text-cyan-400 mr-2"></i>
                 @(StateService.CurrentCliente.IDCliente > 0 ? "Editar Cliente" : "Cadastrar Novo Cliente")
@@ -20,7 +20,7 @@
         </div>
 
         <!-- Sistema de Abas - Implementação Direta -->
-        <div>
+        <div class="px-6 shrink-0">
             <nav class="flex flex-wrap">
                 @if (StateService.ActiveTab == "dados")
                 {
@@ -83,9 +83,10 @@
             }
         </div>
 
-        <EditForm Model="StateService.CurrentCliente" OnValidSubmit="@(async () => await HandleSaveCliente(StateService.CurrentCliente))" Context="clienteContext">
+        <EditForm Model="StateService.CurrentCliente" OnValidSubmit="@(async () => await HandleSaveCliente(StateService.CurrentCliente))" Context="clienteContext" class="flex flex-col flex-1 min-h-0">
             <DataAnnotationsValidator />
 
+            <div class="flex-1 overflow-y-auto px-6 pb-6">
             <!-- Conteúdo das Abas -->
             <div class="bg-slate-900 rounded-lg rounded-tl-none shadow p-6">
                 @if (StateService.ActiveTab == "dados")
@@ -264,18 +265,19 @@
                     </div>
                 }
             </div>
-            
-            <div class="flex space-x-3 mt-8">
-                <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 px-6 py-3 rounded-lg text-white transition-colors">
-                    <i class="fas fa-save mr-2"></i>@(StateService.CurrentCliente.IDCliente > 0 ? "Atualizar" : "Salvar") 
+            </div>
+
+            <div class="flex flex-nowrap items-center gap-1.5 sm:gap-3 px-3 sm:px-6 py-3 sm:py-4 border-t border-slate-700 shrink-0">
+                <button type="submit" class="flex-1 min-w-0 whitespace-nowrap overflow-hidden bg-cyan-600 hover:bg-cyan-500 px-2 sm:px-4 py-2 sm:py-3 rounded-lg text-white transition-colors">
+                    <i class="fas fa-save mr-1 sm:mr-2"></i>@(StateService.CurrentCliente.IDCliente > 0 ? "Atualizar" : "Salvar")
                 </button>
-                <button type="button" @onclick="ClearForm" class="bg-slate-600 hover:bg-slate-500 px-6 py-3 rounded-lg text-white transition-colors">
-                    <i class="fas fa-eraser mr-2"></i>Limpar
+                <button type="button" @onclick="ClearForm" class="flex-1 min-w-0 whitespace-nowrap overflow-hidden bg-slate-600 hover:bg-slate-500 px-2 sm:px-4 py-2 sm:py-3 rounded-lg text-white transition-colors">
+                    <i class="fas fa-eraser mr-1 sm:mr-2"></i>Limpar
                 </button>
                 @if (ClienteSalvo)
                 {
-                    <button type="button" @onclick="Close" class="bg-gray-600 hover:bg-gray-500 px-6 py-3 rounded-lg text-white transition-colors">
-                        <i class="fas fa-check mr-2"></i>Concluir
+                    <button type="button" @onclick="Close" class="flex-1 min-w-0 whitespace-nowrap overflow-hidden bg-gray-600 hover:bg-gray-500 px-2 sm:px-4 py-2 sm:py-3 rounded-lg text-white transition-colors">
+                        <i class="fas fa-check mr-1 sm:mr-2"></i>Concluir
                     </button>
                 }
             </div>
