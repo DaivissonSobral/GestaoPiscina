@@ -50,11 +50,6 @@
                             </div>
                             <div class="meta-lines">
                                 Data da visita: @os.DataExecucao.ToString("dd 'de' MMMM 'de' yyyy", CultureInfo.GetCultureInfo("pt-BR"))
-                                @if (!string.IsNullOrWhiteSpace(os.Piscina.Cliente.CNPJ))
-                                {
-                                    <br />
-                                    @CnpjTexto
-                                }
                             </div>
                         </div>
                         <div>
@@ -353,8 +348,6 @@
     };
 
     private string NomeTecnico() => usuarios.FirstOrDefault(u => u.IDUsuario == os!.IDUsuario)?.Nome ?? "—";
-
-    private string CnpjTexto => os == null ? string.Empty : $"CNPJ {os.Piscina.Cliente.CNPJ}";
 
     // Estruturado como lista (mesmo só existindo 1 piscina por OS hoje) para
     // já deixar o layout pronto caso um relatório venha a cobrir mais de uma
