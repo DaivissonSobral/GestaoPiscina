@@ -5,7 +5,7 @@
 @inject AuthService AuthService
 @inject IJSRuntime JSRuntime
 
-<div class="fixed inset-0 bg-black bg-opacity-50 flex sm:items-start justify-center z-50 sm:pt-8 @(IsVisible ? "" : "hidden")">
+<div class="fixed inset-0 !mt-0 bg-black bg-opacity-50 flex sm:items-start justify-center z-50 sm:pt-8 @(IsVisible ? "" : "hidden")">
     <div class="bg-slate-800 w-full h-full sm:h-auto sm:rounded-xl sm:max-w-4xl sm:mx-4 sm:max-h-[90vh] flex flex-col">
         <div class="flex justify-between items-center p-6 pb-4 shrink-0">
             <h3 class="text-lg font-semibold text-slate-100">
@@ -307,7 +307,7 @@
     <CancelarOSModal @bind-IsVisible="cancelarModalVisible" OrdemDeServico="OrdemDeServico" OnCancelado="OnOSCancelada" />
 </div>
 
-<div class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[60] @(hodometroModalVisible ? "" : "hidden")">
+<div class="fixed inset-0 !mt-0 bg-black bg-opacity-70 flex items-center justify-center z-[60] @(hodometroModalVisible ? "" : "hidden")">
     <div class="bg-slate-800 rounded-xl p-6 w-full max-w-sm mx-4">
         <h4 class="text-slate-100 font-semibold mb-1">Iniciar Percurso</h4>
         <p class="text-slate-400 text-xs mb-3">Tire uma foto do hodômetro antes de sair para o cliente.</p>

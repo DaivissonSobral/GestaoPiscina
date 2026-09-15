@@ -7,7 +7,7 @@
 @inject IJSRuntime JSRuntime
 @inject IConfiguration Configuration
 
-<div class="fixed inset-0 bg-black bg-opacity-50 flex sm:items-start justify-center z-50 sm:pt-8 @(IsVisible ? "" : "hidden")" @onclick="HandleBackdropClick">
+<div class="fixed inset-0 !mt-0 bg-black bg-opacity-50 flex sm:items-start justify-center z-50 sm:pt-8 @(IsVisible ? "" : "hidden")" @onclick="HandleBackdropClick">
     <div class="bg-slate-800 w-full h-full sm:h-auto sm:rounded-xl sm:max-w-6xl sm:mx-4 sm:max-h-[90vh] flex flex-col" @onclick:stopPropagation="true">
         <div class="flex items-center justify-between p-6 pb-4 shrink-0">
             <h4 class="text-lg font-semibold text-slate-100 flex items-center">
@@ -19,8 +19,9 @@
             </button>
         </div>
 
-        <!-- Sistema de Abas - Implementação Direta -->
-        <div class="px-6 shrink-0">
+        <!-- Sistema de Abas - Implementação Direta (no celular, a navegação vira uma barra
+             fixa no rodapé — ver "Abas no celular" logo antes dos botões) -->
+        <div class="hidden sm:block px-6 shrink-0">
             <nav class="flex flex-wrap">
                 @if (StateService.ActiveTab == "dados")
                 {
@@ -75,13 +76,13 @@
                 }
             </nav>
             <hr class="border-t-2 border-white mt-0" />
-            @if (!ClienteSalvo)
-            {
-                <p class="text-sm text-amber-400 mt-2">
-                    <i class="fas fa-info-circle mr-1"></i>Salve os dados do cliente para habilitar piscinas, equipamentos e produtos.
-                </p>
-            }
         </div>
+        @if (!ClienteSalvo)
+        {
+            <p class="text-sm text-amber-400 px-6 py-2 shrink-0">
+                <i class="fas fa-info-circle mr-1"></i>Salve os dados do cliente para habilitar piscinas, equipamentos e produtos.
+            </p>
+        }
 
         <EditForm Model="StateService.CurrentCliente" OnValidSubmit="@(async () => await HandleSaveCliente(StateService.CurrentCliente))" Context="clienteContext" class="flex flex-col flex-1 min-h-0">
             <DataAnnotationsValidator />
@@ -100,7 +101,7 @@
                             <h5 class="text-lg font-semibold text-slate-200 flex items-center">
                                 <i class="fas fa-swimming-pool text-cyan-400 mr-2"></i>Piscinas
                             </h5>
-                            <button type="button" @onclick="ShowCreatePiscina" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-2 rounded-lg text-white text-sm transition-colors">
+                            <button type="button" @onclick="ShowCreatePiscina" class="hidden sm:inline-block bg-cyan-600 hover:bg-cyan-500 px-3 py-2 rounded-lg text-white text-sm transition-colors">
                                 <i class="fas fa-plus mr-1"></i>Nova Piscina
                             </button>
                         </div>
@@ -159,7 +160,7 @@
                             <h5 class="text-lg font-semibold text-slate-200 flex items-center">
                                 <i class="fas fa-robot text-cyan-400 mr-2"></i>Equipamentos
                             </h5>
-                            <button type="button" @onclick="ShowCreateEquipamento" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-2 rounded-lg text-white text-sm transition-colors">
+                            <button type="button" @onclick="ShowCreateEquipamento" class="hidden sm:inline-block bg-cyan-600 hover:bg-cyan-500 px-3 py-2 rounded-lg text-white text-sm transition-colors">
                                 <i class="fas fa-plus mr-1"></i>Novo Equipamento
                             </button>
                         </div>
@@ -213,7 +214,7 @@
                             <h5 class="text-lg font-semibold text-slate-200 flex items-center">
                                 <i class="fas fa-box text-cyan-400 mr-2"></i>Estoque
                             </h5>
-                            <button type="button" @onclick="() => AbrirNovaMovimentacao(null)" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-2 rounded-lg text-white text-sm transition-colors">
+                            <button type="button" @onclick="() => AbrirNovaMovimentacao(null)" class="hidden sm:inline-block bg-cyan-600 hover:bg-cyan-500 px-3 py-2 rounded-lg text-white text-sm transition-colors">
                                 <i class="fas fa-plus mr-1"></i>Nova Movimentação
                             </button>
                         </div>
@@ -266,6 +267,38 @@
                 }
             </div>
             </div>
+
+            @if (BotaoAdicionarAtivo() != null)
+            {
+                <!-- Botão único de adicionar no celular: substitui os botões "Nova Piscina" /
+                     "Novo Equipamento" / "Nova Movimentação" de cada aba. Flutua por cima do
+                     conteúdo (fixed, não ocupa espaço no layout), ancorado no canto inferior
+                     direito, logo acima da barra de abas. -->
+                <button type="button" @onclick="AdicionarItemDaAbaAtiva" class="sm:hidden fixed bottom-[136px] right-4 z-10 w-11 h-11 flex items-center justify-center rounded-full bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg transition-colors" title="@BotaoAdicionarAtivo()">
+                    <i class="fas fa-plus"></i>
+                </button>
+            }
+
+            <!-- Abas no celular: barra fixa no rodapé, acima dos botões, com cada aba
+                 ocupando a mesma fração da largura da tela -->
+            <nav class="sm:hidden grid grid-cols-4 border-t border-slate-700 shrink-0">
+                <button type="button" @onclick="SetDadosTab" class="flex flex-col items-center justify-center gap-1 py-2 text-xs font-medium transition-colors @(StateService.ActiveTab == "dados" ? "text-cyan-400" : "text-slate-400 hover:text-slate-200")">
+                    <i class="fas fa-user text-lg"></i>
+                    <span>Dados</span>
+                </button>
+                <button type="button" @onclick="SetPiscinasTab" disabled="@(!ClienteSalvo)" title="@(ClienteSalvo ? "" : "Salve os dados do cliente primeiro")" class="flex flex-col items-center justify-center gap-1 py-2 text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed @(StateService.ActiveTab == "piscinas" ? "text-cyan-400" : "text-slate-400 hover:text-slate-200")">
+                    <i class="fas fa-swimming-pool text-lg"></i>
+                    <span>Piscinas</span>
+                </button>
+                <button type="button" @onclick="SetEquipamentosTab" disabled="@(!ClienteSalvo)" title="@(ClienteSalvo ? "" : "Salve os dados do cliente primeiro")" class="flex flex-col items-center justify-center gap-1 py-2 text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed @(StateService.ActiveTab == "equipamentos" ? "text-cyan-400" : "text-slate-400 hover:text-slate-200")">
+                    <i class="fas fa-robot text-lg"></i>
+                    <span>Equipam.</span>
+                </button>
+                <button type="button" @onclick="SetProdutosTab" disabled="@(!ClienteSalvo)" title="@(ClienteSalvo ? "" : "Salve os dados do cliente primeiro")" class="flex flex-col items-center justify-center gap-1 py-2 text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed @(StateService.ActiveTab == "produtos" ? "text-cyan-400" : "text-slate-400 hover:text-slate-200")">
+                    <i class="fas fa-box text-lg"></i>
+                    <span>Produtos</span>
+                </button>
+            </nav>
 
             <div class="flex flex-nowrap items-center gap-1.5 sm:gap-3 px-3 sm:px-6 py-3 sm:py-4 border-t border-slate-700 shrink-0">
                 <button type="submit" class="flex-1 min-w-0 whitespace-nowrap overflow-hidden bg-cyan-600 hover:bg-cyan-500 px-2 sm:px-4 py-2 sm:py-3 rounded-lg text-white transition-colors">
@@ -483,6 +516,32 @@
     private Task SetProdutosTab()
     {
         return OnTabChanged("produtos");
+    }
+
+    // Botão único "Adicionar" no celular (acima da barra de abas): despacha pra ação de
+    // criação da aba ativa. Retorna null na aba Dados, onde não existe "adicionar".
+    private string? BotaoAdicionarAtivo() => StateService.ActiveTab switch
+    {
+        "piscinas" => "Nova Piscina",
+        "equipamentos" => "Novo Equipamento",
+        "produtos" => "Nova Movimentação",
+        _ => null
+    };
+
+    private void AdicionarItemDaAbaAtiva()
+    {
+        switch (StateService.ActiveTab)
+        {
+            case "piscinas":
+                ShowCreatePiscina();
+                break;
+            case "equipamentos":
+                ShowCreateEquipamento();
+                break;
+            case "produtos":
+                AbrirNovaMovimentacao(null);
+                break;
+        }
     }
 
     // Métodos de controle das abas
