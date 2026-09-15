@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{3C32BE53
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GestaoPiscina.Server.Tests", "tests\GestaoPiscina.Server.Tests\GestaoPiscina.Server.Tests.csproj", "{3673093E-0823-4518-BC0C-FF117B4CDA59}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GestaoPiscina.Client.Tests", "tests\GestaoPiscina.Client.Tests\GestaoPiscina.Client.Tests.csproj", "{4028F879-583E-4BEF-933B-E338A528DAC3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,8 +34,13 @@ Global
 		{3673093E-0823-4518-BC0C-FF117B4CDA59}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3673093E-0823-4518-BC0C-FF117B4CDA59}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3673093E-0823-4518-BC0C-FF117B4CDA59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4028F879-583E-4BEF-933B-E338A528DAC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4028F879-583E-4BEF-933B-E338A528DAC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4028F879-583E-4BEF-933B-E338A528DAC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4028F879-583E-4BEF-933B-E338A528DAC3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{3673093E-0823-4518-BC0C-FF117B4CDA59} = {3C32BE53-74CF-4652-B7B6-0790C61FFA3A}
+		{4028F879-583E-4BEF-933B-E338A528DAC3} = {3C32BE53-74CF-4652-B7B6-0790C61FFA3A}
 	EndGlobalSection
 EndGlobal
