@@ -1,4 +1,5 @@
 @using GestaoPiscina.Client.Models
+@using GestaoPiscina.Client.Validation
 
 <div class="space-y-6">
     <h5 class="text-lg font-semibold text-slate-200 mb-4 flex items-center">
@@ -40,7 +41,8 @@
         </div>
         <div class="space-y-3">
             <label class="block text-sm font-medium text-slate-300 mb-2">Telefone</label>
-            <InputText @bind-Value="Cliente.Telefone" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="(11) 99999-9999" />
+            <input type="text" @bind="Cliente.Telefone" @bind:event="oninput" @bind:after="FormatarTelefone" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="(11) 99999-9999" maxlength="15" />
+            <ValidationMessage For="@(() => Cliente.Telefone)" class="text-red-500 text-sm" />
         </div>
         <div class="space-y-3">
             <label class="block text-sm font-medium text-slate-300 mb-2">Email</label>
@@ -48,8 +50,9 @@
             <ValidationMessage For="@(() => Cliente.Email)" class="text-red-500 text-sm" />
         </div>
         <div class="space-y-3">
-            <label class="block text-sm font-medium text-slate-300 mb-2">CNPJ</label>
-            <InputText @bind-Value="Cliente.CNPJ" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="00.000.000/0000-00" />
+            <label class="block text-sm font-medium text-slate-300 mb-2">CNPJ/CPF</label>
+            <input type="text" @bind="Cliente.CNPJ" @bind:event="oninput" @bind:after="FormatarCnpj" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="000.000.000-00 ou 00.000.000/0000-00" maxlength="18" />
+            <ValidationMessage For="@(() => Cliente.CNPJ)" class="text-red-500 text-sm" />
         </div>
         <div class="md:col-span-2 space-y-3">
             <label class="block text-sm font-medium text-slate-300 mb-2">Endereço</label>
@@ -65,9 +68,28 @@
 </div>
 
 @code {
+    // Os campos de Telefone e CNPJ/CPF usam <input> puro (em vez de InputText) pra poder
+    // reformatar o valor a cada tecla digitada via @bind:after. Isso não passa pelo
+    // CurrentValueAsString do InputBase, que é quem normalmente avisa o EditContext que o
+    // campo mudou — sem o NotifyFieldChanged manual abaixo, a mensagem de validação (CPF/CNPJ
+    // ou telefone inválido) só apareceria ao submeter o formulário, não enquanto digita.
+    [CascadingParameter] private EditContext? CascadedEditContext { get; set; }
+
     [Parameter] public Cliente Cliente { get; set; } = new();
     [Parameter] public List<Gestor>? Gestores { get; set; }
     [Parameter] public int SelectedGestorId { get; set; }
     [Parameter] public EventCallback<int> OnGestorSelected { get; set; }
     [Parameter] public EventCallback OnNovoGestor { get; set; }
+
+    private void FormatarTelefone()
+    {
+        Cliente.Telefone = Formatadores.FormatarTelefone(Cliente.Telefone);
+        CascadedEditContext?.NotifyFieldChanged(new FieldIdentifier(Cliente, nameof(Cliente.Telefone)));
+    }
+
+    private void FormatarCnpj()
+    {
+        Cliente.CNPJ = Formatadores.FormatarCpfCnpj(Cliente.CNPJ);
+        CascadedEditContext?.NotifyFieldChanged(new FieldIdentifier(Cliente, nameof(Cliente.CNPJ)));
+    }
 }

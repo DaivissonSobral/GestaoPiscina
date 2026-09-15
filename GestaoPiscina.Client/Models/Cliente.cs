@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using GestaoPiscina.Client.Validation;
 
 namespace GestaoPiscina.Client.Models
 {
@@ -12,7 +13,10 @@ namespace GestaoPiscina.Client.Models
         [Required(ErrorMessage = "O tipo é obrigatório.")]
         public string Tipo { get; set; } = string.Empty;
 
+        [Telefone]
         public string Telefone { get; set; } = string.Empty;
+
+        [EmailAddress(ErrorMessage = "E-mail inválido.")]
         public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "O endereço é obrigatório.")]
@@ -20,6 +24,8 @@ namespace GestaoPiscina.Client.Models
 
         public string? DiasDeVisita { get; set; }
         public string? Observacoes { get; set; }
+
+        [CpfCnpj]
         public string? CNPJ { get; set; }
 
         // Preenchidos via geocodificação no navegador (ver wwwroot/js/maps.js) sempre que
