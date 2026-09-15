@@ -57,6 +57,17 @@ namespace GestaoPiscina.Client.Models
         public double? LatitudeInicio { get; set; }
         public double? LongitudeInicio { get; set; }
 
+        // Foto do hodômetro tirada pelo técnico ao clicar "Iniciar Percurso", antes de sair
+        // pro cliente — só um registro interno, não aparece nos relatórios.
+        [StringLength(500, ErrorMessage = "Fotos devem ter no máximo 500 caracteres")]
+        public string? FotoHodometro { get; set; }
+
+        // Momento em que o técnico enviou a foto do hodômetro (clicou "Iniciar Percurso"),
+        // ou seja, quando saiu em direção ao cliente. Diferente de HoraInicio (abaixo), que
+        // só é atualizado quando ele de fato chega e clica "Iniciar Manutenção" — HoraInicio
+        // é o que aparece nos relatórios, este campo não.
+        public DateTime? InicioPercurso { get; set; }
+
         [Required(ErrorMessage = "pH é obrigatório")]
         [Range(0, double.MaxValue, ErrorMessage = "pH deve ser maior ou igual a zero")]
         public decimal pH { get; set; }

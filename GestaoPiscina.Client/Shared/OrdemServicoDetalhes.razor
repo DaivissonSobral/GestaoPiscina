@@ -282,7 +282,7 @@
             }
             else
             {
-                <button @onclick="IniciarEEditarAsync" disabled="@capturandoLocalizacao" class="flex-1 min-w-0 whitespace-nowrap bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 px-2 sm:px-4 py-2 rounded-lg text-white transition-colors">
+                <button @onclick="IniciarEEditarAsync" disabled="@capturandoLocalizacao" class="flex-[2] min-w-0 whitespace-nowrap bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 px-2 sm:px-4 py-2 rounded-lg text-white transition-colors">
                     <i class="fas @(capturandoLocalizacao ? "fa-spinner fa-spin" : "fa-edit") mr-1 sm:mr-2"></i>@(capturandoLocalizacao ? "Localizando..." : TextoBotaoEditar())
                 </button>
                 @if (OrdemDeServico.Status is not ("Finalizada" or "Cancelada" or "Ocorrência"))
@@ -305,6 +305,26 @@
     </div>
 
     <CancelarOSModal @bind-IsVisible="cancelarModalVisible" OrdemDeServico="OrdemDeServico" OnCancelado="OnOSCancelada" />
+</div>
+
+<div class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[60] @(hodometroModalVisible ? "" : "hidden")">
+    <div class="bg-slate-800 rounded-xl p-6 w-full max-w-sm mx-4">
+        <h4 class="text-slate-100 font-semibold mb-1">Iniciar Percurso</h4>
+        <p class="text-slate-400 text-xs mb-3">Tire uma foto do hodômetro antes de sair para o cliente.</p>
+        <UploadFotos Label="Foto do Hodômetro" @bind-Urls="OrdemDeServico.FotoHodometro" />
+        @if (!string.IsNullOrEmpty(erroHodometro))
+        {
+            <p class="text-red-400 text-xs mt-2"><i class="fas fa-exclamation-circle mr-1"></i>@erroHodometro</p>
+        }
+        <div class="flex space-x-3 mt-4">
+            <button type="button" @onclick="EnviarInicioPercursoAsync" disabled="@enviandoPercurso" class="flex-1 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 px-4 py-2 rounded-lg text-white transition-colors">
+                <i class="fas @(enviandoPercurso ? "fa-spinner fa-spin" : "fa-paper-plane") mr-2"></i>@(enviandoPercurso ? "Enviando..." : "Enviar")
+            </button>
+            <button type="button" @onclick="CancelarHodometro" disabled="@enviandoPercurso" class="flex-1 bg-slate-600 hover:bg-slate-500 disabled:opacity-50 px-4 py-2 rounded-lg text-white transition-colors">
+                Cancelar
+            </button>
+        </div>
+    </div>
 </div>
 
 @code {
@@ -451,15 +471,26 @@
 
     private bool capturandoLocalizacao;
 
-    // Clicar em "Iniciar" (só quando a OS ainda está "Em Aberto" — Continuar/Abrir numa OS
-    // já em andamento não deve regravar a localização de início) captura a geolocalização
-    // exata do navegador/celular antes de abrir o formulário de edição, pra usar na Rota.
-    // Nunca bloqueia o fluxo: se a geolocalização falhar (sem suporte, permissão negada,
-    // timeout), segue pro Editar do mesmo jeito.
+    // Numa OS "Em Aberto" o fluxo agora tem duas etapas: "Iniciar Percurso" (abre o modal
+    // do hodômetro — ver AbrirModalHodometro/EnviarInicioPercursoAsync, que já muda o
+    // Status pra "Em Andamento" ao enviar) e, na próxima vez que abrir pra editar, "Iniciar
+    // Manutenção" — identificado por já ter InicioPercurso mas ainda não ter capturado
+    // LatitudeInicio. É só nesse momento que a geolocalização é capturada e o Horário de
+    // Início é de fato gravado (reaberturas seguintes, com LatitudeInicio já preenchida,
+    // caem direto no Editar sem regravar nada — vira "Continuar"). Nunca bloqueia o fluxo:
+    // se a geolocalização falhar (sem suporte, permissão negada, timeout), o Horário de
+    // Início ainda assim é atualizado e segue pro Editar do mesmo jeito.
     private async Task IniciarEEditarAsync()
     {
         if (OrdemDeServico.Status == "Em Aberto")
         {
+            AbrirModalHodometro();
+            return;
+        }
+
+        if (OrdemDeServico.Status == "Em Andamento" && OrdemDeServico.InicioPercurso != null && OrdemDeServico.LatitudeInicio == null)
+        {
+            OrdemDeServico.HoraInicio = OrdemDeServico.DataExecucao.Date + DateTime.Now.TimeOfDay;
             capturandoLocalizacao = true;
             try
             {
@@ -482,6 +513,56 @@
         await OnEdit.InvokeAsync(OrdemDeServico);
     }
 
+    private bool hodometroModalVisible;
+    private bool enviandoPercurso;
+    private string? erroHodometro;
+
+    private void AbrirModalHodometro()
+    {
+        erroHodometro = null;
+        hodometroModalVisible = true;
+    }
+
+    private void CancelarHodometro()
+    {
+        hodometroModalVisible = false;
+        erroHodometro = null;
+    }
+
+    // "Enviar" no modal do hodômetro já salva a OS na hora (diferente do resto da tela, que
+    // só salva quando o técnico confirma o formulário completo em "Iniciar Manutenção") —
+    // pra garantir o registro do início do percurso mesmo que ele feche o app antes de
+    // efetivamente começar o atendimento. Já muda o Status pra "Em Andamento" também.
+    private async Task EnviarInicioPercursoAsync()
+    {
+        if (string.IsNullOrWhiteSpace(OrdemDeServico.FotoHodometro))
+        {
+            erroHodometro = "Tire uma foto do hodômetro antes de enviar.";
+            return;
+        }
+
+        enviandoPercurso = true;
+        erroHodometro = null;
+        var statusAnterior = OrdemDeServico.Status;
+        try
+        {
+            OrdemDeServico.InicioPercurso = DateTime.Now;
+            OrdemDeServico.Status = "Em Andamento";
+            await ApiService.UpdateOrdemDeServicoAsync(OrdemDeServico);
+            hodometroModalVisible = false;
+        }
+        catch (Exception ex)
+        {
+            OrdemDeServico.InicioPercurso = null;
+            OrdemDeServico.Status = statusAnterior;
+            erroHodometro = ex.Message;
+        }
+        finally
+        {
+            enviandoPercurso = false;
+        }
+    }
+
     private void AbrirRelatorio()
     {
         Navigation.NavigateTo($"/relatorios/os/{OrdemDeServico.IDOS}");
@@ -498,15 +579,30 @@
 
     // Uma Ocorrência ou um Cancelamento trava Salvar pra qualquer um (ver
     // EstaBloqueadaParaEdicao no OrdemServicoModal) — o botão vira "Abrir" (só
-    // visualização), igual a uma OS já finalizada.
-    private string TextoBotaoEditar() => OrdemDeServico.Status switch
+    // visualização), igual a uma OS já finalizada. "Em Aberto" é sempre "Iniciar Percurso"
+    // (que já muda o Status pra "Em Andamento" ao enviar a foto do hodômetro); a partir daí,
+    // enquanto a localização de início ainda não foi capturada, o botão vira "Iniciar
+    // Manutenção" (ver IniciarEEditarAsync) — só depois disso passa a ser "Continuar".
+    private string TextoBotaoEditar()
     {
-        "Em Aberto" => "Iniciar",
-        "Finalizada" => "Abrir",
-        "Cancelada" => "Abrir",
-        "Ocorrência" => "Abrir",
-        _ => "Continuar"
-    };
+        if (OrdemDeServico.Status == "Em Aberto")
+        {
+            return "Iniciar Percurso";
+        }
+
+        if (OrdemDeServico.Status == "Em Andamento" && OrdemDeServico.InicioPercurso != null && OrdemDeServico.LatitudeInicio == null)
+        {
+            return "Iniciar Manutenção";
+        }
+
+        return OrdemDeServico.Status switch
+        {
+            "Finalizada" => "Abrir",
+            "Cancelada" => "Abrir",
+            "Ocorrência" => "Abrir",
+            _ => "Continuar"
+        };
+    }
 
     private string GetStatusClass(string status)
     {

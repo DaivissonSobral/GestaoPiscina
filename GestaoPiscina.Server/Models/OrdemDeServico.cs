@@ -57,6 +57,16 @@ namespace GestaoPiscina.Server.Models
         public double? LatitudeInicio { get; set; }
         public double? LongitudeInicio { get; set; }
 
+        // Foto do hodômetro tirada pelo técnico ao clicar "Iniciar Percurso", antes de sair
+        // pro cliente — só um registro interno, não aparece nos relatórios.
+        public string? FotoHodometro { get; set; }
+
+        // Momento em que o técnico enviou a foto do hodômetro (clicou "Iniciar Percurso"),
+        // ou seja, quando saiu em direção ao cliente. Diferente de HoraInicio (abaixo), que
+        // só é atualizado quando ele de fato chega e clica "Iniciar Manutenção" — HoraInicio
+        // é o que aparece nos relatórios, este campo não.
+        public DateTime? InicioPercurso { get; set; }
+
         [Required]
         [Range(0, double.MaxValue)]
         public decimal pH { get; set; }
