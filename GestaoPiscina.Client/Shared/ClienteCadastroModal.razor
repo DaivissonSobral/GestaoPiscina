@@ -87,9 +87,9 @@
         <EditForm Model="StateService.CurrentCliente" OnValidSubmit="@(async () => await HandleSaveCliente(StateService.CurrentCliente))" Context="clienteContext" class="flex flex-col flex-1 min-h-0">
             <DataAnnotationsValidator />
 
-            <div class="flex-1 overflow-y-auto px-6 pb-6">
-            <!-- Conteúdo das Abas -->
-            <div class="bg-slate-900 rounded-lg rounded-tl-none shadow p-6">
+            <!-- Conteúdo das Abas: preenche toda a área entre o título/abas (tom claro) e a
+                 barra de abas/botões no rodapé (que mantêm a cor de fundo do card) -->
+            <div class="flex-1 overflow-y-auto bg-slate-900 px-6 py-6">
                 @if (StateService.ActiveTab == "dados")
                 {
                     <ClienteForm Cliente="StateService.CurrentCliente" Gestores="gestores" SelectedGestorId="selectedGestorId" OnGestorSelected="OnGestorSelected" OnNovoGestor="AbrirModalNovoGestor" />
@@ -265,7 +265,6 @@
                         }
                     </div>
                 }
-            </div>
             </div>
 
             @if (BotaoAdicionarAtivo() != null)
