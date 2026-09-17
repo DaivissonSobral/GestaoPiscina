@@ -117,7 +117,7 @@
                                         <div class="flex justify-between items-start">
                                             <div class="flex-1">
                                                 <h4 class="text-sm font-medium text-slate-100">@NomeTipoPiscina(piscina.Tipo)</h4>
-                                                <span class="text-sm text-slate-400">Volume: @piscina.VolumeLitros L</span>
+                                                <span class="text-sm text-slate-400">Volume: @piscina.VolumeM3 m³</span>
                                             </div>
                                             <div class="flex space-x-3 ml-4">
                                                 <button type="button" @onclick="() => ShowEditPiscina(piscina)" class="text-cyan-400 hover:text-cyan-300 p-2 rounded transition-colors" title="Editar">
@@ -629,7 +629,7 @@
             IDPiscina = piscina.IDPiscina,
             IDCliente = piscina.IDCliente,
             Tipo = piscina.Tipo,
-            VolumeLitros = piscina.VolumeLitros,
+            VolumeM3 = piscina.VolumeM3,
             Localizacao = piscina.Localizacao,
             Coberta = piscina.Coberta,
             Aquecida = piscina.Aquecida,

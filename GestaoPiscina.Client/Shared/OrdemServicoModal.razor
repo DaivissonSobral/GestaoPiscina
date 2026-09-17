@@ -88,7 +88,7 @@
                                         <option value="0">Selecione uma piscina...</option>
                                         @foreach (var piscina in PiscinasDoCliente)
                                         {
-                                            <option value="@piscina.IDPiscina">@piscina.Tipo (@piscina.VolumeLitros L)</option>
+                                            <option value="@piscina.IDPiscina">@piscina.Tipo (@piscina.VolumeM3 m³)</option>
                                         }
                                     </InputSelect>
                                     <ValidationMessage For="@(() => OrdemDeServico.IDPiscina)" class="text-red-500 text-sm" />
@@ -169,9 +169,9 @@
                 <div class="border border-slate-700 rounded-lg overflow-hidden">
                     <button type="button" @onclick="() => DefinirEtapaAtual(3)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
                         <span class="text-sm font-semibold text-slate-200"><i class="fas fa-tint mr-2 text-cyan-400"></i>Parâmetros da Água - Antes</span>
-                        <i class="fas @(secaoAguaAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                        <i class="fas @(secaoAguaAntesAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
                     </button>
-                    @if (secaoAguaAberta)
+                    @if (secaoAguaAntesAberta)
                     {
                         <div class="p-4 space-y-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -208,16 +208,16 @@
                 <div class="border border-slate-700 rounded-lg overflow-hidden">
                     <button type="button" @onclick="() => DefinirEtapaAtual(5)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
                         <span class="text-sm font-semibold text-slate-200"><i class="fas fa-tint mr-2 text-cyan-400"></i>Parâmetros da Água - Depois</span>
-                        <i class="fas @(secaoAguaAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                        <i class="fas @(secaoAguaDepoisAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
                     </button>
-                    @if (secaoAguaAberta)
+                    @if (secaoAguaDepoisAberta)
                     {
                         <div class="p-4 space-y-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <CampoNumerico Label="pH" @bind-Value="OrdemDeServico.pH" @bind-Value:after="AtualizarChecklistConcluido" Step="0.1m" Min="0m" Max="14m" />
-                                <CampoNumerico Label="Alcalinidade" Unidade="ppm" @bind-Value="OrdemDeServico.Alcalinidade" @bind-Value:after="AtualizarChecklistConcluido" Step="10m" Min="0m" Max="300m" />
-                                <CampoNumerico Label="Cloro Livre" Unidade="ppm" @bind-Value="OrdemDeServico.CloroLivre" @bind-Value:after="AtualizarChecklistConcluido" Step="0.5m" Min="0m" Max="10m" />
-                                <CampoNumerico Label="Dureza Cálcica" Unidade="ppm" @bind-Value="OrdemDeServico.DurezaCalcica" Step="10m" Min="0m" Max="800m" />
+                                <CampoNumerico Label="pH" @bind-Value="PHDepoisValue" @bind-Value:after="AtualizarChecklistConcluido" Step="0.1m" Min="0m" Max="14m" />
+                                <CampoNumerico Label="Alcalinidade" Unidade="ppm" @bind-Value="AlcalinidadeDepoisValue" @bind-Value:after="AtualizarChecklistConcluido" Step="10m" Min="0m" Max="300m" />
+                                <CampoNumerico Label="Cloro Livre" Unidade="ppm" @bind-Value="CloroLivreDepoisValue" @bind-Value:after="AtualizarChecklistConcluido" Step="0.5m" Min="0m" Max="10m" />
+                                <CampoNumerico Label="Dureza Cálcica" Unidade="ppm" @bind-Value="DurezaCalcicaDepoisValue" Step="10m" Min="0m" Max="800m" />
                             </div>
                         </div>
                     }
@@ -264,7 +264,7 @@
                             <div class="flex items-start pt-2 border-t border-slate-700">
                                 <i class="fas @(ParametrosAguaPreenchidos ? "fa-check-circle text-green-400" : "fa-circle-notch text-slate-500") mr-2 mt-1 shrink-0"></i>
                                 <span class="text-sm text-slate-300">
-                                    @(ParametrosAguaPreenchidos ? "Parâmetros da água informados." : "Parâmetros da água ainda não informados — preencha na seção \"Parâmetros da Água\".")
+                                    @(ParametrosAguaPreenchidos ? "Parâmetros da água (antes e depois) informados." : "Parâmetros da água ainda não informados — preencha as seções \"Antes\" e \"Depois\".")
                                 </span>
                             </div>
 
@@ -387,11 +387,38 @@
     // campos obrigatórios); as demais começam fechadas para reduzir a rolagem inicial.
     private bool secaoDadosAberta = true;
     private bool secaoRotaAberta = false;
-    private bool secaoAguaAberta = false;
+    private bool secaoAguaAntesAberta = false;
+    private bool secaoAguaDepoisAberta = false;
     private bool secaoDosagemAberta = false;
     private bool secaoFotosAberta = false;
     private bool secaoChecklistAberta = false;
     private bool secaoOcorrenciaAberta = false;
+
+    // CampoNumerico só aceita decimal (não decimal?) — estes wrappers adaptam os campos
+    // "Depois", que começam nulos até o técnico medir novamente após a dosagem.
+    private decimal PHDepoisValue
+    {
+        get => OrdemDeServico.pHDepois ?? 0m;
+        set => OrdemDeServico.pHDepois = value;
+    }
+
+    private decimal AlcalinidadeDepoisValue
+    {
+        get => OrdemDeServico.AlcalinidadeDepois ?? 0m;
+        set => OrdemDeServico.AlcalinidadeDepois = value;
+    }
+
+    private decimal CloroLivreDepoisValue
+    {
+        get => OrdemDeServico.CloroLivreDepois ?? 0m;
+        set => OrdemDeServico.CloroLivreDepois = value;
+    }
+
+    private decimal DurezaCalcicaDepoisValue
+    {
+        get => OrdemDeServico.DurezaCalcicaDepois ?? 0m;
+        set => OrdemDeServico.DurezaCalcicaDepois = value;
+    }
 
     // Dosagens de produtos já salvas nesta OS (reportadas pelo DosagemForm) — usadas para
     // montar o item dinâmico "produtos aplicados" do checklist e para exigir que pelo menos
@@ -478,7 +505,8 @@
     // para "produtos dosados": um item dinâmico cujo estado (marcado ou não) é derivado
     // direto dos dados da OS, em vez de uma caixa de marcação manual.
     private bool ParametrosAguaPreenchidos =>
-        OrdemDeServico.pH > 0 && OrdemDeServico.Alcalinidade > 0 && OrdemDeServico.CloroLivre > 0;
+        OrdemDeServico.pH > 0 && OrdemDeServico.Alcalinidade > 0 && OrdemDeServico.CloroLivre > 0
+        && OrdemDeServico.pHDepois > 0 && OrdemDeServico.AlcalinidadeDepois > 0 && OrdemDeServico.CloroLivreDepois > 0;
 
     private bool FotosCompletas =>
         !string.IsNullOrWhiteSpace(OrdemDeServico.FotosAntes) && !string.IsNullOrWhiteSpace(OrdemDeServico.FotosDepois);
@@ -668,7 +696,8 @@
     {
         secaoDadosAberta = etapaAtualIndex == 1;
         secaoRotaAberta = etapaAtualIndex == 2;
-        secaoAguaAberta = etapaAtualIndex == 3 || etapaAtualIndex == 5;
+        secaoAguaAntesAberta = etapaAtualIndex == 3;
+        secaoAguaDepoisAberta = etapaAtualIndex == 5;
         secaoDosagemAberta = etapaAtualIndex == 4;
         secaoFotosAberta = etapaAtualIndex == 6;
         secaoChecklistAberta = etapaAtualIndex == 7;
@@ -749,7 +778,8 @@
         toastValidacaoVisible = false;
         etapaAtualIndex = 1;
         secaoDadosAberta = true;
-        secaoAguaAberta = false;
+        secaoAguaAntesAberta = false;
+        secaoAguaDepoisAberta = false;
         secaoDosagemAberta = false;
         secaoFotosAberta = false;
         secaoChecklistAberta = false;

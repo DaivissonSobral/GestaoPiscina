@@ -142,7 +142,7 @@ namespace GestaoPiscina.Server.Controllers
                     return BadRequest(new { message = "Tipo de piscina é obrigatório" });
                 }
 
-                if (piscina.VolumeLitros <= 0)
+                if (piscina.VolumeM3 <= 0)
                 {
                     _logger.LogWarning("Volume de piscina deve ser maior que zero");
                     return BadRequest(new { message = "Volume de piscina deve ser maior que zero" });
@@ -234,7 +234,7 @@ namespace GestaoPiscina.Server.Controllers
                     return BadRequest(new { message = "Tipo de piscina é obrigatório" });
                 }
 
-                if (piscina.VolumeLitros <= 0)
+                if (piscina.VolumeM3 <= 0)
                 {
                     _logger.LogWarning("Volume de piscina deve ser maior que zero");
                     return BadRequest(new { message = "Volume de piscina deve ser maior que zero" });
@@ -271,7 +271,7 @@ namespace GestaoPiscina.Server.Controllers
 
                 // Atualizar propriedades
                 piscinaExistente.Tipo = piscina.Tipo;
-                piscinaExistente.VolumeLitros = piscina.VolumeLitros;
+                piscinaExistente.VolumeM3 = piscina.VolumeM3;
                 piscinaExistente.Localizacao = piscina.Localizacao;
                 piscinaExistente.IDCliente = piscina.IDCliente;
                 piscinaExistente.Coberta = piscina.Coberta;

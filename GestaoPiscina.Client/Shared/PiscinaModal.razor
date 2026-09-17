@@ -52,9 +52,9 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Volume (Litros) *</label>
-                    <InputNumber @bind-Value="Piscina.VolumeLitros" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Ex: 50000" />
-                    <ValidationMessage For="@(() => Piscina.VolumeLitros)" class="text-red-500 text-sm" />
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Volume (m³) *</label>
+                    <InputNumber @bind-Value="Piscina.VolumeM3" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Ex: 50" />
+                    <ValidationMessage For="@(() => Piscina.VolumeM3)" class="text-red-500 text-sm" />
                 </div>
 
                 <div class="md:col-span-2 grid grid-cols-2 gap-4">

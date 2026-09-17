@@ -84,6 +84,21 @@ namespace GestaoPiscina.Server.Models
         [Range(0, double.MaxValue)]
         public decimal DurezaCalcica { get; set; }
 
+        // Segunda medição, feita depois da dosagem de produtos (fluxo: mede antes, dosa,
+        // mede depois) — fica nula até o técnico preencher a etapa "Parâmetros da Água -
+        // Depois" do wizard.
+        [Range(0, double.MaxValue)]
+        public decimal? pHDepois { get; set; }
+
+        [Range(0, double.MaxValue)]
+        public decimal? AlcalinidadeDepois { get; set; }
+
+        [Range(0, double.MaxValue)]
+        public decimal? CloroLivreDepois { get; set; }
+
+        [Range(0, double.MaxValue)]
+        public decimal? DurezaCalcicaDepois { get; set; }
+
         [Required]
         public DateTime HoraInicio { get; set; }
 

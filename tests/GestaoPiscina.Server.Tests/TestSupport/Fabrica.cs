@@ -45,7 +45,7 @@ namespace GestaoPiscina.Server.Tests.TestSupport
 
         public static Piscina Piscina(
             Cliente cliente,
-            decimal volumeLitros = 10000m,
+            decimal volumeM3 = 10m,
             string recorrenciaFrequencia = "Nenhuma",
             int recorrenciaIntervalo = 1,
             string? recorrenciaDiasSemana = null,
@@ -56,7 +56,7 @@ namespace GestaoPiscina.Server.Tests.TestSupport
         {
             Cliente = cliente,
             Tipo = "adulto",
-            VolumeLitros = volumeLitros,
+            VolumeM3 = volumeM3,
             Coberta = "Não",
             Aquecida = false,
             RecorrenciaFrequencia = recorrenciaFrequencia,

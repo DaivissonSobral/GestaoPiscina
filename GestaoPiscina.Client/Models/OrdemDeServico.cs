@@ -83,6 +83,21 @@ namespace GestaoPiscina.Client.Models
         [Range(0, double.MaxValue, ErrorMessage = "Dureza cálcica deve ser maior ou igual a zero")]
         public decimal DurezaCalcica { get; set; }
 
+        // Segunda medição, feita depois da dosagem de produtos (fluxo: mede antes, dosa,
+        // mede depois) — fica nula até o técnico preencher a etapa "Parâmetros da Água -
+        // Depois" do wizard.
+        [Range(0, double.MaxValue, ErrorMessage = "pH deve ser maior ou igual a zero")]
+        public decimal? pHDepois { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Alcalinidade deve ser maior ou igual a zero")]
+        public decimal? AlcalinidadeDepois { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Cloro livre deve ser maior ou igual a zero")]
+        public decimal? CloroLivreDepois { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Dureza cálcica deve ser maior ou igual a zero")]
+        public decimal? DurezaCalcicaDepois { get; set; }
+
         [Required(ErrorMessage = "Horário de início é obrigatório")]
         public DateTime HoraInicio { get; set; }
 

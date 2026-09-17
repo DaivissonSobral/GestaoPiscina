@@ -58,7 +58,7 @@
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-slate-400">Volume:</span>
-                                <span class="text-slate-100">@OrdemDeServico.Piscina.VolumeLitros L</span>
+                                <span class="text-slate-100">@OrdemDeServico.Piscina.VolumeM3 m³</span>
                             </div>
                             @if (!string.IsNullOrEmpty(OrdemDeServico.Piscina.Localizacao))
                             {
@@ -72,7 +72,7 @@
                 }
 
                 <div class="bg-slate-700 rounded-lg p-4">
-                    <h4 class="text-md font-semibold text-slate-200 mb-3">Parâmetros da Água</h4>
+                    <h4 class="text-md font-semibold text-slate-200 mb-3">Parâmetros da Água - Antes</h4>
                     <div class="space-y-2">
                         <div class="flex justify-between">
                             <span class="text-slate-400">pH:</span>
@@ -92,6 +92,31 @@
                         </div>
                     </div>
                 </div>
+
+                @if (OrdemDeServico.pHDepois.HasValue || OrdemDeServico.AlcalinidadeDepois.HasValue || OrdemDeServico.CloroLivreDepois.HasValue || OrdemDeServico.DurezaCalcicaDepois.HasValue)
+                {
+                    <div class="bg-slate-700 rounded-lg p-4">
+                        <h4 class="text-md font-semibold text-slate-200 mb-3">Parâmetros da Água - Depois</h4>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">pH:</span>
+                                <span class="text-slate-100">@(OrdemDeServico.pHDepois?.ToString() ?? "-")</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Alcalinidade:</span>
+                                <span class="text-slate-100">@(OrdemDeServico.AlcalinidadeDepois.HasValue ? $"{OrdemDeServico.AlcalinidadeDepois} ppm" : "-")</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Cloro Livre:</span>
+                                <span class="text-slate-100">@(OrdemDeServico.CloroLivreDepois.HasValue ? $"{OrdemDeServico.CloroLivreDepois} ppm" : "-")</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Dureza Cálcica:</span>
+                                <span class="text-slate-100">@(OrdemDeServico.DurezaCalcicaDepois.HasValue ? $"{OrdemDeServico.DurezaCalcicaDepois} ppm" : "-")</span>
+                            </div>
+                        </div>
+                    </div>
+                }
 
                 <div class="bg-slate-700 rounded-lg p-4">
                     <h4 class="text-md font-semibold text-slate-200 mb-3">Dosagem</h4>

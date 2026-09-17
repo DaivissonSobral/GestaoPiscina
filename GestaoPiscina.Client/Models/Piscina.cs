@@ -13,9 +13,9 @@ namespace GestaoPiscina.Client.Models
         [StringLength(20, ErrorMessage = "Tipo deve ter no máximo 20 caracteres")]
         public string Tipo { get; set; } = string.Empty;
         
-        [Required(ErrorMessage = "Volume em litros é obrigatório")]
+        [Required(ErrorMessage = "Volume em m³ é obrigatório")]
         [Range(0.01, double.MaxValue, ErrorMessage = "Volume deve ser maior que zero")]
-        public decimal VolumeLitros { get; set; }
+        public decimal VolumeM3 { get; set; }
         
         [StringLength(255, ErrorMessage = "Localização deve ter no máximo 255 caracteres")]
         public string? Localizacao { get; set; }

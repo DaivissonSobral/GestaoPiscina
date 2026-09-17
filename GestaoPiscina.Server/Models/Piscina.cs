@@ -14,7 +14,7 @@ namespace GestaoPiscina.Server.Models
         
         [Required]
         [Range(0, double.MaxValue)]
-        public decimal VolumeLitros { get; set; }
+        public decimal VolumeM3 { get; set; }
         
         [StringLength(255)]
         public string? Localizacao { get; set; }

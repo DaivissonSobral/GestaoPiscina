@@ -47,7 +47,7 @@ namespace GestaoPiscina.Server.Data
             {
                 entity.HasKey(e => e.IDPiscina);
                 entity.Property(e => e.Tipo).IsRequired().HasMaxLength(20);
-                entity.Property(e => e.VolumeLitros).IsRequired().HasPrecision(10, 2);
+                entity.Property(e => e.VolumeM3).IsRequired().HasPrecision(10, 2);
                 entity.Property(e => e.Localizacao).HasMaxLength(255);
                 entity.Property(e => e.Coberta).IsRequired().HasMaxLength(10);
                 entity.Property(e => e.Aquecida).IsRequired();
@@ -77,6 +77,10 @@ namespace GestaoPiscina.Server.Data
                 entity.Property(e => e.Alcalinidade).IsRequired().HasPrecision(10, 3);
                 entity.Property(e => e.CloroLivre).IsRequired().HasPrecision(10, 3);
                 entity.Property(e => e.DurezaCalcica).IsRequired().HasPrecision(10, 3);
+                entity.Property(e => e.pHDepois).HasPrecision(10, 2);
+                entity.Property(e => e.AlcalinidadeDepois).HasPrecision(10, 3);
+                entity.Property(e => e.CloroLivreDepois).HasPrecision(10, 3);
+                entity.Property(e => e.DurezaCalcicaDepois).HasPrecision(10, 3);
                 entity.HasOne(e => e.Piscina)
                     .WithMany(p => p.OrdensDeServico)
                     .HasForeignKey(e => e.IDPiscina)

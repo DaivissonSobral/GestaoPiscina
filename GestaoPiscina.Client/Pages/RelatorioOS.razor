@@ -416,7 +416,7 @@
         _ => piscina.Tipo
     };
 
-    private string VolumeFormatado(Piscina piscina) => (piscina.VolumeLitros / 1000).ToString("0.##", CultureInfo.GetCultureInfo("pt-BR"));
+    private string VolumeFormatado(Piscina piscina) => piscina.VolumeM3.ToString("0.##", CultureInfo.GetCultureInfo("pt-BR"));
 
     private Piscina? PiscinaDe(int idPiscina) => piscinasRelatorio.FirstOrDefault(p => p.IDPiscina == idPiscina);
 
