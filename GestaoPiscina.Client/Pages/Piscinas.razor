@@ -20,8 +20,13 @@
         <select @bind="filtroTipo" class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
             <option value="">Todos os Tipos</option>
             <option value="adulto">Adulto</option>
-            <option value="infantil">Infantil</option>
             <option value="espelho">Espelho d'água</option>
+            <option value="fonte">Fonte</option>
+            <option value="hidromassagem">Hidromassagem/Hidro</option>
+            <option value="infantil">Infantil</option>
+            <option value="interligada">Interligada</option>
+            <option value="parque-aquatico">Parque aquático</option>
+            <option value="semiolimpica">Semiolímpica</option>
         </select>
     </div>
 
@@ -274,16 +279,26 @@
     private string NomeTipo(string tipo) => tipo switch
     {
         "adulto" => "Adulto",
-        "infantil" => "Infantil",
         "espelho" => "Espelho d'água",
+        "fonte" => "Fonte",
+        "hidromassagem" => "Hidromassagem/Hidro",
+        "infantil" => "Infantil",
+        "interligada" => "Interligada",
+        "parque-aquatico" => "Parque aquático",
+        "semiolimpica" => "Semiolímpica",
         _ => tipo
     };
 
     private string GetTipoClass(string tipo) => tipo switch
     {
         "adulto" => "bg-blue-100 text-blue-800",
-        "infantil" => "bg-green-100 text-green-800",
         "espelho" => "bg-purple-100 text-purple-800",
+        "fonte" => "bg-amber-100 text-amber-800",
+        "hidromassagem" => "bg-teal-100 text-teal-800",
+        "infantil" => "bg-green-100 text-green-800",
+        "interligada" => "bg-indigo-100 text-indigo-800",
+        "parque-aquatico" => "bg-orange-100 text-orange-800",
+        "semiolimpica" => "bg-cyan-100 text-cyan-800",
         _ => "bg-slate-100 text-slate-800"
     };
 

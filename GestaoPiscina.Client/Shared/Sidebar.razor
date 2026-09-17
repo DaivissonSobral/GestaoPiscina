@@ -8,8 +8,8 @@
 
 <aside class="w-64 shrink-0 bg-slate-900 px-6 pb-6 flex-col min-h-screen border-r border-slate-800 fixed md:static inset-y-0 left-0 z-40 overflow-y-auto md:flex @(MainLayout?.MobileMenuOpen == true ? "flex" : "hidden") @(Collapsed ? "md:w-20 md:px-3 md:pb-3" : "")">
     <div class="pt-3 mb-10">
-        <div class="h-10 flex items-center justify-between @(Collapsed ? "md:justify-center" : "")">
-            <img src="images/logo-fort-piscina.png" alt="Fort Piscina" class="h-10 w-auto @(Collapsed ? "md:hidden" : "")" />
+        <div class="h-14 flex items-center justify-between @(Collapsed ? "md:justify-center" : "")">
+            <img src="images/logo-fort-piscina.png" alt="Fort Piscina" class="h-14 w-auto @(Collapsed ? "md:hidden" : "")" />
             <button type="button" @onclick="() => MainLayout?.ToggleSidebar()" class="inline-flex items-center justify-center shrink-0 text-slate-300 hover:text-white transition-colors" title="@(MainLayout?.MobileMenuOpen == true ? "Fechar menu" : "Recolher/expandir menu")">
                 <i class="fas fa-bars text-xl !hidden md:!inline"></i>
                 <i class="fas fa-times text-xl md:!hidden"></i>

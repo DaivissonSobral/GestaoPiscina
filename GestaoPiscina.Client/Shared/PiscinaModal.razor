@@ -42,8 +42,13 @@
                     <InputSelect @bind-Value="Piscina.Tipo" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
                         <option value="">Selecione...</option>
                         <option value="adulto">Adulto</option>
-                        <option value="infantil">Infantil</option>
                         <option value="espelho">Espelho d'água</option>
+                        <option value="fonte">Fonte</option>
+                        <option value="hidromassagem">Hidromassagem/Hidro</option>
+                        <option value="infantil">Infantil</option>
+                        <option value="interligada">Interligada</option>
+                        <option value="parque-aquatico">Parque aquático</option>
+                        <option value="semiolimpica">Semiolímpica</option>
                     </InputSelect>
                     <ValidationMessage For="@(() => Piscina.Tipo)" class="text-red-500 text-sm" />
                 </div>

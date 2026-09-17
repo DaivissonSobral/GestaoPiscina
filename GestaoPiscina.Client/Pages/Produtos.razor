@@ -6,13 +6,17 @@
 
 <section class="p-4 space-y-6">
     <div>
-        <button @onclick="AbrirModalNovo" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-white transition-colors">
-            <i class="fas fa-plus mr-2"></i>Novo Produto
+        <!-- No celular vira um botão flutuante (FAB) redondo, fixo no canto inferior
+             direito da tela; no desktop continua um botão normal no fluxo da página. -->
+        <button @onclick="AbrirModalNovo" class="fixed bottom-6 right-6 z-20 w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-lg
+                                                   sm:static sm:z-auto sm:w-auto sm:h-auto sm:rounded-lg sm:shadow-none sm:block sm:px-4 sm:py-2 sm:text-base
+                                                   bg-cyan-600 hover:bg-cyan-500 text-white transition-colors">
+            <i class="fas fa-plus sm:mr-2"></i><span class="hidden sm:inline">Novo Produto</span>
         </button>
     </div>
 
     <div class="flex space-x-2">
-        <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar produtos..." class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+        <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar produtos..." class="w-full sm:w-auto bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
     </div>
 
     @if (carregando)
