@@ -46,14 +46,19 @@
                     </div>
                     <div class="text-xs text-slate-400">@EtapaAtual de 7</div>
                 </div>
-                <div class="text-sm font-medium text-slate-300 shrink-0">
-                    @(EtapaAtual * 100 / 7)%
+                <div class="flex items-center gap-3 shrink-0">
+                    <button type="button" @onclick="AlternarTodasSecoes" class="text-slate-400 hover:text-slate-200 transition-colors" title="@(TodasSecoesAbertas ? "Recolher tudo" : "Expandir tudo")">
+                        <i class="fas @(TodasSecoesAbertas ? "fa-compress-alt" : "fa-expand-alt")"></i>
+                    </button>
+                    <div class="text-sm font-medium text-slate-300">
+                        @(ProgressoPercentual.ToString("0", CultureInfo.InvariantCulture))%
+                    </div>
                 </div>
             </div>
             <div class="mt-2 h-2.5 rounded-full bg-slate-700 overflow-hidden">
-                <div class="h-full rounded-full" style="width:@(((EtapaAtual * 100.0 / 7.0)).ToString("0.##", CultureInfo.InvariantCulture))%; background-color:#06b6d4;"></div>
+                <div class="h-full rounded-full" style="width:@(ProgressoPercentual.ToString("0.##", CultureInfo.InvariantCulture))%; background-color:#06b6d4;"></div>
             </div>
-            
+
         </div>
 
         <EditForm Model="OrdemDeServico" OnValidSubmit="HandleSubmit" OnInvalidSubmit="HandleInvalidSubmit" class="flex flex-col flex-1 min-h-0 pt-2">
@@ -63,9 +68,15 @@
                 <ValidationMessage For="@(() => OrdemDeServico.Status)" />
 
                 <div class="border border-slate-700 rounded-lg overflow-hidden">
-                    <button type="button" @onclick="() => DefinirEtapaAtual(1)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
+                    <button type="button" @onclick="() => AlternarSecao(1)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
                         <span class="text-sm font-semibold text-slate-200"><i class="fas fa-clipboard-list mr-2 text-cyan-400"></i>Dados Gerais</span>
-                        <i class="fas @(secaoDadosAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                        <span class="flex items-center gap-2">
+                            @if (SecaoDadosConcluida)
+                            {
+                                <i class="fas fa-check-circle text-green-400" title="Concluído"></i>
+                            }
+                            <i class="fas @(secaoDadosAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                        </span>
                     </button>
                     @if (secaoDadosAberta)
                     {
@@ -147,9 +158,15 @@
                 </div>
 
                 <div class="border border-slate-700 rounded-lg overflow-hidden">
-                    <button type="button" @onclick="() => DefinirEtapaAtual(2)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
+                    <button type="button" @onclick="() => AlternarSecao(2)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
                         <span class="text-sm font-semibold text-slate-200"><i class="fas fa-route mr-2 text-cyan-400"></i>Rota</span>
-                        <i class="fas @(secaoRotaAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                        <span class="flex items-center gap-2">
+                            @if (SecaoRotaConcluida)
+                            {
+                                <i class="fas fa-check-circle text-green-400" title="Concluído"></i>
+                            }
+                            <i class="fas @(secaoRotaAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                        </span>
                     </button>
                     @if (secaoRotaAberta)
                     {
@@ -167,27 +184,39 @@
                 </div>
 
                 <div class="border border-slate-700 rounded-lg overflow-hidden">
-                    <button type="button" @onclick="() => DefinirEtapaAtual(3)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
+                    <button type="button" @onclick="() => AlternarSecao(3)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
                         <span class="text-sm font-semibold text-slate-200"><i class="fas fa-tint mr-2 text-cyan-400"></i>Parâmetros da Água - Antes</span>
-                        <i class="fas @(secaoAguaAntesAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                        <span class="flex items-center gap-2">
+                            @if (SecaoAguaAntesConcluida)
+                            {
+                                <i class="fas fa-check-circle text-green-400" title="Concluído"></i>
+                            }
+                            <i class="fas @(secaoAguaAntesAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                        </span>
                     </button>
                     @if (secaoAguaAntesAberta)
                     {
                         <div class="p-4 space-y-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <CampoNumerico Label="pH" @bind-Value="OrdemDeServico.pH" @bind-Value:after="AtualizarChecklistConcluido" Step="0.1m" Min="0m" Max="14m" />
-                                <CampoNumerico Label="Alcalinidade" Unidade="ppm" @bind-Value="OrdemDeServico.Alcalinidade" @bind-Value:after="AtualizarChecklistConcluido" Step="10m" Min="0m" Max="300m" />
-                                <CampoNumerico Label="Cloro Livre" Unidade="ppm" @bind-Value="OrdemDeServico.CloroLivre" @bind-Value:after="AtualizarChecklistConcluido" Step="0.5m" Min="0m" Max="10m" />
-                                <CampoNumerico Label="Dureza Cálcica" Unidade="ppm" @bind-Value="OrdemDeServico.DurezaCalcica" Step="10m" Min="0m" Max="800m" />
+                                <CampoNumerico Label="pH" @bind-Value="OrdemDeServico.pH" @bind-Value:after="AtualizarChecklistConcluido" Step="0.1m" Min="0m" Max="14m" IdealMin="7.2m" IdealMax="7.8m" />
+                                <CampoNumerico Label="Alcalinidade" Unidade="ppm" @bind-Value="OrdemDeServico.Alcalinidade" @bind-Value:after="AtualizarChecklistConcluido" Step="10m" Min="0m" Max="300m" IdealMin="80m" IdealMax="120m" />
+                                <CampoNumerico Label="Cloro Livre" Unidade="ppm" @bind-Value="OrdemDeServico.CloroLivre" @bind-Value:after="AtualizarChecklistConcluido" Step="0.5m" Min="0m" Max="10m" IdealMin="0.8m" IdealMax="3m" />
+                                <CampoNumerico Label="Dureza Cálcica" Unidade="ppm" @bind-Value="OrdemDeServico.DurezaCalcica" Step="10m" Min="0m" Max="800m" IdealMin="200m" IdealMax="400m" />
                             </div>
                         </div>
                     }
                 </div>
 
                 <div class="border border-slate-700 rounded-lg overflow-hidden">
-                    <button type="button" @onclick="() => DefinirEtapaAtual(4)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
+                    <button type="button" @onclick="() => AlternarSecao(4)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
                         <span class="text-sm font-semibold text-slate-200"><i class="fas fa-flask mr-2 text-cyan-400"></i>Dosagem de Produtos</span>
-                        <i class="fas @(secaoDosagemAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                        <span class="flex items-center gap-2">
+                            @if (SecaoDosagemConcluida)
+                            {
+                                <i class="fas fa-check-circle text-green-400" title="Concluído"></i>
+                            }
+                            <i class="fas @(secaoDosagemAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                        </span>
                     </button>
                     @* Fica sempre montado (só escondido via CSS, não @if) para que a dosagem seja
                        carregada e conte para o checklist mesmo sem o usuário abrir esta seção. *@
@@ -206,27 +235,39 @@
                 </div>
 
                 <div class="border border-slate-700 rounded-lg overflow-hidden">
-                    <button type="button" @onclick="() => DefinirEtapaAtual(5)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
+                    <button type="button" @onclick="() => AlternarSecao(5)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
                         <span class="text-sm font-semibold text-slate-200"><i class="fas fa-tint mr-2 text-cyan-400"></i>Parâmetros da Água - Depois</span>
-                        <i class="fas @(secaoAguaDepoisAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                        <span class="flex items-center gap-2">
+                            @if (SecaoAguaDepoisConcluida)
+                            {
+                                <i class="fas fa-check-circle text-green-400" title="Concluído"></i>
+                            }
+                            <i class="fas @(secaoAguaDepoisAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                        </span>
                     </button>
                     @if (secaoAguaDepoisAberta)
                     {
                         <div class="p-4 space-y-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <CampoNumerico Label="pH" @bind-Value="PHDepoisValue" @bind-Value:after="AtualizarChecklistConcluido" Step="0.1m" Min="0m" Max="14m" />
-                                <CampoNumerico Label="Alcalinidade" Unidade="ppm" @bind-Value="AlcalinidadeDepoisValue" @bind-Value:after="AtualizarChecklistConcluido" Step="10m" Min="0m" Max="300m" />
-                                <CampoNumerico Label="Cloro Livre" Unidade="ppm" @bind-Value="CloroLivreDepoisValue" @bind-Value:after="AtualizarChecklistConcluido" Step="0.5m" Min="0m" Max="10m" />
-                                <CampoNumerico Label="Dureza Cálcica" Unidade="ppm" @bind-Value="DurezaCalcicaDepoisValue" Step="10m" Min="0m" Max="800m" />
+                                <CampoNumerico Label="pH" @bind-Value="PHDepoisValue" @bind-Value:after="AtualizarChecklistConcluido" Step="0.1m" Min="0m" Max="14m" IdealMin="7.2m" IdealMax="7.8m" />
+                                <CampoNumerico Label="Alcalinidade" Unidade="ppm" @bind-Value="AlcalinidadeDepoisValue" @bind-Value:after="AtualizarChecklistConcluido" Step="10m" Min="0m" Max="300m" IdealMin="80m" IdealMax="120m" />
+                                <CampoNumerico Label="Cloro Livre" Unidade="ppm" @bind-Value="CloroLivreDepoisValue" @bind-Value:after="AtualizarChecklistConcluido" Step="0.5m" Min="0m" Max="10m" IdealMin="0.8m" IdealMax="3m" />
+                                <CampoNumerico Label="Dureza Cálcica" Unidade="ppm" @bind-Value="DurezaCalcicaDepoisValue" Step="10m" Min="0m" Max="800m" IdealMin="200m" IdealMax="400m" />
                             </div>
                         </div>
                     }
                 </div>
 
                 <div class="border border-slate-700 rounded-lg overflow-hidden">
-                    <button type="button" @onclick="() => DefinirEtapaAtual(6)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
+                    <button type="button" @onclick="() => AlternarSecao(6)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
                         <span class="text-sm font-semibold text-slate-200"><i class="fas fa-camera mr-2 text-cyan-400"></i>Fotos</span>
-                        <i class="fas @(secaoFotosAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                        <span class="flex items-center gap-2">
+                            @if (SecaoFotosConcluida)
+                            {
+                                <i class="fas fa-check-circle text-green-400" title="Concluído"></i>
+                            }
+                            <i class="fas @(secaoFotosAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                        </span>
                     </button>
                     @if (secaoFotosAberta)
                     {
@@ -240,9 +281,15 @@
                 </div>
 
                 <div class="border border-slate-700 rounded-lg overflow-hidden">
-                    <button type="button" @onclick="() => DefinirEtapaAtual(7)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
+                    <button type="button" @onclick="() => AlternarSecao(7)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
                         <span class="text-sm font-semibold text-slate-200"><i class="fas fa-clipboard-check mr-2 text-cyan-400"></i>Checklist</span>
-                        <i class="fas @(secaoChecklistAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                        <span class="flex items-center gap-2">
+                            @if (SecaoChecklistConcluida)
+                            {
+                                <i class="fas fa-check-circle text-green-400" title="Concluído"></i>
+                            }
+                            <i class="fas @(secaoChecklistAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                        </span>
                     </button>
                     @if (secaoChecklistAberta)
                     {
@@ -374,7 +421,9 @@
     [Parameter] public List<Usuario>? Aprovadores { get; set; }
     [Parameter] public List<ChecklistItemDefinicao>? ChecklistItensDisponiveis { get; set; }
     [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
-    [Parameter] public Func<OrdemDeServico, Task<bool>>? OnSave { get; set; }
+    // O segundo parâmetro indica se o pai deve exibir o toast de sucesso — false nos
+    // salvamentos automáticos entre etapas (ver SalvarEtapaAtualAsync), true no Salvar/Finalizar.
+    [Parameter] public Func<OrdemDeServico, bool, Task<bool>>? OnSave { get; set; }
     [Parameter] public EventCallback<OrdemDeServico> OnSalvo { get; set; }
 
     private int ClienteIdDaOS =>
@@ -548,11 +597,26 @@
     private string? statusOriginal;
 
     // Abrir o acordeão já registra a ocorrência (sem botão separado) — só ao ABRIR, não ao
-    // fechar de novo, senão colapsar a seção depois de preenchida desfaria o registro.
+    // fechar de novo, senão colapsar a seção depois de preenchida desfaria o registro. Ao
+    // abrir, fecha todas as demais seções para deixar só a Ocorrência (com todos os campos
+    // visíveis) em foco na tela.
     private void ToggleSecaoOcorrencia()
     {
         secaoOcorrenciaAberta = !secaoOcorrenciaAberta;
-        if (secaoOcorrenciaAberta && OrdemDeServico.Status != "Ocorrência")
+        if (!secaoOcorrenciaAberta)
+        {
+            return;
+        }
+
+        secaoDadosAberta = false;
+        secaoRotaAberta = false;
+        secaoAguaAntesAberta = false;
+        secaoDosagemAberta = false;
+        secaoAguaDepoisAberta = false;
+        secaoFotosAberta = false;
+        secaoChecklistAberta = false;
+
+        if (OrdemDeServico.Status != "Ocorrência")
         {
             OrdemDeServico.Status = "Ocorrência";
             OnStatusAlterado();
@@ -700,38 +764,125 @@
         _ => "Checklist"
     };
 
-    private void DefinirEtapaAtual(int etapa)
+    // Cada seção pode ser aberta/fechada independente das demais (o usuário decide o que
+    // ver na tela) — só a abertura/fechamento pontual de UM acordeão por vez, sem fechar
+    // os outros.
+    private void AlternarSecao(int etapa)
     {
-        if (etapa < 1 || etapa > 7)
-        {
-            return;
-        }
-
         etapaAtualIndex = etapa;
-        AtualizarSecoesPorEtapa();
-    }
-
-    private void AtualizarSecoesPorEtapa()
-    {
-        secaoDadosAberta = etapaAtualIndex == 1;
-        secaoRotaAberta = etapaAtualIndex == 2;
-        secaoAguaAntesAberta = etapaAtualIndex == 3;
-        secaoAguaDepoisAberta = etapaAtualIndex == 5;
-        secaoDosagemAberta = etapaAtualIndex == 4;
-        secaoFotosAberta = etapaAtualIndex == 6;
-        secaoChecklistAberta = etapaAtualIndex == 7;
-
-        if (etapaAtualIndex != 7 && OrdemDeServico.Status == "Ocorrência")
+        switch (etapa)
         {
-            secaoOcorrenciaAberta = false;
+            case 1: secaoDadosAberta = !secaoDadosAberta; break;
+            case 2: secaoRotaAberta = !secaoRotaAberta; break;
+            case 3: secaoAguaAntesAberta = !secaoAguaAntesAberta; break;
+            case 4: secaoDosagemAberta = !secaoDosagemAberta; break;
+            case 5: secaoAguaDepoisAberta = !secaoAguaDepoisAberta; break;
+            case 6: secaoFotosAberta = !secaoFotosAberta; break;
+            case 7: secaoChecklistAberta = !secaoChecklistAberta; break;
         }
     }
+
+    // Usado por Avançar/Anterior para levar o usuário direto à seção alvo, sem mexer no
+    // estado (aberto/fechado) das demais.
+    private void AbrirSecao(int etapa)
+    {
+        etapaAtualIndex = etapa;
+        switch (etapa)
+        {
+            case 1: secaoDadosAberta = true; break;
+            case 2: secaoRotaAberta = true; break;
+            case 3: secaoAguaAntesAberta = true; break;
+            case 4: secaoDosagemAberta = true; break;
+            case 5: secaoAguaDepoisAberta = true; break;
+            case 6: secaoFotosAberta = true; break;
+            case 7: secaoChecklistAberta = true; break;
+        }
+    }
+
+    // Usado por Avançar/Anterior pra fechar a etapa que está sendo deixada para trás,
+    // antes de abrir a próxima — clique manual no cabeçalho (AlternarSecao) continua livre
+    // pra manter várias seções abertas ao mesmo tempo.
+    private void FecharSecao(int etapa)
+    {
+        switch (etapa)
+        {
+            case 1: secaoDadosAberta = false; break;
+            case 2: secaoRotaAberta = false; break;
+            case 3: secaoAguaAntesAberta = false; break;
+            case 4: secaoDosagemAberta = false; break;
+            case 5: secaoAguaDepoisAberta = false; break;
+            case 6: secaoFotosAberta = false; break;
+            case 7: secaoChecklistAberta = false; break;
+        }
+    }
+
+    private bool TodasSecoesAbertas =>
+        secaoDadosAberta && secaoRotaAberta && secaoAguaAntesAberta && secaoDosagemAberta
+        && secaoAguaDepoisAberta && secaoFotosAberta && secaoChecklistAberta;
+
+    private void AlternarTodasSecoes()
+    {
+        var abrir = !TodasSecoesAbertas;
+        secaoDadosAberta = abrir;
+        secaoRotaAberta = abrir;
+        secaoAguaAntesAberta = abrir;
+        secaoDosagemAberta = abrir;
+        secaoAguaDepoisAberta = abrir;
+        secaoFotosAberta = abrir;
+        secaoChecklistAberta = abrir;
+    }
+
+    // Conclusão de cada etapa com base nos dados reais preenchidos — usada para o ícone
+    // verde no acordeão, a barra de progresso e a navegação por Avançar/Anterior.
+    private bool SecaoDadosConcluida => OrdemDeServico.IDPiscina > 0 && TecnicoPreenchido && HoraInicioPreenchida;
+    // A Rota não tem campo próprio pra preencher (é só apoio visual) — conta como concluída
+    // assim que o técnico já clicou em "Iniciar Manutenção" (Status sai de "Em Aberto"/
+    // "Reagendada", que são os únicos status possíveis pra uma OS que ainda não começou).
+    private bool SecaoRotaConcluida => OrdemDeServico.Status is not ("Em Aberto" or "Reagendada");
+    private bool SecaoAguaAntesConcluida => OrdemDeServico.pH > 0 && OrdemDeServico.Alcalinidade > 0 && OrdemDeServico.CloroLivre > 0;
+    private bool SecaoDosagemConcluida => dosagensAtuais.Any();
+    private bool SecaoAguaDepoisConcluida => OrdemDeServico.pHDepois > 0 && OrdemDeServico.AlcalinidadeDepois > 0 && OrdemDeServico.CloroLivreDepois > 0;
+    private bool SecaoFotosConcluida => FotosCompletas;
+    private bool SecaoChecklistConcluida => PodeFinalizar;
+
+    private bool SecaoConcluida(int etapa) => etapa switch
+    {
+        1 => SecaoDadosConcluida,
+        2 => SecaoRotaConcluida,
+        3 => SecaoAguaAntesConcluida,
+        4 => SecaoDosagemConcluida,
+        5 => SecaoAguaDepoisConcluida,
+        6 => SecaoFotosConcluida,
+        7 => SecaoChecklistConcluida,
+        _ => true
+    };
+
+    // Só as etapas com requisito próprio contam pra % de progresso — Rota não tem nada
+    // pra preencher e Checklist só espelha o conjunto das outras quatro (PodeFinalizar),
+    // então incluir as duas inflaria o percentual sem refletir dado novo.
+    private static readonly int[] EtapasComRequisitoProprio = { 1, 3, 4, 5, 6 };
+
+    private double ProgressoPercentual =>
+        EtapasComRequisitoProprio.Count(SecaoConcluida) * 100.0 / EtapasComRequisitoProprio.Length;
 
     private void AnteriorEtapa()
     {
-        if (etapaAtualIndex > 1)
+        var etapaOrigem = etapaAtualIndex;
+
+        for (var etapa = etapaOrigem - 1; etapa >= 1; etapa--)
         {
-            DefinirEtapaAtual(etapaAtualIndex - 1);
+            if (SecaoConcluida(etapa))
+            {
+                FecharSecao(etapaOrigem);
+                AbrirSecao(etapa);
+                return;
+            }
+        }
+
+        if (etapaOrigem > 1)
+        {
+            FecharSecao(etapaOrigem);
+            AbrirSecao(etapaOrigem - 1);
         }
     }
 
@@ -748,7 +899,20 @@
             return;
         }
 
-        DefinirEtapaAtual(etapaAtualIndex + 1);
+        var etapaOrigem = etapaAtualIndex;
+
+        for (var etapa = etapaOrigem + 1; etapa <= 7; etapa++)
+        {
+            if (!SecaoConcluida(etapa))
+            {
+                FecharSecao(etapaOrigem);
+                AbrirSecao(etapa);
+                return;
+            }
+        }
+
+        FecharSecao(etapaOrigem);
+        AbrirSecao(Math.Min(etapaOrigem + 1, 7));
     }
 
     private async Task<bool> SalvarEtapaAtualAsync()
@@ -758,7 +922,7 @@
             return true;
         }
 
-        var sucesso = await OnSave.Invoke(OrdemDeServico);
+        var sucesso = await OnSave.Invoke(OrdemDeServico, false);
         if (!sucesso)
         {
             return false;
@@ -792,19 +956,20 @@
 
         ordemInicializada = OrdemDeServico;
 
-        // Toda OS aberta começa só com "Dados Gerais" expandida.
+        // Toda OS aberta começa com todos os acordeões fechados — o técnico escolhe o que
+        // quer ver primeiro (ou usa Avançar/Anterior, que abrem a etapa certa sozinhos).
         mensagemErroValidacao = null;
         toastValidacaoVisible = false;
         etapaAtualIndex = 1;
-        secaoDadosAberta = true;
+        secaoDadosAberta = false;
+        secaoRotaAberta = false;
         secaoAguaAntesAberta = false;
         secaoAguaDepoisAberta = false;
         secaoDosagemAberta = false;
         secaoFotosAberta = false;
         secaoChecklistAberta = false;
-        secaoOcorrenciaAberta = OrdemDeServico.Status == "Ocorrência";
+        secaoOcorrenciaAberta = false;
         dosagensAtuais = new List<DosagemProduto>();
-        AtualizarSecoesPorEtapa();
 
         statusOriginal = OrdemDeServico.IDOS > 0 ? OrdemDeServico.Status : null;
         erroAprovacaoOcorrencia = null;
@@ -860,7 +1025,7 @@
 
     private async Task HandleSubmit()
     {
-        var sucesso = OnSave == null || await OnSave.Invoke(OrdemDeServico);
+        var sucesso = OnSave == null || await OnSave.Invoke(OrdemDeServico, true);
         if (!sucesso)
         {
             return;

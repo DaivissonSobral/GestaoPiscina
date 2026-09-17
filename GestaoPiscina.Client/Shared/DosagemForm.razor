@@ -158,6 +158,11 @@
     // existe um IDOS válido pra vincular uma dosagem nova. Grava só o que mudou desde o
     // carregamento (diff contra valorInicial), igual à lógica que antes rodava no botão
     // "Salvar Dosagem" removido.
+    //
+    // O assistente da OS chama isso a cada "Avançar" (e no Salvar/Finalizar final) — depois
+    // de gravar, valorInicial/dosagemIdExistente precisam refletir o novo estado salvo, senão
+    // o próximo Avançar (sem nenhuma mudança nesta seção) veria o mesmo "diff" de novo e
+    // criaria/moveria estoque outra vez para a mesma dosagem.
     public async Task<bool> SalvarPendentesAsync(int osIdReal)
     {
         erro = null;
@@ -178,15 +183,19 @@
                 if (novoValor <= 0m && idExistente.HasValue)
                 {
                     await ApiService.DeleteDosagemAsync(idExistente.Value);
+                    dosagemIdExistente[produto.IDProduto] = null;
                 }
                 else if (novoValor > 0m && !idExistente.HasValue)
                 {
-                    await ApiService.CreateDosagemAsync(new DosagemProduto { IDOS = osIdReal, IDProduto = produto.IDProduto, Quantidade = novoValor });
+                    var criada = await ApiService.CreateDosagemAsync(new DosagemProduto { IDOS = osIdReal, IDProduto = produto.IDProduto, Quantidade = novoValor });
+                    dosagemIdExistente[produto.IDProduto] = criada.IDDosagem;
                 }
                 else if (novoValor > 0m && idExistente.HasValue)
                 {
                     await ApiService.UpdateDosagemAsync(new DosagemProduto { IDDosagem = idExistente.Value, IDOS = osIdReal, IDProduto = produto.IDProduto, Quantidade = novoValor });
                 }
+
+                valorInicial[produto.IDProduto] = novoValor;
             }
 
             return true;

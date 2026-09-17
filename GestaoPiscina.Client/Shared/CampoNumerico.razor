@@ -35,6 +35,22 @@
             <span>@Min.ToString("0.##", CultureInfo.InvariantCulture)</span>
             <span>@Max.ToString("0.##", CultureInfo.InvariantCulture)</span>
         </div>
+
+        @if (TemFaixaIdeal)
+        {
+            <div class="mt-3 pt-3 border-t border-slate-600/60">
+                <div class="flex items-center justify-between text-[11px] text-slate-400 mb-1.5">
+                    <span>Faixa ideal</span>
+                    <span class="font-medium @(DentroDoIdeal ? "text-emerald-400" : "text-amber-400")">
+                        @IdealMin!.Value.ToString("0.##", CultureInfo.InvariantCulture) – @IdealMax!.Value.ToString("0.##", CultureInfo.InvariantCulture)@Unidade
+                    </span>
+                </div>
+                <div class="relative h-2 rounded-full bg-slate-800">
+                    <div class="absolute inset-y-0 rounded-full bg-cyan-500/30" style="left:@(Inv(PosicaoPercentual(IdealMin.Value)))%; width:@(Inv(LarguraIdealPercentual()))%;"></div>
+                    <div class="absolute top-1/2 w-3 h-3 rounded-full border-2 border-slate-900 @(DentroDoIdeal ? "bg-emerald-400" : "bg-amber-400")" style="left:@(Inv(PosicaoPercentual(Value)))%; transform:translate(-50%, -50%);"></div>
+                </div>
+            </div>
+        }
     </div>
 </div>
 
@@ -47,6 +63,33 @@
     [Parameter] public decimal Max { get; set; } = 100m;
     [Parameter] public string? Unidade { get; set; }
     [Parameter] public string? Info { get; set; }
+
+    // Quando informados, desenha uma barrinha de referência (mesmo conceito do relatório da
+    // OS) mostrando a faixa ideal do parâmetro dentro da escala Min–Max e onde o valor atual
+    // caiu nela — verde dentro do ideal, âmbar fora.
+    [Parameter] public decimal? IdealMin { get; set; }
+    [Parameter] public decimal? IdealMax { get; set; }
+
+    private bool TemFaixaIdeal => IdealMin.HasValue && IdealMax.HasValue && Max > Min;
+    private bool DentroDoIdeal => IdealMin.HasValue && IdealMax.HasValue && Value >= IdealMin.Value && Value <= IdealMax.Value;
+
+    private double PosicaoPercentual(decimal valor)
+    {
+        var clamped = Math.Clamp(valor, Min, Max);
+        return (double)((clamped - Min) / (Max - Min)) * 100.0;
+    }
+
+    private double LarguraIdealPercentual()
+    {
+        if (!TemFaixaIdeal)
+        {
+            return 0;
+        }
+
+        return PosicaoPercentual(IdealMax!.Value) - PosicaoPercentual(IdealMin!.Value);
+    }
+
+    private static string Inv(double valor) => valor.ToString("0.####", CultureInfo.InvariantCulture);
 
     private Task OnAlterado(ChangeEventArgs e)
     {

@@ -706,7 +706,14 @@
         modalDetalhesVisible = true;
     }
 
-    private async Task<bool> SalvarOS(OrdemDeServico os)
+    // mostrarSucesso é false nos salvamentos automáticos de cada etapa do assistente (ao
+    // clicar Avançar) — o feedback ali passou a ser o ícone verde no acordeão da própria
+    // etapa, não um toast repetido a cada passo. O toast de sucesso continua no Salvar/
+    // Finalizar (ação definitiva) e o de erro dispara sempre, em qualquer etapa. Pelo mesmo
+    // motivo, só recarrega a lista (CarregarDados) nesse salvamento final — recarregar a
+    // cada etapa refaz 5 chamadas à API e re-renderiza a tela de trás (Lista de OS) sem
+    // necessidade, já que ela não está visível enquanto o assistente está aberto.
+    private async Task<bool> SalvarOS(OrdemDeServico os, bool mostrarSucesso = true)
     {
         try
         {
@@ -716,15 +723,25 @@
                 // O modal precisa do ID real pra poder salvar a dosagem de produtos logo em
                 // seguida, na mesma submissão — sem isso `os.IDOS` continuaria 0 depois de criar.
                 os.IDOS = criada.IDOS;
-                MostrarNotificacao("Sucesso", "Ordem de Serviço criada com sucesso!", "success");
+                if (mostrarSucesso)
+                {
+                    MostrarNotificacao("Sucesso", "Ordem de Serviço criada com sucesso!", "success");
+                }
             }
             else
             {
                 await ApiService.UpdateOrdemDeServicoAsync(os);
-                MostrarNotificacao("Sucesso", "Ordem de Serviço atualizada com sucesso!", "success");
+                if (mostrarSucesso)
+                {
+                    MostrarNotificacao("Sucesso", "Ordem de Serviço atualizada com sucesso!", "success");
+                }
             }
 
-            await CarregarDados();
+            if (mostrarSucesso)
+            {
+                await CarregarDados();
+            }
+
             return true;
         }
         catch (Exception ex)
