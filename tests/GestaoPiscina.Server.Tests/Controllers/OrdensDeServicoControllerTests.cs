@@ -257,6 +257,34 @@ namespace GestaoPiscina.Server.Tests.Controllers
         }
 
         [Fact]
+        public async Task GerarOSAutomaticas_GeraOSComTecnicoEmBranco()
+        {
+            await CriarTecnicoPadraoAsync();
+            var cliente = Fabrica.Cliente();
+            var piscina = Fabrica.Piscina(cliente,
+                recorrenciaFrequencia: "Diaria",
+                recorrenciaIntervalo: 1,
+                recorrenciaDataInicio: new DateTime(2024, 1, 1));
+            _db.Context.AddRange(cliente, piscina);
+            await _db.Context.SaveChangesAsync();
+
+            await Controller.GerarOSAutomaticas(new GerarOSAutomaticasRequest
+            {
+                DataInicio = new DateTime(2024, 1, 1),
+                DataFim = new DateTime(2024, 1, 2)
+            });
+
+            var geradas = _db.Context.OrdensDeServico.ToList();
+            Assert.NotEmpty(geradas);
+            Assert.All(geradas, os =>
+            {
+                Assert.Null(os.IDUsuario);
+                Assert.Equal(default, os.HoraInicio);
+                Assert.Equal(default, os.HoraTermino);
+            });
+        }
+
+        [Fact]
         public async Task GerarOSAutomaticas_RecorrenciaDiaria_GeraNosDiasCorretosConformeOIntervalo()
         {
             await CriarTecnicoPadraoAsync();

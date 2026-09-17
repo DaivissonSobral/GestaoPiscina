@@ -9,21 +9,24 @@
 
         <p class="text-sm text-slate-400 mb-4">Gera as ordens de serviço previstas pela periodicidade de cada piscina, para o período escolhido.</p>
 
-        <div class="flex flex-wrap gap-2 mb-4">
-            <button type="button" @onclick="() => AplicarPeriodo(0, 0)" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg text-xs text-slate-200 transition-colors">Hoje</button>
-            <button type="button" @onclick="() => AplicarPeriodo(0, 6)" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg text-xs text-slate-200 transition-colors">Próximos 7 dias</button>
-            <button type="button" @onclick="AplicarEsteMes" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg text-xs text-slate-200 transition-colors">Este mês</button>
-            <button type="button" @onclick="() => AplicarPeriodo(0, 29)" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg text-xs text-slate-200 transition-colors">Próximos 30 dias</button>
+        <div class="mb-4">
+            <div class="flex w-full items-stretch bg-slate-700 border border-slate-600 rounded-lg overflow-hidden">
+                <button type="button" @onclick="() => AplicarPeriodo(0, 0)" class="w-[78px] shrink-0 bg-slate-700 hover:bg-slate-600 px-3 py-2 text-sm text-slate-200 transition-colors whitespace-nowrap">Hoje</button>
+                <button type="button" @onclick="() => AplicarPeriodo(1, 1)" class="flex-1 min-w-0 bg-slate-700 hover:bg-slate-600 px-3 py-2 text-sm text-slate-200 transition-colors border-l border-slate-600 whitespace-nowrap">Amanhã</button>
+                <button type="button" @onclick="() => AplicarPeriodo(0, 6)" class="flex-1 min-w-0 bg-slate-700 hover:bg-slate-600 px-3 py-2 text-sm text-slate-200 transition-colors border-l border-slate-600 whitespace-nowrap">Próximos 7 dias</button>
+            </div>
         </div>
 
         <div class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-slate-300 mb-2">Data Início</label>
-                <input type="date" @bind="dataInicio" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-slate-300 mb-2">Data Fim</label>
-                <input type="date" @bind="dataFim" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">De</label>
+                    <input type="date" @bind="dataInicio" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Até</label>
+                    <input type="date" @bind="dataFim" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+                </div>
             </div>
             @if (!string.IsNullOrEmpty(erro))
             {

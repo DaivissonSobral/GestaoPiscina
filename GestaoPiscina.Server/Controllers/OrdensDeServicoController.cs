@@ -295,13 +295,6 @@ namespace GestaoPiscina.Server.Controllers
                     return BadRequest(new { message = "O período não pode ultrapassar 1 ano." });
                 }
 
-                var tecnicoPadrao = await _context.Usuarios
-                    .FirstOrDefaultAsync(u => u.Perfil.Nome == "Técnico" && u.Ativo);
-                if (tecnicoPadrao == null)
-                {
-                    return BadRequest(new { message = "Nenhum técnico cadastrado para atribuir às OS automáticas." });
-                }
-
                 var piscinas = await _context.Piscinas
                     .Include(p => p.Cliente)
                     .Where(p => p.RecorrenciaFrequencia != "Nenhuma")
@@ -354,13 +347,13 @@ namespace GestaoPiscina.Server.Controllers
                         var novaOS = new OrdemDeServico
                         {
                             IDPiscina = piscina.IDPiscina,
-                            IDUsuario = tecnicoPadrao.IDUsuario,
+                            IDUsuario = null,
                             DataExecucao = data,
                             Status = "Em Aberto",
                             ChecklistConcluido = false,
                             RelatorioGerado = false,
-                            HoraInicio = data,
-                            HoraTermino = data
+                            HoraInicio = default,
+                            HoraTermino = default
                         };
 
                         _context.OrdensDeServico.Add(novaOS);
@@ -480,7 +473,8 @@ namespace GestaoPiscina.Server.Controllers
                 return "Selecione uma piscina válida.";
             }
 
-            if (!await _context.Usuarios.AnyAsync(u => u.IDUsuario == ordemDeServico.IDUsuario))
+            if (ordemDeServico.IDUsuario.HasValue
+                && !await _context.Usuarios.AnyAsync(u => u.IDUsuario == ordemDeServico.IDUsuario.Value))
             {
                 return "Selecione um técnico válido.";
             }

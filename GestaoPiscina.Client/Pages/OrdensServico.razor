@@ -208,27 +208,27 @@
                                             <i class="fas fa-user-hard-hat mr-1"></i>@NomeTecnico(os)
                                         </div>
                                     }
-                                    <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-600">
+                                    <div class="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-600">
                                         <span class="@(EstaAtrasada(os) ? "text-red-400 font-semibold" : "text-slate-400")">
                                             <i class="fas fa-calendar-alt mr-1"></i>@os.DataExecucao.ToString("dd/MM/yyyy")
                                         </span>
-                                        @if (os.Status == "Em Andamento" && os.InicioPercurso.HasValue)
+                                        @if (os.Status == "Em Andamento" && (os.InicioPercurso.HasValue || os.HoraInicio == default))
                                         {
-                                            <span class="text-blue-400 font-semibold" title="Em Deslocamento">Em Deslocamento</span>
+                                            <span class="ml-auto text-blue-400 font-semibold" title="A caminho">A caminho</span>
                                         }
-                                        else
+                                        @if (EstaAtrasada(os))
                                         {
-                                            <span class="@GetStatusIconColor(os.Status)" title="@(os.ChecklistConcluido ? "Checklist concluído" : "Checklist pendente") · @os.Status">
+                                            <div class="ml-auto text-red-400 font-semibold mt-1">
+                                                <i class="fas fa-exclamation-triangle ml-1 mr-1"></i>
+                                            </div>
+                                        }
+                                        else if (os.Status != "Em Andamento" || (!os.InicioPercurso.HasValue && os.HoraInicio != default))
+                                        {
+                                            <span class="ml-auto @GetStatusIconColor(os.Status)" title="@(os.ChecklistConcluido ? "Checklist concluído" : "Checklist pendente") · @os.Status">
                                                 <i class="fas @(os.ChecklistConcluido ? "fa-check-circle" : "fa-circle")"></i>
                                             </span>
                                         }
                                     </div>
-                                    @if (EstaAtrasada(os))
-                                    {
-                                        <div class="text-red-400 font-semibold mt-1">
-                                            <i class="fas fa-exclamation-triangle mr-1"></i>Atrasada
-                                        </div>
-                                    }
                                 </div>
                             }
                         </div>
@@ -258,7 +258,7 @@
 
 <OrdemServicoDetalhes @bind-IsVisible="modalDetalhesVisible"
                       OrdemDeServico="osSelecionada"
-                      Aprovadores="quimicos"
+                      MostrarInicioPercurso="EhPrimeiraOsDoDia(osSelecionada)"
                       Tecnicos="tecnicos"
                       ChecklistItensDisponiveis="checklistItens"
                       OnEdit="EditarOS" />
@@ -400,6 +400,21 @@
     };
 
     private bool EstaAtrasada(OrdemDeServico os) => os.Status == "Em Aberto" && os.DataExecucao.Date < DateTime.Today;
+
+    private bool EhPrimeiraOsDoDia(OrdemDeServico os)
+    {
+        if (os.IDUsuario <= 0 || ordensDeServico == null)
+        {
+            return false;
+        }
+
+        var mesmaData = os.DataExecucao.Date;
+        return !ordensDeServico.Any(outro =>
+            outro.IDOS != os.IDOS &&
+            outro.IDUsuario == os.IDUsuario &&
+            outro.DataExecucao.Date == mesmaData &&
+            outro.Status != "Cancelada");
+    }
 
     private static readonly HashSet<string> StatusValidos = new()
     {
@@ -759,7 +774,16 @@
         try
         {
             var osCriadas = await ApiService.GerarOSAutomaticasAsync(periodo.DataInicio, periodo.DataFim);
-            MostrarNotificacao("Sucesso", $"Foram criadas {osCriadas.Count} ordens de serviço automáticas!", "success");
+
+            if (osCriadas.Count == 0)
+            {
+                MostrarNotificacao("Nenhuma OS gerada", "Não há ordens de serviço para gerar no período selecionado.", "warning");
+            }
+            else
+            {
+                MostrarNotificacao("Sucesso", $"Foram geradas {osCriadas.Count} ordens de serviço no período selecionado", "success");
+            }
+
             await CarregarDados();
         }
         catch (Exception ex)

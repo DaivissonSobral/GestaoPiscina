@@ -342,7 +342,7 @@ namespace GestaoPiscina.Server.Migrations
                     b.Property<int>("IDPiscina")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("IDUsuario")
+                    b.Property<int?>("IDUsuario")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime?>("InicioPercurso")
@@ -764,8 +764,7 @@ namespace GestaoPiscina.Server.Migrations
                     b.HasOne("GestaoPiscina.Server.Models.Usuario", "Tecnico")
                         .WithMany()
                         .HasForeignKey("IDUsuario")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("AprovadorUsuario");
 

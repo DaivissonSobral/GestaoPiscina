@@ -5,7 +5,7 @@
 @inject ApiService ApiService
 
 <section class="p-4 space-y-6">
-    <div>
+    <div >
         <!-- No celular vira um botão flutuante (FAB) redondo, fixo no canto inferior
              direito da tela; no desktop continua um botão normal no fluxo da página. -->
         <button @onclick="AbrirModalNovo" class="fixed bottom-6 right-6 z-20 w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-lg
@@ -15,8 +15,8 @@
         </button>
     </div>
 
-    <div class="flex space-x-2">
-        <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar equipamentos..." class="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+    <div class="grid grid-cols-2 gap-2 w-full sm:flex sm:flex-wrap sm:w-auto min-w-0">
+        <input type="text" @bind="termoBusca" @bind:event="oninput" placeholder="Buscar equipamentos..." class="w-full sm:w-auto sm:flex-1 sm:min-w-[160px] bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
         <select @bind="filtroCalibracao" class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
             <option value="">Todas as Calibrações</option>
             <option value="pendente">Calibração Pendente</option>

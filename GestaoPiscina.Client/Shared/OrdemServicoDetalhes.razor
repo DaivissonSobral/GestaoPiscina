@@ -335,6 +335,7 @@
     [Parameter] public List<ChecklistItemDefinicao>? ChecklistItensDisponiveis { get; set; }
     [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
     [Parameter] public EventCallback<OrdemDeServico> OnEdit { get; set; }
+    [Parameter] public bool MostrarInicioPercurso { get; set; } = true;
 
     private List<DosagemProduto> dosagensAtuais = new();
 
@@ -484,7 +485,13 @@
     {
         if (OrdemDeServico.Status == "Em Aberto")
         {
-            AbrirModalHodometro();
+            if (MostrarInicioPercurso)
+            {
+                AbrirModalHodometro();
+                return;
+            }
+
+            await OnEdit.InvokeAsync(OrdemDeServico);
             return;
         }
 
@@ -587,7 +594,7 @@
     {
         if (OrdemDeServico.Status == "Em Aberto")
         {
-            return "Iniciar Percurso";
+            return MostrarInicioPercurso ? "Iniciar Percurso" : "Iniciar Manutenção";
         }
 
         if (OrdemDeServico.Status == "Em Andamento" && OrdemDeServico.InicioPercurso != null && OrdemDeServico.LatitudeInicio == null)

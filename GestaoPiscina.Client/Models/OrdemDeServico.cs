@@ -48,9 +48,8 @@ namespace GestaoPiscina.Client.Models
 
         public DateTime? DataReprovacaoOcorrencia { get; set; }
 
-        [Required(ErrorMessage = "Técnico responsável é obrigatório")]
-        [Range(1, int.MaxValue, ErrorMessage = "Selecione um técnico")]
-        public int IDUsuario { get; set; }
+        [Range(1, int.MaxValue, ErrorMessage = "Selecione um técnico válido")]
+        public int? IDUsuario { get; set; }
 
         // Localização exata do técnico (geolocalização do navegador) no momento em que ele
         // clicou "Iniciar" nesta OS — ver OrdemServicoDetalhes.IniciarAsync.

@@ -52,27 +52,27 @@
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-300 mb-2">Piscina</label>
-                                    <InputSelect @bind-Value="OrdemDeServico.IDPiscina" @bind-Value:after="AtualizarChecklistConcluido" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">Piscina *</label>
+                                    <InputSelect @bind-Value="OrdemDeServico.IDPiscina" @bind-Value:after="AtualizarChecklistConcluido" class="@ObterClasseCampo(nameof(OrdemDeServico.IDPiscina))">
                                         <option value="0">Selecione uma piscina...</option>
                                         @foreach (var piscina in PiscinasDoCliente)
                                         {
                                             <option value="@piscina.IDPiscina">@piscina.Tipo (@piscina.VolumeLitros L)</option>
                                         }
                                     </InputSelect>
-                                    <ValidationMessage For="@(() => OrdemDeServico.IDPiscina)" />
+                                    <ValidationMessage For="@(() => OrdemDeServico.IDPiscina)" class="text-red-500 text-sm" />
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-300 mb-2">Data de Execução</label>
-                                    <InputDate @bind-Value="OrdemDeServico.DataExecucao" @bind-Value:after="OnDataExecucaoAlterada" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
-                                    <ValidationMessage For="@(() => OrdemDeServico.DataExecucao)" />
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">Data de Execução *</label>
+                                    <InputDate @bind-Value="OrdemDeServico.DataExecucao" @bind-Value:after="OnDataExecucaoAlterada" class="@ObterClasseCampo(nameof(OrdemDeServico.DataExecucao))" />
+                                    <ValidationMessage For="@(() => OrdemDeServico.DataExecucao)" class="text-red-500 text-sm" />
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-medium text-slate-300 mb-2">Técnico Responsável</label>
-                                    <InputSelect @bind-Value="OrdemDeServico.IDUsuario" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-                                        <option value="0">Selecione...</option>
+                                    <InputSelect @bind-Value="OrdemDeServico.IDUsuario" class="@ObterClasseCampo(nameof(OrdemDeServico.IDUsuario))">
+                                        <option value="">Selecione...</option>
                                         @if (Tecnicos != null)
                                         {
                                             @foreach (var tecnico in Tecnicos)
@@ -81,24 +81,25 @@
                                             }
                                         }
                                     </InputSelect>
-                                    <ValidationMessage For="@(() => OrdemDeServico.IDUsuario)" />
+                                    <ValidationMessage For="@(() => OrdemDeServico.IDUsuario)" class="text-red-500 text-sm" />
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-300 mb-2">Horário de Início</label>
-                                    <InputDate Type="InputDateType.Time" @bind-Value="HoraInicioTime" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" />
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">Horário de Início *</label>
+                                    <InputDate Type="InputDateType.Time" @bind-Value="HoraInicioTime" class="@ObterClasseCampo(nameof(OrdemDeServico.HoraInicio))" />
+                                    <ValidationMessage For="@(() => OrdemDeServico.HoraInicio)" class="text-red-500 text-sm" />
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-medium text-slate-300 mb-2">
-                                        Horário de Término
+                                        Horário de Término *
                                         @if (!PermiteEditarHoraTermino)
                                         {
                                             <span class="text-xs text-slate-500 font-normal">(preenchido ao finalizar ou registrar ocorrência)</span>
                                         }
                                     </label>
-                                    <InputDate Type="InputDateType.Time" @bind-Value="HoraTerminoTime" disabled="@(!PermiteEditarHoraTermino)" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 disabled:opacity-50" />
-                                    <ValidationMessage For="@(() => OrdemDeServico.HoraTermino)" />
+                                    <InputDate Type="InputDateType.Time" @bind-Value="HoraTerminoTime" disabled="@(!PermiteEditarHoraTermino)" class="@($"{ObterClasseCampo(nameof(OrdemDeServico.HoraTermino))} {(PermiteEditarHoraTermino ? "" : "disabled:opacity-50")}")" />
+                                    <ValidationMessage For="@(() => OrdemDeServico.HoraTermino)" class="text-red-500 text-sm" />
                                 </div>
                             </div>
 
@@ -136,7 +137,7 @@
 
                 <div class="border border-slate-700 rounded-lg overflow-hidden">
                     <button type="button" @onclick="() => secaoAguaAberta = !secaoAguaAberta" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
-                        <span class="text-sm font-semibold text-slate-200"><i class="fas fa-tint mr-2 text-cyan-400"></i>Parâmetros da Água</span>
+                        <span class="text-sm font-semibold text-slate-200"><i class="fas fa-tint mr-2 text-cyan-400"></i>Parâmetros da Água - Antes</span>
                         <i class="fas @(secaoAguaAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
                     </button>
                     @if (secaoAguaAberta)
@@ -171,6 +172,24 @@
                             </p>
                         }
                     </div>
+                </div>
+
+                <div class="border border-slate-700 rounded-lg overflow-hidden">
+                    <button type="button" @onclick="() => secaoAguaAberta = !secaoAguaAberta" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
+                        <span class="text-sm font-semibold text-slate-200"><i class="fas fa-tint mr-2 text-cyan-400"></i>Parâmetros da Água - Depois</span>
+                        <i class="fas @(secaoAguaAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
+                    </button>
+                    @if (secaoAguaAberta)
+                    {
+                        <div class="p-4 space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <CampoNumerico Label="pH" @bind-Value="OrdemDeServico.pH" @bind-Value:after="AtualizarChecklistConcluido" Step="0.1m" Min="0m" Max="14m" />
+                                <CampoNumerico Label="Alcalinidade" Unidade="ppm" @bind-Value="OrdemDeServico.Alcalinidade" @bind-Value:after="AtualizarChecklistConcluido" Step="10m" Min="0m" Max="300m" />
+                                <CampoNumerico Label="Cloro Livre" Unidade="ppm" @bind-Value="OrdemDeServico.CloroLivre" @bind-Value:after="AtualizarChecklistConcluido" Step="0.5m" Min="0m" Max="10m" />
+                                <CampoNumerico Label="Dureza Cálcica" Unidade="ppm" @bind-Value="OrdemDeServico.DurezaCalcica" Step="10m" Min="0m" Max="800m" />
+                            </div>
+                        </div>
+                    }
                 </div>
 
                 <div class="border border-slate-700 rounded-lg overflow-hidden">
@@ -302,6 +321,11 @@
     </div>
 
     <CancelarOSModal @bind-IsVisible="cancelarModalVisible" OrdemDeServico="OrdemDeServico" OnCancelado="OnOSCancelada" />
+    <Toast @bind-IsVisible="toastValidacaoVisible"
+           Title="Validação"
+           Message="@mensagemErroValidacao"
+           Type="error"
+           AutoHideDelay="4000" />
 </div>
 
 @code {
@@ -483,6 +507,8 @@
     private bool PodeCancelar => OrdemDeServico.Status is not ("Finalizada" or "Cancelada");
 
     private bool cancelarModalVisible;
+    private bool toastValidacaoVisible;
+    private string? mensagemErroValidacao;
 
     // O CancelarOSModal já deixou a OrdemDeServico com Status "Cancelada" e salvou no
     // servidor — só falta repassar pro pai (mesmo callback usado ao Salvar/Finalizar) e
@@ -593,6 +619,8 @@
         ordemInicializada = OrdemDeServico;
 
         // Toda OS aberta começa só com "Dados Gerais" expandida.
+        mensagemErroValidacao = null;
+        toastValidacaoVisible = false;
         secaoDadosAberta = true;
         secaoAguaAberta = false;
         secaoDosagemAberta = false;
@@ -681,8 +709,28 @@
     // A maioria dos campos com validação (Piscina, Técnico, Status/Observações, horários)
     // mora em "Dados Gerais" — se o Salvar falhar por validação, garante que essa seção
     // esteja visível para o usuário ver a mensagem, mesmo se ele tiver fechado o acordeão.
+    [CascadingParameter] private EditContext? EditContext { get; set; }
+
+    private string ObterClasseCampo(string nomeCampo, string classePadrao = "w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500")
+    {
+        if (EditContext == null)
+        {
+            return classePadrao;
+        }
+
+        var invalid = EditContext.GetValidationMessages(new FieldIdentifier(OrdemDeServico, nomeCampo)).Any();
+        if (!invalid)
+        {
+            return classePadrao;
+        }
+
+        return "w-full bg-red-950/20 border border-red-500 rounded-lg px-3 py-2 text-red-50 shadow-[0_0_0_1px_rgba(239,68,68,0.35)] focus:border-red-400 focus:ring-2 focus:ring-red-500/60";
+    }
+
     private void HandleInvalidSubmit()
     {
+        mensagemErroValidacao = "Corrija os campos destacados antes de salvar a ordem de serviço.";
+        toastValidacaoVisible = true;
         secaoDadosAberta = true;
     }
 }

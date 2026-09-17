@@ -47,8 +47,9 @@ namespace GestaoPiscina.Server.Models
 
         public DateTime? DataReprovacaoOcorrencia { get; set; }
 
-        [Required]
-        public int IDUsuario { get; set; } // Técnico responsável
+        // Técnico responsável — pode permanecer nulo na criação inicial da OS até que o
+        // usuário defina quem vai execuá-la.
+        public int? IDUsuario { get; set; }
 
         // Localização exata do técnico (geolocalização do navegador/celular) no momento em
         // que ele clicou "Iniciar" nesta OS — usada pra traçar a rota até o cliente na tela
