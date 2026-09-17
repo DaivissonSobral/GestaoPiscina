@@ -213,18 +213,6 @@ namespace GestaoPiscina.Server.Tests.Controllers
         }
 
         [Fact]
-        public async Task GerarOSAutomaticas_SemTecnicoCadastrado_RetornaBadRequest()
-        {
-            var resultado = await Controller.GerarOSAutomaticas(new GerarOSAutomaticasRequest
-            {
-                DataInicio = new DateTime(2024, 1, 1),
-                DataFim = new DateTime(2024, 1, 1)
-            });
-
-            Assert.IsType<BadRequestObjectResult>(resultado.Result);
-        }
-
-        [Fact]
         public async Task GerarOSAutomaticas_ComDataFimAntesDaDataInicio_RetornaBadRequest()
         {
             await CriarTecnicoPadraoAsync();

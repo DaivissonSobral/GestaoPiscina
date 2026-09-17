@@ -403,7 +403,7 @@
 
     private bool EhPrimeiraOsDoDia(OrdemDeServico os)
     {
-        if (os.IDUsuario <= 0 || ordensDeServico == null)
+        if (os.IDUsuario is null or <= 0 || ordensDeServico == null)
         {
             return false;
         }
