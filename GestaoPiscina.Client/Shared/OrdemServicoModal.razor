@@ -1,3 +1,4 @@
+@using System.Globalization
 @using GestaoPiscina.Client.Models
 @using GestaoPiscina.Client.Services
 @inject ApiService ApiService
@@ -6,33 +7,63 @@
 
 <div class="fixed inset-0 !mt-0 bg-black bg-opacity-50 flex sm:items-start justify-center z-50 sm:pt-8 @(IsVisible ? "" : "hidden")">
     <div class="bg-slate-800 w-full h-full sm:h-auto sm:rounded-xl sm:max-w-4xl sm:mx-4 sm:max-h-[90vh] flex flex-col">
-        <div class="flex justify-between items-center p-6 pb-4 gap-3 shrink-0">
-            <h3 class="text-lg font-semibold text-slate-100">
-                @(OrdemDeServico.IDOS > 0 ? "Editar Ordem de Serviço" : "Nova Ordem de Serviço")
-            </h3>
-            <div class="flex items-center gap-2">
-                <select @bind="OrdemDeServico.Status" @bind:after="OnStatusAlterado" class="@GetStatusBadgeClass() text-xs font-semibold rounded-full pl-3 pr-2 py-1.5 border-0 focus:outline-none focus:ring-2 focus:ring-cyan-500">
-                    <option value="Em Aberto">Em Aberto</option>
-                    <option value="Em Andamento">Em Andamento</option>
-                    <option value="Finalizada" disabled="@(!PodeFinalizar)">Finalizada</option>
-                    <option value="Ocorrência">Ocorrência</option>
-                    <option value="Reagendada">Reagendada</option>
-                    <option value="Cancelada">Cancelada</option>
-                </select>
-                <button @onclick="Close" class="text-slate-400 hover:text-slate-200">
-                    <i class="fas fa-times"></i>
+        <div class="flex items-center justify-between px-4 py-3 gap-3 shrink-0 sm:px-6 sm:py-4">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" @onclick="Close" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="min-w-0">
+                    <h3 class="text-xl font-semibold text-slate-100 truncate">
+                        Editar OS
+                    </h3>
+                    <div class="text-[10px] text-slate-400 leading-none mt-0.5">
+                        Informações da Ordem de Serviço
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <span class="inline-flex items-center justify-center w-4 h-4 rounded-full @GetStatusDotClass()" title="@OrdemDeServico.Status"></span>
+                <button type="button" @onclick="ToggleSecaoOcorrencia" class="w-10 h-10 flex items-center justify-center rounded-xl bg-purple-600 hover:bg-purple-500 text-white transition-colors" title="Ocorrência">
+                    <i class="fas fa-triangle-exclamation"></i>
+                </button>
+                <button type="button" @onclick="() => cancelarModalVisible = true" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-600 hover:bg-red-500 text-white transition-colors @(PodeCancelar ? "" : "hidden")" title="Cancelar">
+                    <i class="fas fa-ban"></i>
                 </button>
             </div>
         </div>
 
-        <EditForm Model="OrdemDeServico" OnValidSubmit="HandleSubmit" OnInvalidSubmit="HandleInvalidSubmit" class="flex flex-col flex-1 min-h-0">
+        <div class="border-t border-slate-700"></div>
+
+        <div class="px-4 pb-3 pt-3 sm:px-6 sm:pt-4">
+            <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2 min-w-0">
+                    <div class="flex items-center space-x-2 text-slate-300 hover:text-slate-100 transition-colors">
+                        @EtapaAtual
+                    </div>
+                    <div class="text-sm font-semibold text-slate-100 truncate">
+                        @NomeEtapaAtual
+                    </div>
+                    <div class="text-xs text-slate-400">@EtapaAtual de 7</div>
+                </div>
+                <div class="text-sm font-medium text-slate-300 shrink-0">
+                    @(EtapaAtual * 100 / 7)%
+                </div>
+            </div>
+            <div class="mt-2 h-2.5 rounded-full bg-slate-700 overflow-hidden">
+                <div class="h-full rounded-full" style="width:@(((EtapaAtual * 100.0 / 7.0)).ToString("0.##", CultureInfo.InvariantCulture))%; background-color:#06b6d4;"></div>
+            </div>
+            
+        </div>
+
+        <EditForm Model="OrdemDeServico" OnValidSubmit="HandleSubmit" OnInvalidSubmit="HandleInvalidSubmit" class="flex flex-col flex-1 min-h-0 pt-2">
             <DataAnnotationsValidator />
 
             <div class="flex-1 overflow-y-auto px-6 space-y-3 scroll-tema">
                 <ValidationMessage For="@(() => OrdemDeServico.Status)" />
 
                 <div class="border border-slate-700 rounded-lg overflow-hidden">
-                    <button type="button" @onclick="() => secaoDadosAberta = !secaoDadosAberta" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
+                    <button type="button" @onclick="() => DefinirEtapaAtual(1)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
                         <span class="text-sm font-semibold text-slate-200"><i class="fas fa-clipboard-list mr-2 text-cyan-400"></i>Dados Gerais</span>
                         <i class="fas @(secaoDadosAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
                     </button>
@@ -116,7 +147,7 @@
                 </div>
 
                 <div class="border border-slate-700 rounded-lg overflow-hidden">
-                    <button type="button" @onclick="() => secaoRotaAberta = !secaoRotaAberta" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
+                    <button type="button" @onclick="() => DefinirEtapaAtual(2)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
                         <span class="text-sm font-semibold text-slate-200"><i class="fas fa-route mr-2 text-cyan-400"></i>Rota</span>
                         <i class="fas @(secaoRotaAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
                     </button>
@@ -136,7 +167,7 @@
                 </div>
 
                 <div class="border border-slate-700 rounded-lg overflow-hidden">
-                    <button type="button" @onclick="() => secaoAguaAberta = !secaoAguaAberta" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
+                    <button type="button" @onclick="() => DefinirEtapaAtual(3)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
                         <span class="text-sm font-semibold text-slate-200"><i class="fas fa-tint mr-2 text-cyan-400"></i>Parâmetros da Água - Antes</span>
                         <i class="fas @(secaoAguaAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
                     </button>
@@ -154,7 +185,7 @@
                 </div>
 
                 <div class="border border-slate-700 rounded-lg overflow-hidden">
-                    <button type="button" @onclick="() => secaoDosagemAberta = !secaoDosagemAberta" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
+                    <button type="button" @onclick="() => DefinirEtapaAtual(4)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
                         <span class="text-sm font-semibold text-slate-200"><i class="fas fa-flask mr-2 text-cyan-400"></i>Dosagem de Produtos</span>
                         <i class="fas @(secaoDosagemAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
                     </button>
@@ -175,7 +206,7 @@
                 </div>
 
                 <div class="border border-slate-700 rounded-lg overflow-hidden">
-                    <button type="button" @onclick="() => secaoAguaAberta = !secaoAguaAberta" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
+                    <button type="button" @onclick="() => DefinirEtapaAtual(5)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
                         <span class="text-sm font-semibold text-slate-200"><i class="fas fa-tint mr-2 text-cyan-400"></i>Parâmetros da Água - Depois</span>
                         <i class="fas @(secaoAguaAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
                     </button>
@@ -193,7 +224,7 @@
                 </div>
 
                 <div class="border border-slate-700 rounded-lg overflow-hidden">
-                    <button type="button" @onclick="() => secaoFotosAberta = !secaoFotosAberta" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
+                    <button type="button" @onclick="() => DefinirEtapaAtual(6)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
                         <span class="text-sm font-semibold text-slate-200"><i class="fas fa-camera mr-2 text-cyan-400"></i>Fotos</span>
                         <i class="fas @(secaoFotosAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
                     </button>
@@ -209,7 +240,7 @@
                 </div>
 
                 <div class="border border-slate-700 rounded-lg overflow-hidden">
-                    <button type="button" @onclick="() => secaoChecklistAberta = !secaoChecklistAberta" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
+                    <button type="button" @onclick="() => DefinirEtapaAtual(7)" class="w-full flex justify-between items-center px-4 py-3 bg-slate-700/60 hover:bg-slate-700 text-left transition-colors">
                         <span class="text-sm font-semibold text-slate-200"><i class="fas fa-clipboard-check mr-2 text-cyan-400"></i>Checklist</span>
                         <i class="fas @(secaoChecklistAberta ? "fa-chevron-up" : "fa-chevron-down") text-slate-400"></i>
                     </button>
@@ -289,29 +320,22 @@
             </div>
 
             <div class="flex flex-nowrap items-center gap-1.5 sm:gap-3 px-3 sm:px-6 py-3 sm:py-4 border-t border-slate-700 shrink-0">
-                <button type="submit" disabled="@EstaBloqueadaParaEdicao" class="flex-1 min-w-0 whitespace-nowrap overflow-hidden bg-slate-600 hover:bg-slate-500 disabled:opacity-40 disabled:cursor-not-allowed px-2 sm:px-4 py-2 rounded-lg text-white transition-colors" title="@(EstaBloqueadaParaEdicao ? "OS finalizada, cancelada ou com ocorrência não pode mais ser salva por aqui" : "Salvar")">
-                    <i class="fas fa-save mr-1 sm:mr-2"></i>Salvar
+                <button type="button" @onclick="AnteriorEtapa" disabled="@(EtapaAtual <= 1)" class="flex-1 min-w-0 whitespace-nowrap overflow-hidden bg-slate-600 hover:bg-slate-500 disabled:opacity-40 disabled:cursor-not-allowed px-2 sm:px-4 py-2 sm:py-3 rounded-lg text-white transition-colors">
+                    Anterior
                 </button>
-                @* Aprovar e Imprimir ficam sempre montados, só escondidos via CSS (não @if): o
-                   próprio clique em AprovarOcorrenciaAsync muda PodeAprovarOcorrencia (e
-                   PodeVerRelatorio) pra outro valor, e mexer no DOM ao redor do Finalizar/Salvar
-                   (type="submit") no meio de um clique já causou o bug do Finalizar não salvar
-                   (ver commit 987b927) — manter tudo sempre montado evita repetir isso. *@
-                <button type="button" @onclick="AprovarOcorrenciaAsync" disabled="@aprovandoOcorrencia" class="flex-1 min-w-0 whitespace-nowrap overflow-hidden bg-purple-600 hover:bg-purple-500 disabled:opacity-50 px-2 sm:px-4 py-2 rounded-lg text-white transition-colors @(PodeAprovarOcorrencia ? "" : "hidden")">
-                    <i class="fas @(aprovandoOcorrencia ? "fa-spinner fa-spin" : "fa-check") mr-1 sm:mr-2"></i>@(aprovandoOcorrencia ? "Aprovando..." : "Aprovar")
-                </button>
-                <button type="submit" @onclick="PrepararFinalizar" disabled="@(!PodeFinalizar)" class="flex-1 min-w-0 whitespace-nowrap overflow-hidden bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed px-2 sm:px-4 py-2 rounded-lg text-white transition-colors" title="@(PodeFinalizar ? "Finalizar" : "Conclua o checklist, os parâmetros da água e as fotos de antes/depois para finalizar")">
-                    <i class="fas fa-check-circle mr-1 sm:mr-2"></i>Finalizar
-                </button>
-                <button type="button" @onclick="() => cancelarModalVisible = true" class="flex-1 min-w-0 whitespace-nowrap overflow-hidden bg-red-600 hover:bg-red-500 px-2 sm:px-4 py-2 rounded-lg text-white transition-colors @(PodeCancelar ? "" : "hidden")">
-                    <i class="fas fa-ban mr-1 sm:mr-2"></i>Cancelar
-                </button>
-                <button type="button" @onclick="AbrirRelatorio" class="shrink-0 w-11 h-11 flex items-center justify-center bg-teal-600 hover:bg-teal-500 rounded-lg text-white text-lg transition-colors @(PodeVerRelatorio ? "" : "hidden")" title="Relatório">
-                    <i class="fas fa-print"></i>
-                </button>
-                <button type="button" @onclick="Close" class="shrink-0 w-11 h-11 flex items-center justify-center bg-slate-600 hover:bg-slate-500 rounded-lg text-white text-lg transition-colors" title="Fechar">
-                    <i class="fas fa-door-open"></i>
-                </button>
+
+                @if (EtapaAtual < 7)
+                {
+                    <button type="button" @onclick="AvancarEtapaAsync" class="flex-1 min-w-0 whitespace-nowrap overflow-hidden bg-blue-600 hover:bg-blue-500 px-2 sm:px-4 py-2 sm:py-3 rounded-lg text-white transition-colors">
+                        Avançar
+                    </button>
+                }
+                else
+                {
+                    <button type="submit" @onclick="PrepararFinalizar" disabled="@(!PodeFinalizar)" class="flex-1 min-w-0 whitespace-nowrap overflow-hidden bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed px-2 sm:px-4 py-2 sm:py-3 rounded-lg text-white transition-colors" title="@(PodeFinalizar ? "Finalizar" : "Conclua o checklist, os parâmetros da água e as fotos de antes/depois para finalizar")">
+                        Finalizar
+                    </button>
+                }
             </div>
             @if (!string.IsNullOrEmpty(erroAprovacaoOcorrencia))
             {
@@ -603,6 +627,108 @@
         _ => "bg-slate-600 text-white"
     };
 
+    private string GetStatusDotClass() => OrdemDeServico.Status switch
+    {
+        "Em Aberto" => "bg-yellow-500 shadow-[0_0_0_2px_rgba(250,204,21,0.25)]",
+        "Em Andamento" => "bg-blue-500 shadow-[0_0_0_2px_rgba(59,130,246,0.25)]",
+        "Finalizada" => "bg-green-500 shadow-[0_0_0_2px_rgba(34,197,94,0.25)]",
+        "Ocorrência" => "bg-purple-500 shadow-[0_0_0_2px_rgba(168,85,247,0.25)]",
+        "Reagendada" => "bg-orange-500 shadow-[0_0_0_2px_rgba(249,115,22,0.25)]",
+        "Cancelada" => "bg-red-500 shadow-[0_0_0_2px_rgba(239,68,68,0.25)]",
+        _ => "bg-slate-500 shadow-[0_0_0_2px_rgba(148,163,184,0.25)]"
+    };
+
+    private int etapaAtualIndex = 1;
+
+    private int EtapaAtual => etapaAtualIndex;
+
+    private string NomeEtapaAtual => EtapaAtual switch
+    {
+        1 => "Dados Gerais",
+        2 => "Rota",
+        3 => "Parâmetros antes",
+        4 => "Dosagem",
+        5 => "Parâmetros depois",
+        6 => "Fotos",
+        _ => "Checklist"
+    };
+
+    private void DefinirEtapaAtual(int etapa)
+    {
+        if (etapa < 1 || etapa > 7)
+        {
+            return;
+        }
+
+        etapaAtualIndex = etapa;
+        AtualizarSecoesPorEtapa();
+    }
+
+    private void AtualizarSecoesPorEtapa()
+    {
+        secaoDadosAberta = etapaAtualIndex == 1;
+        secaoRotaAberta = etapaAtualIndex == 2;
+        secaoAguaAberta = etapaAtualIndex == 3 || etapaAtualIndex == 5;
+        secaoDosagemAberta = etapaAtualIndex == 4;
+        secaoFotosAberta = etapaAtualIndex == 6;
+        secaoChecklistAberta = etapaAtualIndex == 7;
+
+        if (etapaAtualIndex != 7 && OrdemDeServico.Status == "Ocorrência")
+        {
+            secaoOcorrenciaAberta = false;
+        }
+    }
+
+    private void AnteriorEtapa()
+    {
+        if (etapaAtualIndex > 1)
+        {
+            DefinirEtapaAtual(etapaAtualIndex - 1);
+        }
+    }
+
+    private async Task AvancarEtapaAsync()
+    {
+        if (etapaAtualIndex >= 7)
+        {
+            return;
+        }
+
+        var salvo = await SalvarEtapaAtualAsync();
+        if (!salvo)
+        {
+            return;
+        }
+
+        DefinirEtapaAtual(etapaAtualIndex + 1);
+    }
+
+    private async Task<bool> SalvarEtapaAtualAsync()
+    {
+        if (OnSave == null)
+        {
+            return true;
+        }
+
+        var sucesso = await OnSave.Invoke(OrdemDeServico);
+        if (!sucesso)
+        {
+            return false;
+        }
+
+        if (dosagemFormRef != null)
+        {
+            var dosagemOk = await dosagemFormRef.SalvarPendentesAsync(OrdemDeServico.IDOS);
+            if (!dosagemOk)
+            {
+                secaoDosagemAberta = true;
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     // O modal é um componente filho fixo (só fica escondido via CSS), então OnInitialized
     // roda uma única vez pra sempre. Cada "Nova OS"/"Editar" troca a instância de
     // OrdemDeServico — é essa troca de referência que dispara a preparação abaixo,
@@ -621,6 +747,7 @@
         // Toda OS aberta começa só com "Dados Gerais" expandida.
         mensagemErroValidacao = null;
         toastValidacaoVisible = false;
+        etapaAtualIndex = 1;
         secaoDadosAberta = true;
         secaoAguaAberta = false;
         secaoDosagemAberta = false;
@@ -628,6 +755,7 @@
         secaoChecklistAberta = false;
         secaoOcorrenciaAberta = OrdemDeServico.Status == "Ocorrência";
         dosagensAtuais = new List<DosagemProduto>();
+        AtualizarSecoesPorEtapa();
 
         statusOriginal = OrdemDeServico.IDOS > 0 ? OrdemDeServico.Status : null;
         erroAprovacaoOcorrencia = null;

@@ -11,6 +11,8 @@
             </button>
         </div>
 
+        <div class="border-t border-slate-700"></div>
+
         <EditForm Model="Piscina" OnValidSubmit="HandleSubmit" class="flex flex-col flex-1 min-h-0">
             <DataAnnotationsValidator />
 
@@ -30,10 +32,6 @@
                                 }
                             }
                         </InputSelect>
-                        @if (Piscina.IDPiscina > 0)
-                        {
-                            <p class="text-xs text-slate-400">O cliente não pode ser alterado após o cadastro.</p>
-                        }
                     </div>
                 }
 
@@ -59,22 +57,30 @@
                     <ValidationMessage For="@(() => Piscina.VolumeLitros)" class="text-red-500 text-sm" />
                 </div>
 
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Coberta *</label>
-                    <InputSelect @bind-Value="Piscina.Coberta" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
-                        <option value="">Selecione...</option>
-                        <option value="Sim">Sim</option>
-                        <option value="Não">Não</option>
-                        <option value="Parcial">Parcial</option>
-                    </InputSelect>
-                    <ValidationMessage For="@(() => Piscina.Coberta)" class="text-red-500 text-sm" />
-                </div>
+                <div class="md:col-span-2 grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Coberta *</label>
+                        <div class="flex w-full items-stretch bg-slate-700 border border-slate-600 rounded-lg overflow-hidden">
+                            @foreach (var opcao in new[] { "Sim", "Não", "Parcial" })
+                            {
+                                var selecionada = Piscina.Coberta == opcao;
+                                <button type="button"
+                                        @onclick="() => Piscina.Coberta = opcao"
+                                        class="flex-1 min-w-0 px-3 py-2 text-sm font-medium transition-colors @(selecionada ? "bg-cyan-600 text-white" : "bg-slate-700 hover:bg-slate-600 text-slate-200") @(opcao != "Parcial" ? "border-r border-slate-600" : "")">
+                                    @opcao
+                                </button>
+                            }
+                        </div>
+                        <ValidationMessage For="@(() => Piscina.Coberta)" class="text-red-500 text-sm" />
+                    </div>
 
-                <div class="space-y-2 flex items-center">
-                    <label class="flex items-center space-x-2 text-sm font-medium text-slate-300 mt-6">
-                        <InputCheckbox @bind-Value="Piscina.Aquecida" class="rounded" />
-                        <span>Aquecida</span>
-                    </label>
+                    <div class="space-y-2 flex flex-col justify-end">
+                        <label class="block text-sm font-medium text-slate-300 mb-2"></label>
+                        <label class="inline-flex items-center h-10 cursor-pointer">
+                            <InputCheckbox @bind-Value="Piscina.Aquecida" class="h-4 w-4 rounded border-slate-500 bg-slate-700 text-cyan-600 focus:ring-cyan-500" />
+                            <span class="ml-3 text-sm font-medium text-slate-300">Aquecida</span>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="md:col-span-2 space-y-2">
