@@ -114,6 +114,7 @@
                         {
                             var valor = parametro.Valor(os);
                             var dentroDoPadrao = valor >= parametro.IdealMin && valor <= parametro.IdealMax;
+                            var valorDepois = parametro.ValorDepois(os);
                             <div class="gauge-card">
                                 <div class="gauge-card-head">
                                     <div class="ic"><i class="fas @parametro.Icone"></i></div>
@@ -122,7 +123,7 @@
                                 <div class="ideal">Ideal: @FormatarValor(parametro, parametro.IdealMin) – @FormatarValor(parametro, parametro.IdealMax)@parametro.Unidade</div>
                                 <div class="gauge-row">
                                     <div class="gauge-row-top">
-                                        <span class="pool">@NomePiscina(os.Piscina)</span>
+                                        <span class="pool">Antes</span>
                                         <span class="val-status">
                                             <span class="val">@FormatarValor(parametro, valor)@parametro.Unidade</span>
                                             <span class="status-dot @(dentroDoPadrao ? "status-ok" : "status-warn")">@(dentroDoPadrao ? "No padrão" : "Fora do ideal")</span>
@@ -133,6 +134,23 @@
                                         <div class="dot @(dentroDoPadrao ? "" : "warn")" style="left:@(Inv(PosicaoNaFaixa(parametro, valor)))%;"></div>
                                     </div>
                                 </div>
+                                @if (valorDepois.HasValue)
+                                {
+                                    var dentroDoPadraoDepois = valorDepois.Value >= parametro.IdealMin && valorDepois.Value <= parametro.IdealMax;
+                                    <div class="gauge-row">
+                                        <div class="gauge-row-top">
+                                            <span class="pool">Depois</span>
+                                            <span class="val-status">
+                                                <span class="val">@FormatarValor(parametro, valorDepois.Value)@parametro.Unidade</span>
+                                                <span class="status-dot @(dentroDoPadraoDepois ? "status-ok" : "status-warn")">@(dentroDoPadraoDepois ? "No padrão" : "Fora do ideal")</span>
+                                            </span>
+                                        </div>
+                                        <div class="track">
+                                            <div class="band" style="left:@(Inv(BandaEsquerda(parametro)))%; width:@(Inv(BandaLargura(parametro)))%;"></div>
+                                            <div class="dot @(dentroDoPadraoDepois ? "" : "warn")" style="left:@(Inv(PosicaoNaFaixa(parametro, valorDepois.Value)))%;"></div>
+                                        </div>
+                                    </div>
+                                }
                             </div>
                         }
                     </div>
@@ -246,6 +264,57 @@
                     </section>
                 }
 
+                <section>
+                    <div class="section-head">
+                        <h3>Registro dos parâmetros</h3>
+                        <p>Valores medidos antes e depois da dosagem de produtos, para conferência.</p>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Momento</th>
+                                    @foreach (var parametro in parametros)
+                                    {
+                                        <th>@parametro.Nome</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Antes</td>
+                                    @foreach (var parametro in parametros)
+                                    {
+                                        var valor = parametro.Valor(os);
+                                        var dentroDoPadrao = valor >= parametro.IdealMin && valor <= parametro.IdealMax;
+                                        <td class="@(dentroDoPadrao ? "" : "flag")">@FormatarValor(parametro, valor)@parametro.Unidade</td>
+                                    }
+                                </tr>
+                                @if (parametros.Any(p => p.ValorDepois(os).HasValue))
+                                {
+                                    <tr>
+                                        <td>Depois</td>
+                                        @foreach (var parametro in parametros)
+                                        {
+                                            var valorDepois = parametro.ValorDepois(os);
+                                            if (valorDepois.HasValue)
+                                            {
+                                                var dentroDoPadraoDepois = valorDepois.Value >= parametro.IdealMin && valorDepois.Value <= parametro.IdealMax;
+                                                <td class="@(dentroDoPadraoDepois ? "" : "flag")">@FormatarValor(parametro, valorDepois.Value)@parametro.Unidade</td>
+                                            }
+                                            else
+                                            {
+                                                <td>-</td>
+                                            }
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="table-note">Valores em vermelho ficaram fora da faixa recomendada.</p>
+                </section>
+
                 <footer>
                     <div>
                         <h4>Química Responsável</h4>
@@ -271,14 +340,14 @@
     private const string QuimicaResponsavel = "Talina da Silva Ferreira dos Santos";
     private const string CrqResponsavel = "CRQ/CE nº 101000447";
 
-    private record Parametro(string Nome, string Unidade, string Icone, decimal IdealMin, decimal IdealMax, decimal DispMin, decimal DispMax, string Formato, Func<OrdemDeServico, decimal> Valor);
+    private record Parametro(string Nome, string Unidade, string Icone, decimal IdealMin, decimal IdealMax, decimal DispMin, decimal DispMax, string Formato, Func<OrdemDeServico, decimal> Valor, Func<OrdemDeServico, decimal?> ValorDepois);
 
     private readonly List<Parametro> parametros = new()
     {
-        new("pH", "", "fa-tint", 7.2m, 7.8m, 6.8m, 8.0m, "0.0", o => o.pH),
-        new("Cloro Livre", "ppm", "fa-flask", 0.8m, 3m, 0m, 4m, "0.0", o => o.CloroLivre),
-        new("Alcalinidade", "ppm", "fa-water", 80m, 120m, 60m, 140m, "0", o => o.Alcalinidade),
-        new("Dureza Cálcica", "ppm", "fa-gem", 200m, 400m, 150m, 420m, "0", o => o.DurezaCalcica),
+        new("pH", "", "fa-tint", 7.2m, 7.8m, 6.8m, 8.0m, "0.0", o => o.pH, o => o.pHDepois),
+        new("Cloro Livre", "ppm", "fa-flask", 0.8m, 3m, 0m, 4m, "0.0", o => o.CloroLivre, o => o.CloroLivreDepois),
+        new("Alcalinidade", "ppm", "fa-water", 80m, 120m, 60m, 140m, "0", o => o.Alcalinidade, o => o.AlcalinidadeDepois),
+        new("Dureza Cálcica", "ppm", "fa-gem", 200m, 400m, 150m, 420m, "0", o => o.DurezaCalcica, o => o.DurezaCalcicaDepois),
     };
 
     private OrdemDeServico? os;

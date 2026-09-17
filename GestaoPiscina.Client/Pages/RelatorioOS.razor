@@ -325,12 +325,14 @@
 
     private record Parametro(string Nome, string Unidade, string Icone, decimal IdealMin, decimal IdealMax, decimal DispMin, decimal DispMax, string Formato, Func<OrdemDeServico, decimal> Valor);
 
+    // Prioriza a leitura "Depois" (feita após a dosagem, reflete o estado final da água);
+    // cai para a leitura "Antes" nas OS que ainda não tiverem a segunda medição registrada.
     private readonly List<Parametro> parametros = new()
     {
-        new("pH", "", "fa-tint", 7.2m, 7.8m, 6.8m, 8.0m, "0.0", o => o.pH),
-        new("Cloro Livre", "ppm", "fa-flask", 0.8m, 3m, 0m, 4m, "0.0", o => o.CloroLivre),
-        new("Alcalinidade", "ppm", "fa-water", 80m, 120m, 60m, 140m, "0", o => o.Alcalinidade),
-        new("Dureza Cálcica", "ppm", "fa-gem", 200m, 400m, 150m, 420m, "0", o => o.DurezaCalcica),
+        new("pH", "", "fa-tint", 7.2m, 7.8m, 6.8m, 8.0m, "0.0", o => o.pHDepois ?? o.pH),
+        new("Cloro Livre", "ppm", "fa-flask", 0.8m, 3m, 0m, 4m, "0.0", o => o.CloroLivreDepois ?? o.CloroLivre),
+        new("Alcalinidade", "ppm", "fa-water", 80m, 120m, 60m, 140m, "0", o => o.AlcalinidadeDepois ?? o.Alcalinidade),
+        new("Dureza Cálcica", "ppm", "fa-gem", 200m, 400m, 150m, 420m, "0", o => o.DurezaCalcicaDepois ?? o.DurezaCalcica),
     };
 
     private List<Cliente>? clientes;

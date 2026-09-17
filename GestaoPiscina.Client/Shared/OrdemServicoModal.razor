@@ -102,7 +102,7 @@
 
                                 <div>
                                     <label class="block text-sm font-medium text-slate-300 mb-2">Técnico Responsável</label>
-                                    <InputSelect @bind-Value="OrdemDeServico.IDUsuario" class="@ObterClasseCampo(nameof(OrdemDeServico.IDUsuario))">
+                                    <InputSelect @bind-Value="OrdemDeServico.IDUsuario" @bind-Value:after="AtualizarChecklistConcluido" class="@ObterClasseCampo(nameof(OrdemDeServico.IDUsuario))">
                                         <option value="">Selecione...</option>
                                         @if (Tecnicos != null)
                                         {
@@ -117,7 +117,7 @@
 
                                 <div>
                                     <label class="block text-sm font-medium text-slate-300 mb-2">Horário de Início *</label>
-                                    <InputDate Type="InputDateType.Time" @bind-Value="HoraInicioTime" class="@ObterClasseCampo(nameof(OrdemDeServico.HoraInicio))" />
+                                    <InputDate Type="InputDateType.Time" @bind-Value="HoraInicioTime" @bind-Value:after="AtualizarChecklistConcluido" class="@ObterClasseCampo(nameof(OrdemDeServico.HoraInicio))" />
                                     <ValidationMessage For="@(() => OrdemDeServico.HoraInicio)" class="text-red-500 text-sm" />
                                 </div>
 
@@ -262,9 +262,23 @@
                             }
 
                             <div class="flex items-start pt-2 border-t border-slate-700">
+                                <i class="fas @(TecnicoPreenchido ? "fa-check-circle text-green-400" : "fa-circle-notch text-slate-500") mr-2 mt-1 shrink-0"></i>
+                                <span class="text-sm text-slate-300">
+                                    @(TecnicoPreenchido ? "Técnico responsável informado." : "Técnico responsável ainda não informado — preencha em \"Dados Gerais\".")
+                                </span>
+                            </div>
+
+                            <div class="flex items-start">
+                                <i class="fas @(HoraInicioPreenchida ? "fa-check-circle text-green-400" : "fa-circle-notch text-slate-500") mr-2 mt-1 shrink-0"></i>
+                                <span class="text-sm text-slate-300">
+                                    @(HoraInicioPreenchida ? "Horário de início informado." : "Horário de início ainda não informado — preencha em \"Dados Gerais\".")
+                                </span>
+                            </div>
+
+                            <div class="flex items-start">
                                 <i class="fas @(ParametrosAguaPreenchidos ? "fa-check-circle text-green-400" : "fa-circle-notch text-slate-500") mr-2 mt-1 shrink-0"></i>
                                 <span class="text-sm text-slate-300">
-                                    @(ParametrosAguaPreenchidos ? "Parâmetros da água (antes e depois) informados." : "Parâmetros da água ainda não informados — preencha as seções \"Antes\" e \"Depois\".")
+                                    @(ParametrosAguaPreenchidos ? "Parâmetros da água (antes e depois) informados." : "Parâmetros da água ainda não informados — preencha as seções \"Antes\" e \"Depois\" (Dureza Cálcica é opcional).")
                                 </span>
                             </div>
 
@@ -332,7 +346,7 @@
                 }
                 else
                 {
-                    <button type="submit" @onclick="PrepararFinalizar" disabled="@(!PodeFinalizar)" class="flex-1 min-w-0 whitespace-nowrap overflow-hidden bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed px-2 sm:px-4 py-2 sm:py-3 rounded-lg text-white transition-colors" title="@(PodeFinalizar ? "Finalizar" : "Conclua o checklist, os parâmetros da água e as fotos de antes/depois para finalizar")">
+                    <button type="submit" @onclick="PrepararFinalizar" disabled="@(!PodeFinalizar)" class="flex-1 min-w-0 whitespace-nowrap overflow-hidden bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed px-2 sm:px-4 py-2 sm:py-3 rounded-lg text-white transition-colors" title="@(PodeFinalizar ? "Finalizar" : "Preencha técnico, horário de início, parâmetros da água (antes e depois) e fotos, e dose ao menos um produto para finalizar")">
                         Finalizar
                     </button>
                 }
@@ -471,9 +485,9 @@
     // Só é possível preencher o horário de término ao finalizar a OS ou registrar uma ocorrência.
     private bool PermiteEditarHoraTermino => OrdemDeServico.Status is "Finalizada" or "Ocorrência";
 
-    // Checklist concluído = todos os itens fixos marcados + pelo menos um produto dosado.
-    // Recalculado (e persistido em ChecklistConcluido) a cada mudança relevante, pra manter os
-    // outros lugares do sistema que já leem esse bool (dashboard, listagem, relatórios) corretos.
+    // ChecklistConcluido reflete só se os itens de checklist aplicáveis estão marcados —
+    // usado como indicador informativo em outros lugares do sistema (dashboard, listagem,
+    // relatórios). Não bloqueia mais o Finalizar (ver PodeFinalizar).
     private HashSet<string> ChecklistMarcados => ChecklistOS.ItensMarcados(OrdemDeServico.ChecklistItens);
 
     private bool ItemChecklistMarcado(string chave) => ChecklistMarcados.Contains(chave);
@@ -501,9 +515,8 @@
         StateHasChanged();
     }
 
-    // "Parâmetros da Água" e "Fotos" contam para o checklist com a mesma lógica já usada
-    // para "produtos dosados": um item dinâmico cujo estado (marcado ou não) é derivado
-    // direto dos dados da OS, em vez de uma caixa de marcação manual.
+    // Dureza Cálcica não é exigida (medida com menor frequência) — os demais parâmetros,
+    // sim, tanto no "Antes" quanto no "Depois".
     private bool ParametrosAguaPreenchidos =>
         OrdemDeServico.pH > 0 && OrdemDeServico.Alcalinidade > 0 && OrdemDeServico.CloroLivre > 0
         && OrdemDeServico.pHDepois > 0 && OrdemDeServico.AlcalinidadeDepois > 0 && OrdemDeServico.CloroLivreDepois > 0;
@@ -511,13 +524,13 @@
     private bool FotosCompletas =>
         !string.IsNullOrWhiteSpace(OrdemDeServico.FotosAntes) && !string.IsNullOrWhiteSpace(OrdemDeServico.FotosDepois);
 
+    private bool TecnicoPreenchido => OrdemDeServico.IDUsuario is > 0;
+
+    private bool HoraInicioPreenchida => OrdemDeServico.HoraInicio != default;
+
     private void AtualizarChecklistConcluido()
     {
-        OrdemDeServico.ChecklistConcluido =
-            ChecklistItensAplicaveis.All(item => ItemChecklistMarcado(item.Chave))
-            && dosagensAtuais.Any()
-            && ParametrosAguaPreenchidos
-            && FotosCompletas;
+        OrdemDeServico.ChecklistConcluido = ChecklistItensAplicaveis.All(item => ItemChecklistMarcado(item.Chave));
     }
 
     private string NomePiscinaAtual()
@@ -576,9 +589,15 @@
         Navigation.NavigateTo($"/relatorios/os/{OrdemDeServico.IDOS}");
     }
 
-    // ChecklistConcluido já engloba parâmetros da água e fotos (ver AtualizarChecklistConcluido),
-    // então não precisa repetir essas condições aqui.
-    private bool PodeFinalizar => OrdemDeServico.ChecklistConcluido;
+    // Requisitos para finalizar a OS: técnico, horário de início, parâmetros da água (antes
+    // e depois, exceto Dureza Cálcica), pelo menos um produto dosado e fotos de antes/depois.
+    // O checklist de itens fixos é só informativo — não bloqueia mais a finalização.
+    private bool PodeFinalizar =>
+        TecnicoPreenchido
+        && HoraInicioPreenchida
+        && ParametrosAguaPreenchidos
+        && dosagensAtuais.Any()
+        && FotosCompletas;
 
     private int? currentUserId;
     private bool aprovandoOcorrencia;

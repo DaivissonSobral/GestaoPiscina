@@ -446,11 +446,6 @@ namespace GestaoPiscina.Server.Controllers
         // Não substitui um motor de regras completo.
         private async Task<string?> ValidarRegrasDeNegocioAsync(OrdemDeServico ordemDeServico)
         {
-            if (ordemDeServico.Status == "Finalizada" && !ordemDeServico.ChecklistConcluido)
-            {
-                return "A OS só pode ser finalizada com o checklist obrigatório concluído.";
-            }
-
             if (ordemDeServico.Status == "Ocorrência" && ordemDeServico.Aprovador == null)
             {
                 return "É necessário informar o aprovador responsável para finalizar uma OS com ocorrência.";
@@ -483,6 +478,56 @@ namespace GestaoPiscina.Server.Controllers
                 && !await _context.Usuarios.AnyAsync(u => u.IDUsuario == ordemDeServico.Aprovador.Value))
             {
                 return "Selecione um aprovador válido.";
+            }
+
+            // Checado por último: valida a completude do preenchimento (técnico, horário,
+            // parâmetros, fotos, dosagem) só depois de garantir que os dados básicos da OS
+            // são estruturalmente válidos.
+            if (ordemDeServico.Status == "Finalizada")
+            {
+                var erroRequisitos = await ValidarRequisitosParaFinalizarAsync(ordemDeServico);
+                if (erroRequisitos != null)
+                {
+                    return erroRequisitos;
+                }
+            }
+
+            return null;
+        }
+
+        // Requisitos para finalizar a OS: técnico, horário de início, parâmetros da água
+        // (antes e depois, exceto Dureza Cálcica, medida com menor frequência), pelo menos
+        // um produto dosado e fotos de antes/depois. O checklist de itens fixos é só
+        // informativo e não entra aqui (mesma regra aplicada no cliente, ver PodeFinalizar
+        // em OrdemServicoModal.razor).
+        private async Task<string?> ValidarRequisitosParaFinalizarAsync(OrdemDeServico ordemDeServico)
+        {
+            if (ordemDeServico.IDUsuario is null or <= 0)
+            {
+                return "Selecione o técnico responsável para finalizar a OS.";
+            }
+
+            if (ordemDeServico.HoraInicio == default)
+            {
+                return "Informe o horário de início para finalizar a OS.";
+            }
+
+            if (ordemDeServico.pH <= 0 || ordemDeServico.Alcalinidade <= 0 || ordemDeServico.CloroLivre <= 0
+                || ordemDeServico.pHDepois is null or <= 0
+                || ordemDeServico.AlcalinidadeDepois is null or <= 0
+                || ordemDeServico.CloroLivreDepois is null or <= 0)
+            {
+                return "Informe os parâmetros da água (antes e depois) para finalizar a OS.";
+            }
+
+            if (string.IsNullOrWhiteSpace(ordemDeServico.FotosAntes) || string.IsNullOrWhiteSpace(ordemDeServico.FotosDepois))
+            {
+                return "Anexe as fotos de antes e depois para finalizar a OS.";
+            }
+
+            if (!await _context.DosagensProdutos.AnyAsync(d => d.IDOS == ordemDeServico.IDOS))
+            {
+                return "Registre a dosagem de ao menos um produto para finalizar a OS.";
             }
 
             return null;

@@ -39,14 +39,16 @@ namespace GestaoPiscina.Server.Tests.Controllers
         }
 
         [Fact]
-        public async Task PostOrdemDeServico_Finalizada_SemChecklistConcluido_RetornaBadRequest()
+        public async Task PostOrdemDeServico_Finalizada_SemDosagem_RetornaBadRequest()
         {
-            // RN01: "A OS só pode ser finalizada se todos os itens do checklist
-            // obrigatório forem concluídos e validados pelo técnico."
+            // RN01 (atual): finalizar exige técnico, horário de início, parâmetros da água
+            // (antes e depois, exceto Dureza Cálcica), fotos de antes/depois e ao menos um
+            // produto dosado. O checklist de itens fixos não bloqueia mais a finalização.
+            // Criar a OS via POST nunca tem dosagem ainda (ela só existe depois que a OS já
+            // tem um IDOS real), então finalizar direto na criação sempre falha por isso.
             var (piscina, tecnico) = await CriarPiscinaETecnicoAsync();
             var os = Fabrica.OrdemDeServicoValida(piscina, tecnico);
             os.Status = "Finalizada";
-            os.ChecklistConcluido = false;
 
             var resultado = await Controller.PostOrdemDeServico(os);
 
@@ -54,16 +56,46 @@ namespace GestaoPiscina.Server.Tests.Controllers
         }
 
         [Fact]
-        public async Task PostOrdemDeServico_Finalizada_ComChecklistConcluido_CriaComSucesso()
+        public async Task PutOrdemDeServico_Finalizada_ComTodosOsRequisitos_AtualizaComSucesso()
         {
             var (piscina, tecnico) = await CriarPiscinaETecnicoAsync();
+            var produto = Fabrica.Produto();
+            _db.Context.Add(produto);
             var os = Fabrica.OrdemDeServicoValida(piscina, tecnico);
+            os.Status = "Em Andamento";
+            _db.Context.Add(os);
+            await _db.Context.SaveChangesAsync();
+
+            _db.Context.Add(new DosagemProduto { IDOS = os.IDOS, IDProduto = produto.IDProduto, Quantidade = 1m });
+            await _db.Context.SaveChangesAsync();
+
             os.Status = "Finalizada";
-            os.ChecklistConcluido = true;
+            var resultado = await Controller.PutOrdemDeServico(os.IDOS, os);
 
-            var resultado = await Controller.PostOrdemDeServico(os);
+            Assert.IsType<NoContentResult>(resultado);
+        }
 
-            Assert.IsType<CreatedAtActionResult>(resultado.Result);
+        [Fact]
+        public async Task PutOrdemDeServico_Finalizada_SemChecklistConcluido_AtualizaComSucesso()
+        {
+            // O checklist de itens fixos não é mais requisito para finalizar — só os 5
+            // requisitos cobertos em PutOrdemDeServico_Finalizada_ComTodosOsRequisitos.
+            var (piscina, tecnico) = await CriarPiscinaETecnicoAsync();
+            var produto = Fabrica.Produto();
+            _db.Context.Add(produto);
+            var os = Fabrica.OrdemDeServicoValida(piscina, tecnico);
+            os.Status = "Em Andamento";
+            os.ChecklistConcluido = false;
+            _db.Context.Add(os);
+            await _db.Context.SaveChangesAsync();
+
+            _db.Context.Add(new DosagemProduto { IDOS = os.IDOS, IDProduto = produto.IDProduto, Quantidade = 1m });
+            await _db.Context.SaveChangesAsync();
+
+            os.Status = "Finalizada";
+            var resultado = await Controller.PutOrdemDeServico(os.IDOS, os);
+
+            Assert.IsType<NoContentResult>(resultado);
         }
 
         [Fact]

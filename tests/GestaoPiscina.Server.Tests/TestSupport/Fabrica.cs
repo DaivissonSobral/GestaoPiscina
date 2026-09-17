@@ -102,6 +102,12 @@ namespace GestaoPiscina.Server.Tests.TestSupport
                 Alcalinidade = 100m,
                 CloroLivre = 2m,
                 DurezaCalcica = 200m,
+                pHDepois = 7.4m,
+                AlcalinidadeDepois = 100m,
+                CloroLivreDepois = 2m,
+                DurezaCalcicaDepois = 200m,
+                FotosAntes = "http://exemplo.com/antes.jpg",
+                FotosDepois = "http://exemplo.com/depois.jpg",
                 HoraInicio = dataExecucao.AddHours(8),
                 HoraTermino = dataExecucao.AddHours(9)
             };
