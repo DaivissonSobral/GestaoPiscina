@@ -1,0 +1,96 @@
+@using System.Globalization
+
+<div class="bg-slate-700 border border-slate-600 rounded-xl p-4">
+    <div class="flex items-center justify-between gap-3 mb-3">
+        <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-9 h-9 rounded-lg bg-cyan-500/15 text-cyan-400 flex items-center justify-center shrink-0">
+                <i class="fas @Icone"></i>
+            </div>
+            <span class="text-base font-semibold text-slate-100 truncate">@Label</span>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+            <input type="number"
+                   inputmode="decimal"
+                   step="@Step.ToString(CultureInfo.InvariantCulture)"
+                   min="@Min.ToString(CultureInfo.InvariantCulture)"
+                   max="@Max.ToString(CultureInfo.InvariantCulture)"
+                   value="@Value.ToString(CultureInfo.InvariantCulture)"
+                   @onchange="OnAlterado"
+                   class="w-20 text-center text-base font-bold bg-slate-800 border border-slate-600 rounded-lg py-1.5 text-slate-100 focus:outline-none focus:border-cyan-500" />
+            <span class="text-xs font-semibold px-3 py-1 rounded-full border whitespace-nowrap @(DentroDoIdeal ? "bg-emerald-500/30 text-emerald-200 border-emerald-500/40" : "bg-amber-500/30 text-amber-200 border-amber-500/40")">
+                @(DentroDoIdeal ? "No padrão" : "Fora do ideal")
+            </span>
+        </div>
+    </div>
+
+    <div class="relative h-2 flex items-center mb-3">
+        <div class="absolute inset-0 rounded-full bg-slate-400"></div>
+        <div class="absolute h-2 rounded-full bg-cyan-500/60" style="left:@(Inv(PosicaoPercentual(IdealMin)))%; width:@(Inv(PosicaoPercentual(IdealMax) - PosicaoPercentual(IdealMin)))%;"></div>
+        <input type="range"
+               min="@Min.ToString(CultureInfo.InvariantCulture)"
+               max="@Max.ToString(CultureInfo.InvariantCulture)"
+               step="@Step.ToString(CultureInfo.InvariantCulture)"
+               value="@Value.ToString(CultureInfo.InvariantCulture)"
+               @oninput="OnAlterado"
+               style="--faixa-cor:@(DentroDoIdeal ? "#34d399" : "#fbbf24");"
+               class="faixa-slider relative w-full" />
+    </div>
+
+    <div class="flex items-center justify-between text-[11px] text-slate-400 mt-1.5">
+        <span>Faixa ideal</span>
+        <span class="font-medium @(DentroDoIdeal ? "text-emerald-400" : "text-amber-400")">
+            @IdealMin.ToString("0.##", CultureInfo.InvariantCulture) – @IdealMax.ToString("0.##", CultureInfo.InvariantCulture)@Unidade
+        </span>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public string Icone { get; set; } = "fa-tint";
+    [Parameter] public decimal Value { get; set; }
+    [Parameter] public EventCallback<decimal> ValueChanged { get; set; }
+    [Parameter] public decimal Step { get; set; } = 0.1m;
+    [Parameter] public decimal Min { get; set; } = 0m;
+    [Parameter] public decimal Max { get; set; } = 100m;
+    [Parameter] public decimal IdealMin { get; set; }
+    [Parameter] public decimal IdealMax { get; set; }
+    [Parameter] public string? Unidade { get; set; }
+
+    private bool DentroDoIdeal => Value >= IdealMin && Value <= IdealMax;
+
+    // A faixa (banda) e a bolinha (thumb nativo do slider) usam a mesma escala Min–Max do
+    // campo, então a banda aparece exatamente onde a faixa ideal cai dentro do intervalo
+    // total que o técnico pode arrastar — igual ao conceito do relatório.
+    private double PosicaoPercentual(decimal valor)
+    {
+        if (Max <= Min)
+        {
+            return 0;
+        }
+
+        var clamped = Math.Clamp(valor, Min, Max);
+        return (double)((clamped - Min) / (Max - Min)) * 100.0;
+    }
+
+    private static string Inv(double valor) => valor.ToString("0.####", CultureInfo.InvariantCulture);
+
+    private Task OnAlterado(ChangeEventArgs e)
+    {
+        if (!decimal.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var novoValor))
+        {
+            return Task.CompletedTask;
+        }
+
+        if (novoValor < Min)
+        {
+            novoValor = Min;
+        }
+        else if (novoValor > Max)
+        {
+            novoValor = Max;
+        }
+
+        Value = Math.Round(novoValor, 2);
+        return ValueChanged.InvokeAsync(Value);
+    }
+}

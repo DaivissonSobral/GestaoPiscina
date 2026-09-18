@@ -198,12 +198,14 @@
                     {
                         <div class="p-4 space-y-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <CampoNumerico Label="pH" @bind-Value="OrdemDeServico.pH" @bind-Value:after="AtualizarChecklistConcluido" Step="0.1m" Min="0m" Max="14m" IdealMin="7.2m" IdealMax="7.8m" />
-                                <CampoNumerico Label="Alcalinidade" Unidade="ppm" @bind-Value="OrdemDeServico.Alcalinidade" @bind-Value:after="AtualizarChecklistConcluido" Step="10m" Min="0m" Max="300m" IdealMin="80m" IdealMax="120m" />
-                                <CampoNumerico Label="Cloro Livre" Unidade="ppm" @bind-Value="OrdemDeServico.CloroLivre" @bind-Value:after="AtualizarChecklistConcluido" Step="0.5m" Min="0m" Max="10m" IdealMin="0.8m" IdealMax="3m" />
-                                <CampoNumerico Label="Dureza Cálcica" Unidade="ppm" @bind-Value="OrdemDeServico.DurezaCalcica" Step="10m" Min="0m" Max="800m" IdealMin="200m" IdealMax="400m" />
+                                <CampoParametroAgua Label="pH" Icone="fa-tint" @bind-Value="OrdemDeServico.pH" @bind-Value:after="AtualizarChecklistConcluido" Step="0.1m" Min="4m" Max="10m" IdealMin="7.2m" IdealMax="7.8m" />
+                                <CampoParametroAgua Label="Alcalinidade" Icone="fa-water" Unidade="ppm" @bind-Value="OrdemDeServico.Alcalinidade" @bind-Value:after="AtualizarChecklistConcluido" Step="10m" Min="40m" Max="200m" IdealMin="80m" IdealMax="120m" />
+                                <CampoParametroAgua Label="Cloro Livre" Icone="fa-flask" Unidade="ppm" @bind-Value="OrdemDeServico.CloroLivre" @bind-Value:after="AtualizarChecklistConcluido" Step="0.5m" Min="0m" Max="5m" IdealMin="0.8m" IdealMax="3m" />
+                                <CampoParametroAgua Label="Dureza Cálcica" Icone="fa-gem" Unidade="ppm" @bind-Value="OrdemDeServico.DurezaCalcica" Step="10m" Min="100m" Max="600m" IdealMin="200m" IdealMax="400m" />
                             </div>
                         </div>
+
+                        
                     }
                 </div>
 
