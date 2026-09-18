@@ -254,7 +254,8 @@
                    Aprovadores="quimicos"
                    ChecklistItensDisponiveis="checklistItens"
                    OnSave="SalvarOS"
-                   OnSalvo="AbrirDetalhesAposSalvar" />
+                   OnSalvo="AbrirDetalhesAposSalvar"
+                   OnVoltar="VoltarParaDetalhes" />
 
 <OrdemServicoDetalhes @bind-IsVisible="modalDetalhesVisible"
                       OrdemDeServico="osSelecionada"
@@ -704,6 +705,17 @@
     private void AbrirDetalhesAposSalvar(OrdemDeServico os)
     {
         modalDetalhesVisible = true;
+    }
+
+    // Botão de voltar do topo do Editar OS: só existe uma tela de Detalhes pra voltar se a
+    // OS já tiver sido salva ao menos uma vez (IDOS > 0) — uma "Nova OS" abandonada antes
+    // do primeiro Avançar não tem nada persistido pra mostrar, então cai direto na lista.
+    private void VoltarParaDetalhes()
+    {
+        if (osSelecionada.IDOS > 0)
+        {
+            modalDetalhesVisible = true;
+        }
     }
 
     // mostrarSucesso é false nos salvamentos automáticos de cada etapa do assistente (ao

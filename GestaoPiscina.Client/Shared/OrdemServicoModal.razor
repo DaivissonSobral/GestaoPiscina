@@ -9,7 +9,7 @@
     <div class="bg-slate-800 w-full h-full sm:h-auto sm:rounded-xl sm:max-w-4xl sm:mx-4 sm:max-h-[90vh] flex flex-col">
         <div class="flex items-center justify-between px-4 py-3 gap-3 shrink-0 sm:px-6 sm:py-4">
             <div class="flex items-center gap-3 min-w-0">
-                <button type="button" @onclick="Close" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors">
+                <button type="button" @onclick="Voltar" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors">
                     <i class="fas fa-arrow-left"></i>
                 </button>
                 <div class="min-w-0">
@@ -197,11 +197,13 @@
                     @if (secaoAguaAntesAberta)
                     {
                         <div class="p-4 space-y-4">
+                            @* <CampoParametroAgua Label="pH2" Icone="fa-tint" @bind-Value="OrdemDeServico.pH" @bind-Value:after="AtualizarChecklistConcluido" Step="0.1m" Min="4m" Max="10m" IdealMin="7.2m" IdealMax="7.8m" SemCard="true" /> *@
+                            @* <CampoParametroAgua Label="pH2" Icone="fa-tint" @bind-Value="OrdemDeServico.pH" @bind-Value:after="AtualizarChecklistConcluido" Step="0.1m" Min="4m" Max="10m" IdealMin="7.2m" IdealMax="7.8m" SemCard="true" BadgeNaFaixaIdeal="true" /> *@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <CampoParametroAgua Label="pH" Icone="fa-tint" @bind-Value="OrdemDeServico.pH" @bind-Value:after="AtualizarChecklistConcluido" Step="0.1m" Min="4m" Max="10m" IdealMin="7.2m" IdealMax="7.8m" />
-                                <CampoParametroAgua Label="Alcalinidade" Icone="fa-water" Unidade="ppm" @bind-Value="OrdemDeServico.Alcalinidade" @bind-Value:after="AtualizarChecklistConcluido" Step="10m" Min="40m" Max="200m" IdealMin="80m" IdealMax="120m" />
-                                <CampoParametroAgua Label="Cloro Livre" Icone="fa-flask" Unidade="ppm" @bind-Value="OrdemDeServico.CloroLivre" @bind-Value:after="AtualizarChecklistConcluido" Step="0.5m" Min="0m" Max="5m" IdealMin="0.8m" IdealMax="3m" />
-                                <CampoParametroAgua Label="Dureza Cálcica" Icone="fa-gem" Unidade="ppm" @bind-Value="OrdemDeServico.DurezaCalcica" Step="10m" Min="100m" Max="600m" IdealMin="200m" IdealMax="400m" />
+                                <CampoParametroAgua Label="pH" Icone="fa-tint" @bind-Value="OrdemDeServico.pH" @bind-Value:after="AtualizarChecklistConcluido" Step="0.1m" Min="4m" Max="10m" IdealMin="7.2m" IdealMax="7.8m" BadgeNaFaixaIdeal="true" />
+                                <CampoParametroAgua Label="Alcalinidade" Icone="fa-water" Unidade="ppm" @bind-Value="OrdemDeServico.Alcalinidade" @bind-Value:after="AtualizarChecklistConcluido" Step="10m" Min="40m" Max="200m" IdealMin="80m" IdealMax="120m" BadgeNaFaixaIdeal="true" />
+                                <CampoParametroAgua Label="Cloro Livre" Icone="fa-flask" Unidade="ppm" @bind-Value="OrdemDeServico.CloroLivre" @bind-Value:after="AtualizarChecklistConcluido" Step="0.5m" Min="0m" Max="5m" IdealMin="0.8m" IdealMax="3m" BadgeNaFaixaIdeal="true" />
+                                <CampoParametroAgua Label="Dureza Cálcica" Icone="fa-gem" Unidade="ppm" @bind-Value="OrdemDeServico.DurezaCalcica" Step="10m" Min="100m" Max="600m" IdealMin="200m" IdealMax="400m" BadgeNaFaixaIdeal="true" />
                             </div>
                         </div>
 
@@ -427,6 +429,9 @@
     // salvamentos automáticos entre etapas (ver SalvarEtapaAtualAsync), true no Salvar/Finalizar.
     [Parameter] public Func<OrdemDeServico, bool, Task<bool>>? OnSave { get; set; }
     [Parameter] public EventCallback<OrdemDeServico> OnSalvo { get; set; }
+    // Disparado só pelo botão de voltar do topo (não por Salvar/Finalizar/Cancelar, que já
+    // têm seu próprio retorno via OnSalvo) — deixa o pai decidir se volta pra Detalhes.
+    [Parameter] public EventCallback OnVoltar { get; set; }
 
     private int ClienteIdDaOS =>
         OrdemDeServico.Piscina?.Cliente?.IDCliente
@@ -1023,6 +1028,14 @@
     {
         IsVisible = false;
         await IsVisibleChanged.InvokeAsync(false);
+    }
+
+    // Botão de voltar do topo: fecha este modal e avisa o pai — que decide se volta pra
+    // Detalhes (OS já existente) ou pra lista (OS nova ainda não salva).
+    private async Task Voltar()
+    {
+        await Close();
+        await OnVoltar.InvokeAsync();
     }
 
     private async Task HandleSubmit()

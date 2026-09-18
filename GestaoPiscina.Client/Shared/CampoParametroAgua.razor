@@ -1,6 +1,6 @@
 @using System.Globalization
 
-<div class="bg-slate-700 border border-slate-600 rounded-xl p-4">
+<div class="@ClasseContainer">
     <div class="flex items-center justify-between gap-3 mb-3">
         <div class="flex items-center gap-2.5 min-w-0">
             <div class="w-9 h-9 rounded-lg bg-cyan-500/15 text-cyan-400 flex items-center justify-center shrink-0">
@@ -17,9 +17,10 @@
                    value="@Value.ToString(CultureInfo.InvariantCulture)"
                    @onchange="OnAlterado"
                    class="w-20 text-center text-base font-bold bg-slate-800 border border-slate-600 rounded-lg py-1.5 text-slate-100 focus:outline-none focus:border-cyan-500" />
-            <span class="text-xs font-semibold px-3 py-1 rounded-full border whitespace-nowrap @(DentroDoIdeal ? "bg-emerald-500/30 text-emerald-200 border-emerald-500/40" : "bg-amber-500/30 text-amber-200 border-amber-500/40")">
-                @(DentroDoIdeal ? "No padrão" : "Fora do ideal")
-            </span>
+            @if (!BadgeNaFaixaIdeal)
+            {
+                @Badge
+            }
         </div>
     </div>
 
@@ -38,9 +39,15 @@
 
     <div class="flex items-center justify-between text-[11px] text-slate-400 mt-1.5">
         <span>Faixa ideal</span>
-        <span class="font-medium @(DentroDoIdeal ? "text-emerald-400" : "text-amber-400")">
-            @IdealMin.ToString("0.##", CultureInfo.InvariantCulture) – @IdealMax.ToString("0.##", CultureInfo.InvariantCulture)@Unidade
-        </span>
+        <div class="flex items-center gap-2">
+            <span class="font-medium @(DentroDoIdeal ? "text-emerald-400" : "text-amber-400")">
+                @IdealMin.ToString("0.##", CultureInfo.InvariantCulture) – @IdealMax.ToString("0.##", CultureInfo.InvariantCulture)@Unidade
+            </span>
+            @if (BadgeNaFaixaIdeal)
+            {
+                @Badge
+            }
+        </div>
     </div>
 </div>
 
@@ -56,7 +63,23 @@
     [Parameter] public decimal IdealMax { get; set; }
     [Parameter] public string? Unidade { get; set; }
 
+    // Sem o cartão (fundo/borda/cantos), ocupando a largura toda do acordeão — sem linha
+    // separando do próximo item, só o espaçamento mesmo.
+    [Parameter] public bool SemCard { get; set; }
+
+    // Move o botão "No padrão"/"Fora do ideal" pra linha de baixo, ao lado do valor da
+    // faixa ideal (ambos alinhados à direita), deixando no topo só o campo de valor.
+    [Parameter] public bool BadgeNaFaixaIdeal { get; set; }
+
+    private string ClasseContainer => SemCard
+        ? "w-full mb-4"
+        : "bg-slate-700 border border-slate-600 rounded-xl p-4";
+
     private bool DentroDoIdeal => Value >= IdealMin && Value <= IdealMax;
+
+    private RenderFragment Badge => @<span class="text-xs font-semibold px-3 py-1 rounded-full border whitespace-nowrap @(DentroDoIdeal ? "bg-emerald-500/30 text-emerald-200 border-emerald-500/40" : "bg-amber-500/30 text-amber-200 border-amber-500/40")">
+        @(DentroDoIdeal ? "No padrão" : "Fora do ideal")
+    </span>;
 
     // A faixa (banda) e a bolinha (thumb nativo do slider) usam a mesma escala Min–Max do
     // campo, então a banda aparece exatamente onde a faixa ideal cai dentro do intervalo

@@ -7,13 +7,13 @@
 
 <div class="fixed inset-0 !mt-0 bg-black bg-opacity-50 flex sm:items-start justify-center z-50 sm:pt-8 @(IsVisible ? "" : "hidden")">
     <div class="bg-slate-800 w-full h-full sm:h-auto sm:rounded-xl sm:max-w-4xl sm:mx-4 sm:max-h-[90vh] flex flex-col">
-        <div class="flex justify-between items-center p-6 pb-4 shrink-0">
-            <h3 class="text-lg font-semibold text-slate-100">
-                Detalhes da Ordem de Serviço #@OrdemDeServico.IDOS
-            </h3>
-            <button @onclick="Close" class="text-slate-400 hover:text-slate-200">
-                <i class="fas fa-times"></i>
+        <div class="flex items-center gap-3 p-6 pb-4 shrink-0">
+            <button type="button" @onclick="Close" title="Sair" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors shrink-0">
+                <i class="fas fa-arrow-left"></i>
             </button>
+            <h3 class="text-lg font-semibold text-slate-100 truncate">
+                Detalhes da OS #@OrdemDeServico.IDOS
+            </h3>
         </div>
 
         <div class="border-t border-slate-700"></div>
@@ -297,7 +297,7 @@
             <p class="text-red-400 text-xs px-3 sm:px-6 pt-2">@(erroAprovacao ?? erroReprovacao)</p>
         }
 
-        <div class="flex flex-nowrap items-center gap-1.5 sm:gap-3 px-3 sm:px-6 py-3 sm:py-4 border-t border-slate-700 shrink-0">
+        <div class="flex flex-nowrap items-center justify-end gap-1.5 sm:gap-3 px-3 sm:px-6 py-3 sm:py-4 border-t border-slate-700 shrink-0">
             @if (AguardandoDecisaoDoAprovador)
             {
                 <button @onclick="AprovarOcorrenciaAsync" disabled="@(aprovando || reprovando)" class="flex-1 min-w-0 whitespace-nowrap bg-green-600 hover:bg-green-500 disabled:opacity-50 px-2 sm:px-4 py-2 rounded-lg text-white transition-colors">
@@ -309,15 +309,9 @@
             }
             else
             {
-                <button @onclick="IniciarEEditarAsync" disabled="@capturandoLocalizacao" class="flex-[2] min-w-0 whitespace-nowrap bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 px-2 sm:px-4 py-2 rounded-lg text-white transition-colors">
+                <button @onclick="IniciarEEditarAsync" disabled="@capturandoLocalizacao" class="shrink-0 whitespace-nowrap bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 px-4 py-2 rounded-lg text-white transition-colors">
                     <i class="fas @(capturandoLocalizacao ? "fa-spinner fa-spin" : "fa-edit") mr-1 sm:mr-2"></i>@(capturandoLocalizacao ? "Localizando..." : TextoBotaoEditar())
                 </button>
-                @if (OrdemDeServico.Status is not ("Finalizada" or "Cancelada" or "Ocorrência"))
-                {
-                    <button @onclick="() => cancelarModalVisible = true" class="flex-1 min-w-0 whitespace-nowrap bg-red-600 hover:bg-red-500 px-2 sm:px-4 py-2 rounded-lg text-white transition-colors">
-                        <i class="fas fa-ban mr-1 sm:mr-2"></i>Cancelar
-                    </button>
-                }
                 @if (PodeVerRelatorio)
                 {
                     <button @onclick="AbrirRelatorio" class="shrink-0 w-11 h-11 flex items-center justify-center bg-teal-600 hover:bg-teal-500 rounded-lg text-white text-lg transition-colors" title="Relatório">
@@ -325,13 +319,14 @@
                     </button>
                 }
             }
-            <button @onclick="Close" class="shrink-0 w-11 h-11 flex items-center justify-center bg-slate-600 hover:bg-slate-500 rounded-lg text-white text-lg transition-colors" title="Fechar">
-                <i class="fas fa-door-open"></i>
-            </button>
         </div>
     </div>
 
-    <CancelarOSModal @bind-IsVisible="cancelarModalVisible" OrdemDeServico="OrdemDeServico" OnCancelado="OnOSCancelada" />
+    <ConfirmDialog @bind-IsVisible="substituirTecnicoModalVisible"
+                   Title="Substituir técnico responsável?"
+                   Message="@MensagemSubstituicaoTecnico"
+                   ConfirmText="Sim, assumir a OS"
+                   OnConfirm="ConfirmarSubstituicaoTecnicoAsync" />
 </div>
 
 <div class="fixed inset-0 !mt-0 bg-black bg-opacity-70 flex items-center justify-center z-[60] @(hodometroModalVisible ? "" : "hidden")">
@@ -395,6 +390,7 @@
         Aprovadores?.FirstOrDefault(a => a.IDUsuario == OrdemDeServico.Aprovador)?.Nome ?? "-";
 
     private int? currentUserId;
+    private UsuarioInfo? usuarioLogado;
     private bool aprovando;
     private bool reprovando;
     private string? erroAprovacao;
@@ -477,7 +473,7 @@
             }
 
             erroAprovacao = null;
-            var usuarioLogado = await AuthService.GetCurrentUserAsync();
+            usuarioLogado = await AuthService.GetCurrentUserAsync();
             currentUserId = usuarioLogado?.IDUsuario;
         }
 
@@ -518,10 +514,59 @@
                 return;
             }
 
-            await OnEdit.InvokeAsync(OrdemDeServico);
+            await IniciarManutencaoAsync();
             return;
         }
 
+        if (OrdemDeServico.Status == "Em Andamento" && OrdemDeServico.InicioPercurso != null && OrdemDeServico.LatitudeInicio == null)
+        {
+            await IniciarManutencaoAsync();
+            return;
+        }
+
+        await OnEdit.InvokeAsync(OrdemDeServico);
+    }
+
+    // Ponto de entrada do clique em "Iniciar Manutenção" (com ou sem "Iniciar Percurso"
+    // antes): resolve quem é o técnico responsável antes de seguir pro Editar. Sem técnico
+    // ainda, atribui direto a quem clicou; com um técnico diferente já atribuído, pede
+    // confirmação explícita (evita tomar a OS de outro técnico sem querer) — a continuação
+    // só acontece dentro de ConfirmarSubstituicaoTecnicoAsync, se ele confirmar.
+    private async Task IniciarManutencaoAsync()
+    {
+        if (currentUserId.HasValue)
+        {
+            if (OrdemDeServico.IDUsuario is null or <= 0)
+            {
+                OrdemDeServico.IDUsuario = currentUserId.Value;
+            }
+            else if (OrdemDeServico.IDUsuario != currentUserId.Value)
+            {
+                substituirTecnicoModalVisible = true;
+                return;
+            }
+        }
+
+        await ContinuarIniciarManutencaoAsync();
+    }
+
+    private bool substituirTecnicoModalVisible;
+
+    private string MensagemSubstituicaoTecnico =>
+        $"Esta OS está atribuída a {Tecnico?.Nome ?? "outro técnico"}. Se você continuar, o técnico responsável passará a ser você ({usuarioLogado?.Nome ?? "usuário atual"}). Deseja substituir?";
+
+    private async Task ConfirmarSubstituicaoTecnicoAsync()
+    {
+        if (currentUserId.HasValue)
+        {
+            OrdemDeServico.IDUsuario = currentUserId.Value;
+        }
+
+        await ContinuarIniciarManutencaoAsync();
+    }
+
+    private async Task ContinuarIniciarManutencaoAsync()
+    {
         if (OrdemDeServico.Status == "Em Andamento" && OrdemDeServico.InicioPercurso != null && OrdemDeServico.LatitudeInicio == null)
         {
             OrdemDeServico.HoraInicio = OrdemDeServico.DataExecucao.Date + DateTime.Now.TimeOfDay;
@@ -600,15 +645,6 @@
     private void AbrirRelatorio()
     {
         Navigation.NavigateTo($"/relatorios/os/{OrdemDeServico.IDOS}");
-    }
-
-    private bool cancelarModalVisible;
-
-    // O modal já deixa a OrdemDeServico (mesma instância usada pela lista/Kanban na tela
-    // pai) com Status "Cancelada" antes de fechar — só precisa mandar re-renderizar aqui.
-    private void OnOSCancelada()
-    {
-        StateHasChanged();
     }
 
     // Uma Ocorrência ou um Cancelamento trava Salvar pra qualquer um (ver

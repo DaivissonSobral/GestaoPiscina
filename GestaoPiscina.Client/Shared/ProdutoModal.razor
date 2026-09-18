@@ -25,7 +25,14 @@
 
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-2">Unidade *</label>
-                    <InputText @bind-Value="Produto.Unidade" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100" placeholder="Ex: kg, L" />
+                    <InputSelect @bind-Value="Produto.Unidade" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100">
+                        <option value="">Selecione...</option>
+                        <option value="g">Grama (g)</option>
+                        <option value="L">Litro (L)</option>
+                        <option value="mL">Mililitro (mL)</option>
+                        <option value="kg">Quilograma (kg)</option>
+                        <option value="un">Unidade (un)</option>
+                    </InputSelect>
                     <ValidationMessage For="@(() => Produto.Unidade)" class="text-red-500 text-sm" />
                 </div>
 

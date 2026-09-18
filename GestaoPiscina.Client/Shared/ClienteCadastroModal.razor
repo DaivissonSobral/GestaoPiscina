@@ -887,6 +887,12 @@
                 await ApiService.UpdateClienteAsync(cliente);
                 await ReconcileGestorAsync(cliente.IDCliente);
                 ShowToast("Sucesso", "Cliente atualizado com sucesso!", "success");
+
+                // Atualizar mantém a tela aberta (igual ao fluxo de criação) pra deixar o
+                // usuário continuar editando — a lista da tela de trás só é recarregada
+                // quando ele efetivamente fecha o modal (botão Concluir/voltar), via Close().
+                await LoadRelatedData();
+                return;
             }
             else
             {
@@ -898,7 +904,6 @@
                 await LoadRelatedData();
                 return;
             }
-            await OnSave.InvokeAsync();
         }
         catch (Exception ex)
         {
