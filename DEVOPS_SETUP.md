@@ -54,22 +54,30 @@ git commit -m "Implementa autenticação - Closes #789"
 
 ---
 
-## 📊 VISUALIZAR NO DEVOPS
+## 📊 VISUALIZAR COMMITS NO DEVOPS
 
-### **Build Pipeline Runs**
-```
-https://dev.azure.com/DaivissonSobral/GestaoPiscina/_build
-```
+### **Passo-a-Passo: Conectar GitHub Completamente**
 
-### **Boards & Work Items**
-```
-https://dev.azure.com/DaivissonSobral/GestaoPiscina/_workitems
-```
+1. Vá em: `https://dev.azure.com/DaivissonSobral/GestaoPiscina`
+2. Clique em **Boards** (menu lateral)
+3. Procure por **GitHub connections** ou vá em Project Settings → Boards
+4. Clique em **New GitHub Connection**
+5. Selecione repositório: `DaivissonSobral/GestaoPiscina`
+6. Clique em **Connect** e autorize no GitHub
+7. ✅ Pronto! Tudo sincronizado
 
-### **Repositório**
-```
-https://github.com/DaivissonSobral/GestaoPiscina
-```
+### **Depois de Conectar - Visualizar:**
+
+- **Todos os Commits:** Repos → Repositories → DaivissonSobral/GestaoPiscina → Commits
+- **Pull Requests:** Repos → Pull Requests
+- **Histórico Completo:** Repos → History
+
+### **Links Rápidos**
+
+- Build Pipeline: `https://dev.azure.com/DaivissonSobral/GestaoPiscina/_build`
+- Boards & Work Items: `https://dev.azure.com/DaivissonSobral/GestaoPiscina/_workitems`
+- Repositório GitHub: `https://github.com/DaivissonSobral/GestaoPiscina`
+- Repos DevOps: `https://dev.azure.com/DaivissonSobral/GestaoPiscina/_git/GestaoPiscina`
 
 ---
 
@@ -114,6 +122,7 @@ C:\Users\dsobr\AzurePipelinesAgent\_diag\
 | Pipeline Config | ✅ | Usando agent local |
 | Work Items Sync | ✅ | Automático via commits |
 | Web Hooks | ✅ | Sincronização ativa |
+| GitHub Connections | ⏳ | **PRÓXIMO PASSO:** Conectar repositório GitHub |
 
 ---
 
