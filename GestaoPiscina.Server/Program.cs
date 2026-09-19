@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using GestaoPiscina.Server.Data;
 using Microsoft.EntityFrameworkCore.Sqlite;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using GestaoPiscina.Server.Services;
@@ -24,6 +25,16 @@ builder.Services.AddControllers(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// O Cloudflare Tunnel (e futuramente o Azure App Service) fica na frente da API fazendo
+// proxy reverso: a conexão real do cloudflared para o Kestrel é HTTP em localhost, mesmo
+// quando o cliente acessou via HTTPS. Sem isso, Request.Scheme/Request.Host (usados em
+// UploadsController para montar a URL da foto) voltam "http://localhost:7001" em vez do
+// domínio público, e UseHttpsRedirection tenta redirecionar a conexão local incorretamente.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+});
+
 // Configuração do Entity Framework
 builder.Services.AddDbContext<GestaoPiscinaContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -34,11 +45,11 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowBlazorApp",
         policy =>
         {
-            // Além do localhost, libera qualquer túnel *.trycloudflare.com: a URL do túnel
-            // muda a cada sessão (ver appsettings.json/ApiBaseUrl), então travar num
-            // hostname fixo aqui sempre quebra de novo assim que o túnel é recriado.
+            // Além do localhost e do domínio fixo (app.blup.ia.br), libera qualquer túnel
+            // *.trycloudflare.com: durante testes rápidos a URL do túnel muda a cada sessão,
+            // então travar só no hostname fixo quebraria esse fluxo.
             policy.SetIsOriginAllowed(origin =>
-                      origin is "http://localhost:7000" or "https://localhost:7000" or "http://localhost:5000"
+                      origin is "http://localhost:7000" or "https://localhost:7000" or "http://localhost:5000" or "https://app.blup.ia.br"
                       || (Uri.TryCreate(origin, UriKind.Absolute, out var uri) && uri.Host.EndsWith(".trycloudflare.com")))
                   .AllowAnyHeader()
                   .AllowAnyMethod();
@@ -69,6 +80,10 @@ builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<IPushNotificationService, PushNotificationService>();
 
 var app = builder.Build();
+
+// Precisa vir antes de qualquer outro middleware: é o que corrige Scheme/Host
+// a partir dos cabeçalhos X-Forwarded-* enviados pelo proxy (Cloudflare Tunnel/Azure).
+app.UseForwardedHeaders();
 
 if (app.Environment.IsDevelopment())
 {
