@@ -6,8 +6,8 @@ namespace GestaoPiscina.Server.Tests.TestSupport
 {
     // Cada teste recebe seu próprio banco SQLite em memória, isolado dos demais.
     // Diferente do provider "InMemory" do EF Core, o SQLite real suporta
-    // transações, FKs e GroupBy/Sum traduzidos para SQL — mais fiel ao que
-    // roda em produção (GestaoPiscinaContext também usa UseSqlite).
+    // transações, FKs e GroupBy/Sum traduzidos para SQL — mais fiel a um banco
+    // relacional de verdade, mesmo que a produção use SQL Server (UseSqlServer).
     public sealed class SqliteInMemoryContext : IDisposable
     {
         private readonly SqliteConnection _connection;

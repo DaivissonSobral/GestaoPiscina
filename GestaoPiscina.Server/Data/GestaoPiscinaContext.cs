@@ -142,7 +142,7 @@ namespace GestaoPiscina.Server.Data
                 entity.HasOne(e => e.Dosagem)
                     .WithMany()
                     .HasForeignKey(e => e.IDDosagem)
-                    .OnDelete(DeleteBehavior.SetNull);
+                    .OnDelete(DeleteBehavior.ClientSetNull);
                 entity.HasIndex(e => new { e.IDCliente, e.IDProduto });
             });
 

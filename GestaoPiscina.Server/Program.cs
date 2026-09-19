@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using GestaoPiscina.Server.Data;
-using Microsoft.EntityFrameworkCore.Sqlite;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Azure.Storage.Blobs;
 using GestaoPiscina.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,7 +37,11 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
 // Configuração do Entity Framework
 builder.Services.AddDbContext<GestaoPiscinaContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Cliente do Azure Blob Storage, usado pelo UploadsController para gravar as fotos
+// enviadas (substitui o disco local, que não é confiável no App Service do Azure).
+builder.Services.AddSingleton(new BlobServiceClient(builder.Configuration["AzureStorage:ConnectionString"]));
 
 // Configuração do CORS
 builder.Services.AddCors(options =>
@@ -93,10 +97,20 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowBlazorApp");
-app.UseStaticFiles(); // Serve as fotos enviadas em wwwroot/uploads (ver UploadsController)
+app.UseStaticFiles(); // Serve fotos antigas que ainda existam fisicamente em wwwroot/uploads (pré-migração para o Blob Storage)
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Compatibilidade com fotos enviadas antes da migração para o Blob Storage: URLs antigas
+// salvas no banco no formato /uploads/{pasta}/{arquivo} (servidas via UseStaticFiles) agora
+// redirecionam para o blob correspondente, sem precisar alterar os registros já gravados.
+app.MapGet("/uploads/{pasta}/{arquivo}", (string pasta, string arquivo, BlobServiceClient blobServiceClient, IConfiguration config) =>
+{
+    var containerName = config["AzureStorage:ContainerName"] ?? "uploads";
+    var blobClient = blobServiceClient.GetBlobContainerClient(containerName).GetBlobClient($"{pasta}/{arquivo}");
+    return Results.Redirect(blobClient.Uri.ToString());
+});
 
 // Seed data
 using (var scope = app.Services.CreateScope())
