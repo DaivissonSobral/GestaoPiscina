@@ -38,7 +38,8 @@ namespace GestaoPiscina.Server.Data
                         PodeGerenciarOrdensServico = true,
                         PodeGerenciarEquipamentos = true,
                         PodeVisualizarRelatorios = true,
-                        PodeConfigurarSistema = false
+                        PodeConfigurarSistema = false,
+                        ExigeEndereco = true
                     },
                     new Perfil
                     {
@@ -52,7 +53,8 @@ namespace GestaoPiscina.Server.Data
                         PodeGerenciarOrdensServico = true,
                         PodeGerenciarEquipamentos = false,
                         PodeVisualizarRelatorios = true,
-                        PodeConfigurarSistema = false
+                        PodeConfigurarSistema = false,
+                        ExigeEndereco = true
                     },
                     new Perfil
                     {
@@ -198,6 +200,24 @@ namespace GestaoPiscina.Server.Data
                     DataCriacao = DateTime.Now,
                     IDPerfil = quimicaPerfilExistente.IDPerfil
                 });
+                await context.SaveChangesAsync();
+            }
+
+            // Backfill do flag ExigeEndereco para bancos provisionados antes dele existir
+            // (a coluna nasce com default false via migração; aqui ligamos para os perfis
+            // que atendem no endereço do cliente: Piscineiro/Técnico de Operações, Líder,
+            // Técnico e Supervisor — nomeados no banco como "Técnico em Manutenção",
+            // "Líder de Operações", "Técnico" e "Supervisor").
+            var nomesPerfisComEnderecoObrigatorio = new[] { "Técnico", "Supervisor", "Líder de Operações", "Técnico em Manutenção" };
+            var perfisQueExigemEndereco = context.Perfis
+                .Where(p => nomesPerfisComEnderecoObrigatorio.Contains(p.Nome) && !p.ExigeEndereco)
+                .ToList();
+            if (perfisQueExigemEndereco.Any())
+            {
+                foreach (var perfil in perfisQueExigemEndereco)
+                {
+                    perfil.ExigeEndereco = true;
+                }
                 await context.SaveChangesAsync();
             }
 

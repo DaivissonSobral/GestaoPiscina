@@ -17,10 +17,6 @@ namespace GestaoPiscina.Server.Controllers
         private readonly GestaoPiscinaContext _context;
         private readonly JwtService _jwtService;
 
-        // Só Técnico e Supervisor vão a campo até o cliente — os demais perfis não
-        // precisam de endereço cadastrado.
-        private static readonly HashSet<string> PerfisComEnderecoObrigatorio = new() { "Técnico", "Supervisor" };
-
         public UsuariosController(GestaoPiscinaContext context, JwtService jwtService)
         {
             _context = context;
@@ -138,7 +134,7 @@ namespace GestaoPiscina.Server.Controllers
                 return BadRequest(new { message = "Perfil inválido." });
             }
 
-            if (PerfisComEnderecoObrigatorio.Contains(perfil.Nome) && string.IsNullOrWhiteSpace(dto.Endereco))
+            if (perfil.ExigeEndereco && string.IsNullOrWhiteSpace(dto.Endereco))
             {
                 return BadRequest(new { message = "Endereço é obrigatório para o perfil selecionado." });
             }
@@ -209,7 +205,7 @@ namespace GestaoPiscina.Server.Controllers
                 return BadRequest(new { message = "Perfil inválido." });
             }
 
-            if (PerfisComEnderecoObrigatorio.Contains(perfil.Nome) && string.IsNullOrWhiteSpace(dto.Endereco))
+            if (perfil.ExigeEndereco && string.IsNullOrWhiteSpace(dto.Endereco))
             {
                 return BadRequest(new { message = "Endereço é obrigatório para o perfil selecionado." });
             }
@@ -266,7 +262,7 @@ namespace GestaoPiscina.Server.Controllers
                 usuario.Longitude = dto.Longitude;
             }
 
-            var perfilNomeFinal = usuario.Perfil.Nome;
+            var exigeEnderecoFinal = usuario.Perfil.ExigeEndereco;
 
             if (usuario.Perfil.PodeGerenciarUsuarios)
             {
@@ -291,14 +287,14 @@ namespace GestaoPiscina.Server.Controllers
                     if (perfilAlvo != null)
                     {
                         usuario.IDPerfil = perfilAlvo.IDPerfil;
-                        perfilNomeFinal = perfilAlvo.Nome;
+                        exigeEnderecoFinal = perfilAlvo.ExigeEndereco;
                     }
                 }
             }
 
             // Baseado no perfil que vai valer depois deste salvamento (já considerando uma
             // eventual troca de perfil pelo Gestor acima), não no perfil antigo.
-            if (PerfisComEnderecoObrigatorio.Contains(perfilNomeFinal) && string.IsNullOrWhiteSpace(usuario.Endereco))
+            if (exigeEnderecoFinal && string.IsNullOrWhiteSpace(usuario.Endereco))
             {
                 return BadRequest(new { message = "Endereço é obrigatório para o perfil selecionado." });
             }

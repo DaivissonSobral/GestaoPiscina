@@ -23,5 +23,9 @@ namespace GestaoPiscina.Server.Models
         public bool PodeGerenciarEquipamentos { get; set; }
         public bool PodeVisualizarRelatorios { get; set; }
         public bool PodeConfigurarSistema { get; set; }
+
+        // Perfis que atendem no endereço do cliente (técnicos, supervisores etc.)
+        // precisam ter o próprio endereço cadastrado — usado na validação do cadastro de usuário.
+        public bool ExigeEndereco { get; set; }
     }
 } 

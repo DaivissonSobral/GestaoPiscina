@@ -7,7 +7,7 @@ namespace GestaoPiscina.Server.Tests.TestSupport
     // só precisarem sobrescrever o que é relevante para o cenário.
     internal static class Fabrica
     {
-        public static Perfil Perfil(string nome = "Técnico", bool podeGerenciarOrdensServico = true) => new()
+        public static Perfil Perfil(string nome = "Técnico", bool podeGerenciarOrdensServico = true, bool exigeEndereco = false) => new()
         {
             Nome = nome,
             PodeGerenciarUsuarios = nome == "Administrador",
@@ -18,7 +18,8 @@ namespace GestaoPiscina.Server.Tests.TestSupport
             PodeGerenciarOrdensServico = podeGerenciarOrdensServico,
             PodeGerenciarEquipamentos = nome == "Administrador",
             PodeVisualizarRelatorios = true,
-            PodeConfigurarSistema = nome == "Administrador"
+            PodeConfigurarSistema = nome == "Administrador",
+            ExigeEndereco = exigeEndereco
         };
 
         public static Usuario Usuario(

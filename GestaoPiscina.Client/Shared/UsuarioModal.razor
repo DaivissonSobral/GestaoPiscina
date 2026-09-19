@@ -179,13 +179,11 @@
 
     private bool CamposSensiveisBloqueados => ModoPerfil && !PodeEditarCamposSensiveis;
 
-    // Só Técnico e Supervisor precisam de endereço (vão até o cliente) — mesma regra
-    // aplicada no servidor (ver UsuariosController.PerfisComEnderecoObrigatorio).
-    private static readonly HashSet<string> PerfisComEnderecoObrigatorio = new() { "Técnico", "Supervisor" };
-
+    // Endereço obrigatório é definido por perfil (Perfil.ExigeEndereco) — mesma regra
+    // aplicada no servidor (ver UsuariosController).
     private bool EnderecoObrigatorio =>
         Perfis?.FirstOrDefault(p => p.IDPerfil == Usuario.IDPerfil) is { } perfil
-        && PerfisComEnderecoObrigatorio.Contains(perfil.Nome);
+        && perfil.ExigeEndereco;
 
     private string? erroSenha;
     private bool enviandoFoto;
